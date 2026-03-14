@@ -1,0 +1,149 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  VISITOR
+  SUBSCRIBER
+  ADMIN
+}
+
+enum Status {
+  ACTIVE
+  SUSPENDED
+}
+
+enum OrderStatus {
+  PENDING
+  VALIDATED
+  REJECTED
+}
+
+model User {
+  id                 String    @id @default(cuid())
+  name               String
+  email              String    @unique
+  password           String
+  role               Role      @default(SUBSCRIBER)
+  accountStatus      Status    @default(ACTIVE)
+  mustChangePassword Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  orders             Order[]
+  attempts           Attempt[]
+  results            Result[]
+}
+
+model Pack {
+  id                String       @id @default(cuid())
+  name              String
+  price             Int
+  description       String
+  nbModules         Int
+  nbSeriesPerModule Int
+  durationDays      Int
+  isActive          Boolean      @default(true)
+  createdAt         DateTime     @default(now())
+  orders            Order[]
+  series            PackSeries[]
+}
+
+model Order {
+  id             String      @id @default(cuid())
+  reference      String      @unique
+  visitorName    String
+  visitorEmail   String
+  visitorPhone   String
+  visitorMessage String?
+  userId         String?
+  packId         String
+  status         OrderStatus @default(PENDING)
+  activatedAt    DateTime?
+  expiresAt      DateTime?
+  createdAt      DateTime    @default(now())
+  user           User?       @relation(fields: [userId], references: [id])
+  pack           Pack        @relation(fields: [packId], references: [id])
+}
+
+model Module {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique
+  description String
+  duration    Int
+  nbQuestions Int
+  series      Series[]
+}
+
+model Series {
+  id         String       @id @default(cuid())
+  title      String
+  moduleId   String
+  difficulty String
+  isFree     Boolean      @default(false)
+  createdAt  DateTime     @default(now())
+  module     Module       @relation(fields: [moduleId], references: [id])
+  questions  Question[]
+  packs      PackSeries[]
+  attempts   Attempt[]
+}
+
+model PackSeries {
+  packId   String
+  seriesId String
+  pack     Pack   @relation(fields: [packId], references: [id])
+  series   Series @relation(fields: [seriesId], references: [id])
+
+  @@id([packId, seriesId])
+}
+
+model Question {
+  id            String  @id @default(cuid())
+  moduleId      String
+  seriesId      String
+  questionOrder Int
+  category      String?
+  longText      String?
+  imageUrl      String?
+  audioUrl      String?
+  question      String
+  optionA       String
+  optionB       String
+  optionC       String
+  optionD       String
+  correctAnswer String
+  explanation   String?
+  series        Series  @relation(fields: [seriesId], references: [id])
+}
+
+model Attempt {
+  id           String   @id @default(cuid())
+  userId       String
+  seriesId     String
+  moduleCode   String
+  answers      Json
+  writtenTask1 String?
+  writtenTask2 String?
+  audioTask1   String?
+  audioTask2   String?
+  score        Int?
+  aiScore      Float?
+  cecrlLevel   String?
+  timeTaken    Int?
+  completedAt  DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id])
+  series       Series   @relation(fields: [seriesId], references: [id])
+}
+
+model Result {
+  id         String   @id @default(cuid())
+  userId     String
+  moduleCode String
+  avgScore   Float
+  cecrlLevel String
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id])
+}
