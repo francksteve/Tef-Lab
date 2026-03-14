@@ -60,7 +60,7 @@ async function main() {
     },
   })
 
-  console.log('✅ Compte admin créé : tifuzzied@gmail.com / admin@tef-lab')
+  console.log('✅ Compte admin créé : tifuzzied@gmail.com (mot de passe par défaut)')
   console.log('Seed terminé avec succès !')
 }
 

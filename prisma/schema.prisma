@@ -66,6 +66,9 @@ model Order {
   createdAt      DateTime    @default(now())
   user           User?       @relation(fields: [userId], references: [id])
   pack           Pack        @relation(fields: [packId], references: [id])
+
+  @@index([status])
+  @@index([userId])
 }
 
 model Module {
@@ -89,6 +92,9 @@ model Series {
   questions  Question[]
   packs      PackSeries[]
   attempts   Attempt[]
+
+  @@index([moduleId])
+  @@index([isFree])
 }
 
 model PackSeries {
@@ -117,6 +123,9 @@ model Question {
   correctAnswer String
   explanation   String?
   series        Series  @relation(fields: [seriesId], references: [id])
+
+  @@index([seriesId])
+  @@index([moduleId])
 }
 
 model Attempt {
@@ -136,6 +145,9 @@ model Attempt {
   completedAt  DateTime @default(now())
   user         User     @relation(fields: [userId], references: [id])
   series       Series   @relation(fields: [seriesId], references: [id])
+
+  @@index([userId])
+  @@index([seriesId])
 }
 
 model Result {
@@ -146,4 +158,6 @@ model Result {
   cecrlLevel String
   createdAt  DateTime @default(now())
   user       User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, moduleCode])
 }
