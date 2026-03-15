@@ -399,3 +399,37 @@ npm run dev
 - Le schéma Prisma fait autorité sur toute autre description de la base de données
 - Les prompts IA (EE et EO) sont définis dans `lib/scoring.ts` — ne pas les modifier sans validation
 - La gestion des commandes est **manuelle** — ne pas implémenter de passerelle de paiement automatique
+
+---
+
+## 🛠️ ENVIRONNEMENT TECHNIQUE (DÉCOUVERT EN SESSION)
+
+### Prisma 7 — Incompatibilités critiques
+- `datasourceUrl` **supprimé** du constructeur `PrismaClient` — utilise `@prisma/adapter-pg` à la place
+- `url = env("DATABASE_URL")` **supprimé** du bloc `datasource` dans schema.prisma
+- `prisma.config.ts` est **pour le CLI uniquement** (Migrate, Generate) — pas le runtime
+- `lib/prisma.ts` instancie `PrismaPg` avec `connectionString` et passe `adapter` au constructeur
+- Zod v4 : `error.errors` → `error.issues` ; `errorMap` supprimé de `z.enum`
+
+### Commandes CLI sur Windows (npm absent du PATH)
+- Dev server : `node node_modules/next/dist/bin/next dev` (configuré dans `.claude/launch.json`)
+- Prisma generate : `node node_modules/prisma/build/index.js generate`
+- TypeScript check : `node node_modules/typescript/bin/tsc --noEmit`
+- npm install : `node "C:/Program Files/nodejs/node_modules/npm/bin/npm-cli.js" install <pkg>`
+- Bash : éviter les chemins avec `(` (ex: `app/(public)/`) dans les commandes git — utiliser `git add -u`
+- Vider le cache : `rm -rf .next` — **obligatoire** après `next build` avant de relancer `next dev`
+
+### Architecture Layout (décision prise)
+- `app/layout.tsx` — **minimal** (html/body/Providers uniquement, sans Navbar/Footer)
+- `app/(public)/layout.tsx` — Navbar + Footer + WhatsApp (pages publiques uniquement)
+- `app/admin/layout.tsx` — sidebar admin autonome (pas de Navbar publique)
+- **Ne pas recréer** `app/page.tsx` — la page d'accueil est `app/(public)/page.tsx`
+
+### ESLint (.eslintrc.json)
+- `react/no-unescaped-entities` : **désactivé** — application en français avec de nombreuses apostrophes
+- `@typescript-eslint/no-unused-vars` : `argsIgnorePattern: "^_"` — préfixer les params inutilisés par `_`
+- Pattern `Array.isArray(data) && setter(data)` → remplacer par `if (Array.isArray(data)) setter(data)`
+
+### NextAuth `withAuth` middleware
+- **Toujours** spécifier `pages: { signIn: '/connexion' }` dans les options de `withAuth`
+  sinon la redirection part vers `/api/auth/signin` → `/` au lieu de `/connexion`
