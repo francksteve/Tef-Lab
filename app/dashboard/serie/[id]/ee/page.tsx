@@ -253,7 +253,7 @@ export default function EEPage() {
         <div className="max-w-3xl mx-auto px-4 pt-16 pb-8 space-y-6">
           <div>
             <span className="inline-block px-3 py-1 bg-tef-blue text-white text-xs font-semibold rounded-full mb-3">
-              Tâche 1 / 2 — Suite d'article
+              Tâche 1 / 2 — Suite d’article
             </span>
             <h1 className="text-xl font-bold text-gray-900">{series?.title}</h1>
           </div>
@@ -265,7 +265,7 @@ export default function EEPage() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Votre texte (suite de l'article)
+              Votre texte (suite de l’article)
             </label>
             <textarea
               value={task1Text}
@@ -396,7 +396,7 @@ function TaskResultCard({
       )}
       {score.improvements.length > 0 && (
         <div>
-          <p className="text-xs font-semibold text-orange-700 mb-1">Axes d'amélioration</p>
+          <p className="text-xs font-semibold text-orange-700 mb-1">Axes d’amélioration</p>
           <ul className="space-y-1">
             {score.improvements.map((s, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-gray-600">

@@ -23,7 +23,7 @@ export default function EntrainementGratuitPage() {
   useEffect(() => {
     fetch('/api/series?free=true')
       .then((r) => r.json())
-      .then((data) => { Array.isArray(data) && setSeries(data); setLoading(false) })
+      .then((data) => { if (Array.isArray(data)) setSeries(data); setLoading(false) })
       .catch(() => setLoading(false))
   }, [])
 

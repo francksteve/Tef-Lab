@@ -51,12 +51,6 @@ const moduleColors: Record<string, string> = {
   EO: 'bg-orange-50 border-orange-200 hover:border-orange-500',
 }
 
-const moduleSeriesPath: Record<string, string> = {
-  CE: '/dashboard/serie',
-  CO: '/dashboard/serie',
-  EE: '/dashboard/serie',
-  EO: '/dashboard/serie',
-}
 
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60)

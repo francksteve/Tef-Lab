@@ -361,7 +361,7 @@ export default function EOPage() {
 
           {/* Self-evaluation checklists */}
           <div className="space-y-4">
-            <h2 className="text-lg font-bold text-gray-900">Grille d'auto-évaluation</h2>
+            <h2 className="text-lg font-bold text-gray-900">Grille d’auto-évaluation</h2>
 
             <div className="bg-white rounded-xl border border-gray-100 p-5">
               <h3 className="font-semibold text-gray-800 mb-3">
@@ -488,7 +488,7 @@ export default function EOPage() {
 
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 space-y-6">
             <h2 className="text-lg font-bold text-gray-900 text-center">
-              Présentation de l'épreuve
+              Présentation de l’épreuve
             </h2>
 
             <div className="space-y-4">
@@ -528,7 +528,7 @@ export default function EOPage() {
                 onClick={() => setStep('prepA')}
                 className="px-8 py-3 bg-tef-blue text-white font-semibold rounded-lg hover:bg-tef-blue-hover transition-colors"
               >
-                Commencer l'épreuve →
+                Commencer l’épreuve →
               </button>
             </div>
           </div>
@@ -546,7 +546,7 @@ export default function EOPage() {
             <span className="inline-block px-3 py-1 bg-tef-blue text-white text-xs font-semibold rounded-full mb-3">
               Section A — Préparation
             </span>
-            <h1 className="text-xl font-bold text-gray-900">Lisez l'annonce suivante</h1>
+            <h1 className="text-xl font-bold text-gray-900">Lisez l’annonce suivante</h1>
           </div>
 
           <div className="bg-white rounded-xl border border-gray-200 p-6">
@@ -558,7 +558,7 @@ export default function EOPage() {
 
           <div className="bg-blue-50 rounded-xl p-5 text-sm text-blue-800">
             <p className="font-semibold mb-1">Consigne</p>
-            <p>Vous téléphonez pour avoir plus d'informations sur cette annonce. Posez une dizaine de questions à votre interlocuteur(trice). Utilisez le vouvoiement.</p>
+            <p>Vous téléphonez pour avoir plus d’informations sur cette annonce. Posez une dizaine de questions à votre interlocuteur(trice). Utilisez le vouvoiement.</p>
           </div>
 
           <Countdown
@@ -640,7 +640,7 @@ export default function EOPage() {
             <span className="inline-block px-3 py-1 bg-orange-500 text-white text-xs font-semibold rounded-full mb-3">
               Section B — Préparation
             </span>
-            <h1 className="text-xl font-bold text-gray-900">Lisez l'annonce suivante</h1>
+            <h1 className="text-xl font-bold text-gray-900">Lisez l’annonce suivante</h1>
           </div>
 
           <div className="bg-white rounded-xl border border-gray-200 p-6">
@@ -652,7 +652,7 @@ export default function EOPage() {
 
           <div className="bg-orange-50 rounded-xl p-5 text-sm text-orange-800">
             <p className="font-semibold mb-1">Consigne</p>
-            <p>Vous en parlez à un(e) ami(e). Présentez ce document et essayez de le / la convaincre d'y participer. Utilisez le tutoiement.</p>
+            <p>Vous en parlez à un(e) ami(e). Présentez ce document et essayez de le / la convaincre d’y participer. Utilisez le tutoiement.</p>
           </div>
 
           <Countdown
@@ -696,7 +696,7 @@ export default function EOPage() {
                 onClick={proceedToResults}
                 className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors"
               >
-                Terminer l'épreuve →
+                Terminer l’épreuve →
               </button>
             </div>
           )}
@@ -752,7 +752,7 @@ function EOSectionCard({
       )}
       {score.improvements.length > 0 && (
         <div>
-          <p className="text-xs font-semibold text-orange-700 mb-1">Axes d'amélioration</p>
+          <p className="text-xs font-semibold text-orange-700 mb-1">Axes d’amélioration</p>
           <ul className="space-y-1">
             {score.improvements.map((s, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-gray-600">

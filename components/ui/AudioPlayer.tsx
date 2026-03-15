@@ -45,7 +45,7 @@ export default function AudioPlayer({ src, label = 'Écouter le document audio' 
       </button>
       {played && (
         <p className="text-sm text-gray-500 italic">
-          Cet audio ne peut être écouté qu'une seule fois.
+          Cet audio ne peut être écouté qu’une seule fois.
         </p>
       )}
     </div>

@@ -36,7 +36,7 @@ export default function CommandesPage() {
     const url = filter === 'ALL' ? '/api/orders' : `/api/orders?status=${filter}`
     fetch(url)
       .then((r) => r.json())
-      .then((data) => { Array.isArray(data) && setOrders(data); setLoading(false) })
+      .then((data) => { if (Array.isArray(data)) setOrders(data); setLoading(false) })
       .catch(() => setLoading(false))
   }
 

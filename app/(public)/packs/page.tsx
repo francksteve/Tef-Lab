@@ -21,7 +21,7 @@ export default function PacksPage() {
   useEffect(() => {
     fetch('/api/packs')
       .then((r) => r.json())
-      .then((data) => { Array.isArray(data) && setPacks(data); setLoading(false) })
+      .then((data) => { if (Array.isArray(data)) setPacks(data); setLoading(false) })
       .catch(() => setLoading(false))
   }, [])
 
