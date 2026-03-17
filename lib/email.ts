@@ -43,7 +43,7 @@ export async function sendNewOrderEmail(data: NewOrderEmailData): Promise<void> 
   const html = `
 <!DOCTYPE html>
 <html lang="fr">
-<head><meta charset="UTF-8"><title>Nouvelle commande – Tef-Lab</title></head>
+<head><meta charset="UTF-8"><title>Nouvelle commande – TEF-LAB</title></head>
 <body style="font-family: Arial, sans-serif; background:#f5f5f5; margin:0; padding:20px;">
   <div style="max-width:600px; margin:0 auto; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
     <!-- En-tête -->
@@ -124,7 +124,7 @@ export async function sendNewOrderEmail(data: NewOrderEmailData): Promise<void> 
 
     <!-- Pied de page -->
     <div style="background:#f5f5f5; padding:16px 32px; text-align:center; color:#888; font-size:12px;">
-      © 2025 Tef-Lab · <a href="${config.siteUrl}" style="color:#0055B3; text-decoration:none;">tef-lab.com</a>
+      © 2025 TEF-LAB · <a href="${config.siteUrl}" style="color:#0055B3; text-decoration:none;">tef-lab.com</a>
     </div>
   </div>
 </body>
@@ -134,7 +134,7 @@ export async function sendNewOrderEmail(data: NewOrderEmailData): Promise<void> 
   await transporter.sendMail({
     from: config.smtp.from,
     to: config.adminEmail,
-    subject: `[Tef-Lab] Nouvelle commande ${data.reference} – ${data.packName}`,
+    subject: `[TEF-LAB] Nouvelle commande ${data.reference} – ${data.packName}`,
     html,
   })
 }
@@ -165,7 +165,7 @@ export async function sendAccountActivatedEmail(data: AccountActivatedEmailData)
   const html = `
 <!DOCTYPE html>
 <html lang="fr">
-<head><meta charset="UTF-8"><title>Votre compte Tef-Lab est activé</title></head>
+<head><meta charset="UTF-8"><title>Votre compte TEF-LAB est activé</title></head>
 <body style="font-family: Arial, sans-serif; background:#f5f5f5; margin:0; padding:20px;">
   <div style="max-width:600px; margin:0 auto; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
     <!-- En-tête -->
@@ -181,7 +181,7 @@ export async function sendAccountActivatedEmail(data: AccountActivatedEmailData)
       <h2 style="color:#003087; margin-top:0;">Félicitations, ${data.visitorName} !</h2>
       <p style="color:#444; line-height:1.6;">
         Votre commande pour le pack <strong>${data.packName}</strong> a été validée.
-        Votre compte Tef-Lab est maintenant actif. Voici vos identifiants de connexion :
+        Votre compte TEF-LAB est maintenant actif. Voici vos identifiants de connexion :
       </p>
 
       <!-- Identifiants -->
@@ -240,7 +240,7 @@ export async function sendAccountActivatedEmail(data: AccountActivatedEmailData)
 
     <!-- Pied de page -->
     <div style="background:#f5f5f5; padding:16px 32px; text-align:center; color:#888; font-size:12px;">
-      © 2025 Tef-Lab · <a href="${config.siteUrl}" style="color:#0055B3; text-decoration:none;">tef-lab.com</a>
+      © 2025 TEF-LAB · <a href="${config.siteUrl}" style="color:#0055B3; text-decoration:none;">tef-lab.com</a>
     </div>
   </div>
 </body>
@@ -250,7 +250,7 @@ export async function sendAccountActivatedEmail(data: AccountActivatedEmailData)
   await transporter.sendMail({
     from: config.smtp.from,
     to: data.visitorEmail,
-    subject: `[Tef-Lab] Votre compte est activé – Bienvenue ${data.visitorName} !`,
+    subject: `[TEF-LAB] Votre compte est activé – Bienvenue ${data.visitorName} !`,
     html,
   })
 }
@@ -264,11 +264,194 @@ export interface OrderRejectedEmailData {
   reference: string
 }
 
+// ─── Template 5 : Paiement confirmé (NotchPay/PayPal) → Client ─────────────
+
+export interface PaymentConfirmedEmailData {
+  clientName: string
+  clientEmail: string
+  packName: string
+  reference: string
+  activatedAt: Date
+  expiresAt: Date
+  moduleAccess: 'EE_EO' | 'ALL'
+}
+
+export async function sendPaymentConfirmedEmail(data: PaymentConfirmedEmailData): Promise<void> {
+  const formatDate = (d: Date) =>
+    new Date(d).toLocaleDateString('fr-FR', {
+      timeZone: 'Africa/Douala',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+
+  const modulesLabel =
+    data.moduleAccess === 'ALL'
+      ? 'CE · CO · EE · EO (tous les modules)'
+      : 'EE · EO (Expression Écrite &amp; Orale)'
+
+  const html = `
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"><title>Paiement confirmé – TEF-LAB</title></head>
+<body style="font-family: Arial, sans-serif; background:#f5f5f5; margin:0; padding:20px;">
+  <div style="max-width:600px; margin:0 auto; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+    <!-- En-tête -->
+    <div style="background:#003087; padding:24px 32px;">
+      <h1 style="color:#fff; margin:0; font-size:22px; font-weight:900;">TEF-LAB</h1>
+      <p style="color:#cce0ff; margin:6px 0 0;">Confirmation de paiement</p>
+    </div>
+
+    <!-- Corps -->
+    <div style="padding:32px;">
+      <!-- Icône succès -->
+      <div style="text-align:center; margin-bottom:24px;">
+        <div style="width:64px; height:64px; background:#d1fae5; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:28px;">✅</div>
+      </div>
+
+      <h2 style="color:#003087; margin-top:0; text-align:center;">Paiement confirmé !</h2>
+      <p style="color:#444; line-height:1.6; text-align:center;">
+        Bonjour <strong>${data.clientName}</strong>,<br>
+        Votre paiement a été reçu et votre abonnement TEF-LAB est maintenant actif.
+      </p>
+
+      <!-- Récapitulatif -->
+      <div style="background:#f0f4ff; border-radius:8px; padding:20px; margin:24px 0;">
+        <h3 style="color:#003087; margin:0 0 16px; font-size:15px; text-transform:uppercase; letter-spacing:0.5px;">Récapitulatif de votre abonnement</h3>
+        <table style="width:100%; border-collapse:collapse;">
+          <tr style="border-bottom:1px solid #dde6ff;">
+            <td style="padding:10px 0; font-weight:bold; color:#003087; width:40%;">Pack</td>
+            <td style="padding:10px 0; font-weight:bold; color:#003087;">${data.packName}</td>
+          </tr>
+          <tr style="border-bottom:1px solid #dde6ff;">
+            <td style="padding:10px 0; font-weight:bold; color:#555;">Référence</td>
+            <td style="padding:10px 0; font-family:monospace; font-size:13px;">${data.reference}</td>
+          </tr>
+          <tr style="border-bottom:1px solid #dde6ff;">
+            <td style="padding:10px 0; font-weight:bold; color:#555;">Modules inclus</td>
+            <td style="padding:10px 0;">${modulesLabel}</td>
+          </tr>
+          <tr style="border-bottom:1px solid #dde6ff;">
+            <td style="padding:10px 0; font-weight:bold; color:#555;">Activé le</td>
+            <td style="padding:10px 0;">${formatDate(data.activatedAt)}</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 0; font-weight:bold; color:#555;">Expire le</td>
+            <td style="padding:10px 0; font-weight:bold; color:#E30613;">${formatDate(data.expiresAt)}</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- Bouton -->
+      <div style="text-align:center; margin:28px 0 16px;">
+        <a href="${config.siteUrl}/dashboard"
+           style="display:inline-block; background:#003087; color:#fff; text-decoration:none;
+                  padding:16px 40px; border-radius:8px; font-size:16px; font-weight:bold;">
+          Accéder à mon espace
+        </a>
+      </div>
+
+      <p style="color:#666; font-size:13px; line-height:1.6; text-align:center;">
+        Une question ? Contactez-nous sur WhatsApp au
+        <a href="https://wa.me/${config.adminWhatsapp}" style="color:#25D366; font-weight:bold;">+237 683 008 287</a>
+      </p>
+    </div>
+
+    <!-- Pied de page -->
+    <div style="background:#f5f5f5; padding:16px 32px; text-align:center; color:#888; font-size:12px;">
+      © 2025 TEF-LAB · <a href="${config.siteUrl}" style="color:#0055B3; text-decoration:none;">tef-lab.com</a>
+    </div>
+  </div>
+</body>
+</html>
+`
+
+  await transporter.sendMail({
+    from: config.smtp.from,
+    to: data.clientEmail,
+    subject: `[TEF-LAB] ✅ Paiement confirmé — Pack ${data.packName}`,
+    html,
+  })
+}
+
+// ─── Template 4 : Réinitialisation de mot de passe ─────────────────────────
+
+export interface PasswordResetEmailData {
+  name: string
+  email: string
+  resetUrl: string
+}
+
+export async function sendPasswordResetEmail(data: PasswordResetEmailData): Promise<void> {
+  const html = `
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"><title>Réinitialisation de mot de passe – TEF-LAB</title></head>
+<body style="font-family: Arial, sans-serif; background:#f5f5f5; margin:0; padding:20px;">
+  <div style="max-width:600px; margin:0 auto; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+    <!-- En-tête -->
+    <div style="background:#003087; padding:24px 32px;">
+      <h1 style="color:#fff; margin:0; font-size:22px; font-weight:900;">TEF-LAB</h1>
+      <p style="color:#cce0ff; margin:6px 0 0;">Réinitialisation de mot de passe</p>
+    </div>
+
+    <!-- Corps -->
+    <div style="padding:32px;">
+      <h2 style="color:#003087; margin-top:0;">Bonjour ${data.name},</h2>
+      <p style="color:#444; line-height:1.6;">
+        Vous avez demandé la réinitialisation de votre mot de passe TEF-LAB.
+        Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe :
+      </p>
+
+      <!-- Bouton -->
+      <div style="text-align:center; margin:32px 0;">
+        <a href="${data.resetUrl}"
+           style="display:inline-block; background:#003087; color:#fff; text-decoration:none;
+                  padding:16px 40px; border-radius:8px; font-size:16px; font-weight:bold;
+                  letter-spacing:0.5px;">
+          Réinitialiser mon mot de passe
+        </a>
+      </div>
+
+      <!-- Avertissements -->
+      <div style="background:#fff3cd; border-left:4px solid #E30613; padding:12px 16px; border-radius:4px; margin-bottom:24px;">
+        <p style="margin:0; color:#856404; font-size:14px; line-height:1.6;">
+          <strong>⚠️ Ce lien expire dans 1 heure.</strong><br>
+          Si vous n'avez pas fait cette demande, ignorez cet email — votre mot de passe reste inchangé.
+        </p>
+      </div>
+
+      <!-- Lien texte de secours -->
+      <p style="color:#888; font-size:12px; line-height:1.6;">
+        Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br>
+        <a href="${data.resetUrl}" style="color:#0055B3; word-break:break-all;">${data.resetUrl}</a>
+      </p>
+    </div>
+
+    <!-- Pied de page -->
+    <div style="background:#f5f5f5; padding:16px 32px; text-align:center; color:#888; font-size:12px;">
+      © 2025 TEF-LAB · <a href="${config.siteUrl}" style="color:#0055B3; text-decoration:none;">tef-lab.com</a>
+    </div>
+  </div>
+</body>
+</html>
+`
+
+  await transporter.sendMail({
+    from: config.smtp.from,
+    to: data.email,
+    subject: '[TEF-LAB] Réinitialisation de votre mot de passe',
+    html,
+  })
+}
+
+// ─── Template 3 : Commande rejetée → Client ────────────────────────────────
+
 export async function sendOrderRejectedEmail(data: OrderRejectedEmailData): Promise<void> {
   const html = `
 <!DOCTYPE html>
 <html lang="fr">
-<head><meta charset="UTF-8"><title>Commande non validée – Tef-Lab</title></head>
+<head><meta charset="UTF-8"><title>Commande non validée – TEF-LAB</title></head>
 <body style="font-family: Arial, sans-serif; background:#f5f5f5; margin:0; padding:20px;">
   <div style="max-width:600px; margin:0 auto; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
     <!-- En-tête -->
@@ -321,7 +504,7 @@ export async function sendOrderRejectedEmail(data: OrderRejectedEmailData): Prom
 
     <!-- Pied de page -->
     <div style="background:#f5f5f5; padding:16px 32px; text-align:center; color:#888; font-size:12px;">
-      © 2025 Tef-Lab · <a href="${config.siteUrl}" style="color:#0055B3; text-decoration:none;">tef-lab.com</a>
+      © 2025 TEF-LAB · <a href="${config.siteUrl}" style="color:#0055B3; text-decoration:none;">tef-lab.com</a>
     </div>
   </div>
 </body>
@@ -331,7 +514,7 @@ export async function sendOrderRejectedEmail(data: OrderRejectedEmailData): Prom
   await transporter.sendMail({
     from: config.smtp.from,
     to: data.visitorEmail,
-    subject: `[Tef-Lab] Votre commande ${data.reference} n'a pas pu être validée`,
+    subject: `[TEF-LAB] Votre commande ${data.reference} n'a pas pu être validée`,
     html,
   })
 }

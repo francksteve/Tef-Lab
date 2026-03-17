@@ -15,8 +15,10 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           {/* Logo */}
           <div>
-            <span className="font-bold text-white text-xl">TEF CAN</span>
-            <span className="font-bold text-tef-red text-xl">237</span>
+            <div className="flex items-center gap-2">
+              <img src="/logo.png" alt="TEF-LAB" className="h-5 w-auto object-contain" />
+              <span className="font-bold text-lg text-white">TEF-LAB</span>
+            </div>
             <p className="text-blue-200 text-sm mt-1">Prépare ton TEF Canada avec confiance</p>
           </div>
 
@@ -35,7 +37,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-blue-700 mt-8 pt-6 text-center text-sm text-blue-300">
-          © 2025 Tef-Lab. Tous droits réservés.
+          © 2025 TEF-LAB. Tous droits réservés.
         </div>
       </div>
     </footer>

@@ -4,33 +4,34 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
 
-const createPackSchema = z.object({
+const packSchema = z.object({
   name: z.string().min(1, 'Le nom est requis'),
   price: z.number().int().positive('Le prix doit être positif'),
   description: z.string().min(1, 'La description est requise'),
-  nbModules: z.number().int().positive(),
-  nbSeriesPerModule: z.number().int().positive(),
-  durationDays: z.number().int().positive('La durée doit être positive'),
+  moduleAccess: z.enum(['EE_EO', 'ALL']),
+  maxSessions: z.number().int().min(1),
+  aiUsagePerDay: z.number().int().min(0),
+  durationDays: z.number().int().positive(),
   isActive: z.boolean().optional(),
-  seriesIds: z.array(z.string()).optional(),
+  isRecommended: z.boolean().optional(),
 })
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url)
+    const showAll = searchParams.get('all') === '1'
+
+    // `?all=1` is reserved for admin — require ADMIN session
+    if (showAll) {
+      const session = await getServerSession(authOptions)
+      if (!session || session.user.role !== 'ADMIN') {
+        return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+      }
+    }
+
     const packs = await prisma.pack.findMany({
-      where: { isActive: true },
-      include: {
-        series: {
-          include: {
-            series: {
-              include: {
-                module: true,
-              },
-            },
-          },
-        },
-      },
-      orderBy: { createdAt: 'asc' },
+      where: showAll ? {} : { isActive: true },
+      orderBy: { price: 'asc' },
     })
     return NextResponse.json(packs)
   } catch (error) {
@@ -45,39 +46,14 @@ export async function POST(req: NextRequest) {
     if (!session || session.user.role !== 'ADMIN') {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
     }
-
     const body = await req.json()
-    const data = createPackSchema.parse(body)
-
-    const pack = await prisma.pack.create({
-      data: {
-        name: data.name,
-        price: data.price,
-        description: data.description,
-        nbModules: data.nbModules,
-        nbSeriesPerModule: data.nbSeriesPerModule,
-        durationDays: data.durationDays,
-        isActive: data.isActive ?? true,
-        ...(data.seriesIds && data.seriesIds.length > 0
-          ? {
-              series: {
-                create: data.seriesIds.map((sid) => ({ seriesId: sid })),
-              },
-            }
-          : {}),
-      },
-      include: {
-        series: {
-          include: { series: true },
-        },
-      },
-    })
-
+    const parsed = packSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.issues[0]?.message }, { status: 400 })
+    }
+    const pack = await prisma.pack.create({ data: { ...parsed.data, isActive: parsed.data.isActive ?? true, isRecommended: parsed.data.isRecommended ?? false } })
     return NextResponse.json(pack, { status: 201 })
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues }, { status: 400 })
-    }
     console.error('[API_ERROR] POST /api/packs', error)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }

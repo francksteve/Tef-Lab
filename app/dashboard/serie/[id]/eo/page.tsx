@@ -45,25 +45,11 @@ type EoStep =
   | 'results'
   | 'scoring'
 
-// Placeholder announcement texts (would come from series data in a full implementation)
-const ANNONCE_A = `OFFRE D'EMPLOI — AIDE À DOMICILE
-Nous recherchons une personne dynamique et bienveillante pour accompagner une personne âgée dans ses tâches quotidiennes.
-- Expérience souhaitée
-- Permis B requis
-- Poste à temps partiel — 20h/semaine
-- Rémunération : selon convention collective
-
-Contactez-nous pour plus d'informations.`
-
-const ANNONCE_B = `CIRCUIT QUÉBEC — 8 JOURS / 7 NUITS
-Découvrez le Québec en toute sérénité avec notre circuit complet.
-- Villes : Montréal, Québec, Saguenay
-- Hébergement 3* inclus
-- Guide francophone tout au long du séjour
-- Départ tous les samedis
-- À partir de 1 490 € par personne
-
-Une expérience inoubliable vous attend !`
+interface SectionData {
+  longText: string | null
+  imageUrl: string | null
+  consigne: string
+}
 
 function Countdown({
   seconds,
@@ -125,6 +111,16 @@ export default function EOPage() {
   const seriesId = params.id as string
 
   const [series, setSeries] = useState<Series | null>(null)
+  const [sectionA, setSectionA] = useState<SectionData>({
+    longText: null,
+    imageUrl: null,
+    consigne: "Vous téléphonez pour avoir plus d'informations sur cette annonce. Posez une dizaine de questions à votre interlocuteur(trice). Utilisez le vouvoiement.",
+  })
+  const [sectionB, setSectionB] = useState<SectionData>({
+    longText: null,
+    imageUrl: null,
+    consigne: "Vous en parlez à un(e) ami(e). Présentez ce document et essayez de le / la convaincre d'y participer. Utilisez le tutoiement.",
+  })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -162,13 +158,36 @@ export default function EOPage() {
       router.push('/connexion')
       return
     }
-    fetch(`/api/series/${seriesId}`)
-      .then((r) => r.json())
-      .then((data: unknown) => {
-        if (data && typeof data === 'object' && 'id' in data) {
-          setSeries(data as Series)
+    Promise.all([
+      fetch(`/api/series/${seriesId}`).then((r) => r.json()),
+      fetch(`/api/series/${seriesId}/questions`).then((r) => r.json()),
+    ])
+      .then(([seriesData, questionsData]) => {
+        if (seriesData && typeof seriesData === 'object' && 'id' in seriesData) {
+          setSeries(seriesData as Series)
         } else {
           setError('Série introuvable.')
+          setLoading(false)
+          return
+        }
+        // Extract Section A and B from questions
+        if (Array.isArray(questionsData)) {
+          const qA = questionsData.find((q: { category?: string }) => q.category === 'SECTION_A')
+          const qB = questionsData.find((q: { category?: string }) => q.category === 'SECTION_B')
+          if (qA) {
+            setSectionA({
+              longText: qA.longText ?? null,
+              imageUrl: qA.imageUrl ?? null,
+              consigne: qA.question || "Vous téléphonez pour avoir plus d'informations sur cette annonce. Posez une dizaine de questions à votre interlocuteur(trice). Utilisez le vouvoiement.",
+            })
+          }
+          if (qB) {
+            setSectionB({
+              longText: qB.longText ?? null,
+              imageUrl: qB.imageUrl ?? null,
+              consigne: qB.question || "Vous en parlez à un(e) ami(e). Présentez ce document et essayez de le / la convaincre d'y participer. Utilisez le tutoiement.",
+            })
+          }
         }
         setLoading(false)
       })
@@ -214,8 +233,8 @@ export default function EOPage() {
         body: JSON.stringify({
           transcriptionA: '[Transcription audio non disponible — évaluation basée sur auto-évaluation]',
           transcriptionB: '[Transcription audio non disponible — évaluation basée sur auto-évaluation]',
-          announcementA: ANNONCE_A,
-          announcementB: ANNONCE_B,
+          announcementA: sectionA.longText ?? '[Document non disponible]',
+          announcementB: sectionB.longText ?? '[Document non disponible]',
         }),
       })
       if (res.ok) {
@@ -361,7 +380,7 @@ export default function EOPage() {
 
           {/* Self-evaluation checklists */}
           <div className="space-y-4">
-            <h2 className="text-lg font-bold text-gray-900">Grille d’auto-évaluation</h2>
+            <h2 className="text-lg font-bold text-gray-900">Grille d'auto-évaluation</h2>
 
             <div className="bg-white rounded-xl border border-gray-100 p-5">
               <h3 className="font-semibold text-gray-800 mb-3">
@@ -488,7 +507,7 @@ export default function EOPage() {
 
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 space-y-6">
             <h2 className="text-lg font-bold text-gray-900 text-center">
-              Présentation de l’épreuve
+              Présentation de l'épreuve
             </h2>
 
             <div className="space-y-4">
@@ -528,7 +547,7 @@ export default function EOPage() {
                 onClick={() => setStep('prepA')}
                 className="px-8 py-3 bg-tef-blue text-white font-semibold rounded-lg hover:bg-tef-blue-hover transition-colors"
               >
-                Commencer l’épreuve →
+                Commencer l'épreuve →
               </button>
             </div>
           </div>
@@ -546,20 +565,10 @@ export default function EOPage() {
             <span className="inline-block px-3 py-1 bg-tef-blue text-white text-xs font-semibold rounded-full mb-3">
               Section A — Préparation
             </span>
-            <h1 className="text-xl font-bold text-gray-900">Lisez l’annonce suivante</h1>
+            <h1 className="text-xl font-bold text-gray-900">Lisez l'annonce suivante</h1>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <p className="text-sm font-semibold text-gray-500 mb-3">Document support</p>
-            <pre className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap font-sans">
-              {ANNONCE_A}
-            </pre>
-          </div>
-
-          <div className="bg-blue-50 rounded-xl p-5 text-sm text-blue-800">
-            <p className="font-semibold mb-1">Consigne</p>
-            <p>Vous téléphonez pour avoir plus d’informations sur cette annonce. Posez une dizaine de questions à votre interlocuteur(trice). Utilisez le vouvoiement.</p>
-          </div>
+          <SectionDocument section={sectionA} consigne={sectionA.consigne} consigneColor="blue" />
 
           <Countdown
             seconds={30}
@@ -584,9 +593,7 @@ export default function EOPage() {
             <p className="text-sm text-gray-500 mt-1">Durée maximum : 5 minutes</p>
           </div>
 
-          <div className="bg-gray-50 rounded-xl border border-gray-200 p-4 text-xs text-gray-500">
-            <pre className="whitespace-pre-wrap font-sans leading-relaxed">{ANNONCE_A}</pre>
-          </div>
+          <SectionDocument section={sectionA} compact />
 
           <div className="bg-white rounded-xl border border-gray-100 p-6">
             <AudioRecorder
@@ -640,20 +647,10 @@ export default function EOPage() {
             <span className="inline-block px-3 py-1 bg-orange-500 text-white text-xs font-semibold rounded-full mb-3">
               Section B — Préparation
             </span>
-            <h1 className="text-xl font-bold text-gray-900">Lisez l’annonce suivante</h1>
+            <h1 className="text-xl font-bold text-gray-900">Lisez l'annonce suivante</h1>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 p-6">
-            <p className="text-sm font-semibold text-gray-500 mb-3">Document support</p>
-            <pre className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap font-sans">
-              {ANNONCE_B}
-            </pre>
-          </div>
-
-          <div className="bg-orange-50 rounded-xl p-5 text-sm text-orange-800">
-            <p className="font-semibold mb-1">Consigne</p>
-            <p>Vous en parlez à un(e) ami(e). Présentez ce document et essayez de le / la convaincre d’y participer. Utilisez le tutoiement.</p>
-          </div>
+          <SectionDocument section={sectionB} consigne={sectionB.consigne} consigneColor="orange" />
 
           <Countdown
             seconds={60}
@@ -678,9 +675,7 @@ export default function EOPage() {
             <p className="text-sm text-gray-500 mt-1">Durée maximum : 10 minutes</p>
           </div>
 
-          <div className="bg-gray-50 rounded-xl border border-gray-200 p-4 text-xs text-gray-500">
-            <pre className="whitespace-pre-wrap font-sans leading-relaxed">{ANNONCE_B}</pre>
-          </div>
+          <SectionDocument section={sectionB} compact />
 
           <div className="bg-white rounded-xl border border-gray-100 p-6">
             <AudioRecorder
@@ -696,7 +691,7 @@ export default function EOPage() {
                 onClick={proceedToResults}
                 className="px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors"
               >
-                Terminer l’épreuve →
+                Terminer l'épreuve →
               </button>
             </div>
           )}
@@ -706,6 +701,70 @@ export default function EOPage() {
   }
 
   return null
+}
+
+/**
+ * Displays the announcement document for a section.
+ * Order: longText → consigne (optional) → imageUrl
+ * - compact=true → smaller container used during recording step (no consigne)
+ */
+function SectionDocument({
+  section,
+  compact = false,
+  consigne,
+  consigneColor = 'blue',
+}: {
+  section: SectionData
+  compact?: boolean
+  consigne?: string
+  consigneColor?: 'blue' | 'orange'
+}) {
+  const hasContent = section.imageUrl || section.longText
+  if (!hasContent && !consigne) return null
+
+  const consigneBg = consigneColor === 'orange'
+    ? 'bg-orange-50 text-orange-800'
+    : 'bg-blue-50 text-blue-800'
+
+  return (
+    <div className="space-y-4">
+      {/* 1 — Texte du document */}
+      {section.longText && (
+        <div className={`bg-white rounded-xl border border-gray-200 ${compact ? 'p-3' : 'p-6'}`}>
+          {!compact && (
+            <p className="text-sm font-semibold text-gray-500 mb-3">Document support</p>
+          )}
+          <pre className={`whitespace-pre-wrap font-sans leading-relaxed ${
+            compact ? 'text-xs text-gray-500' : 'text-sm text-gray-700'
+          }`}>
+            {section.longText}
+          </pre>
+        </div>
+      )}
+
+      {/* 2 — Consigne */}
+      {!compact && consigne && (
+        <div className={`rounded-xl p-5 text-sm ${consigneBg}`}>
+          <p className="font-semibold mb-1">Consigne</p>
+          <p>{consigne}</p>
+        </div>
+      )}
+
+      {/* 3 — Image */}
+      {section.imageUrl && (
+        <div className={`bg-white rounded-xl border border-gray-200 ${compact ? 'p-3' : 'p-6'}`}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={section.imageUrl}
+            alt="Annonce"
+            className={`w-full object-contain rounded-lg border border-gray-100 bg-gray-50 ${
+              compact ? 'max-h-48' : 'max-h-96'
+            }`}
+          />
+        </div>
+      )}
+    </div>
+  )
 }
 
 function EOSectionCard({
@@ -752,7 +811,7 @@ function EOSectionCard({
       )}
       {score.improvements.length > 0 && (
         <div>
-          <p className="text-xs font-semibold text-orange-700 mb-1">Axes d’amélioration</p>
+          <p className="text-xs font-semibold text-orange-700 mb-1">Axes d'amélioration</p>
           <ul className="space-y-1">
             {score.improvements.map((s, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-gray-600">

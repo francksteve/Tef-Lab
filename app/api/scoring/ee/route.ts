@@ -46,8 +46,10 @@ export async function POST(req: NextRequest) {
       ],
     })
 
-    const responseText = (message.content[0] as { type: string; text: string }).text
-    const result = JSON.parse(responseText)
+    const rawText = (message.content[0] as { type: string; text: string }).text
+    // Strip markdown code fences if present (```json ... ``` or ``` ... ```)
+    const jsonText = rawText.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim()
+    const result = JSON.parse(jsonText)
 
     return NextResponse.json(result)
   } catch (error) {

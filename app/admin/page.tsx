@@ -48,7 +48,7 @@ export default function AdminDashboard() {
     <div className="p-6 space-y-8 max-w-6xl mx-auto">
       <div>
         <h1 className="text-2xl font-extrabold text-gray-900">Tableau de bord</h1>
-        <p className="text-gray-500 text-sm mt-1">Vue d'ensemble de la plateforme Tef-Lab</p>
+        <p className="text-gray-500 text-sm mt-1">Vue d'ensemble de la plateforme TEF-LAB</p>
       </div>
 
       {/* Stats */}
@@ -108,23 +108,6 @@ export default function AdminDashboard() {
         )}
       </div>
 
-      {/* Quick links */}
-      <div className="grid sm:grid-cols-3 gap-4">
-        {[
-          { href: '/admin/utilisateurs', label: 'Gérer les utilisateurs', icon: '👥' },
-          { href: '/admin/series', label: 'Gérer les séries', icon: '📚' },
-          { href: '/admin/questions', label: 'Gérer les questions', icon: '❓' },
-        ].map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="flex items-center gap-3 p-4 bg-white rounded-xl border border-gray-100 shadow-sm hover:border-tef-blue hover:shadow-md transition-all"
-          >
-            <span className="text-2xl">{item.icon}</span>
-            <span className="font-medium text-gray-900 text-sm">{item.label}</span>
-          </Link>
-        ))}
-      </div>
     </div>
   )
 }

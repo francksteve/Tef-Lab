@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  font-size: 18.5px;
+}
+
 :root {
   --tef-blue: #003087;
   --tef-red: #E30613;

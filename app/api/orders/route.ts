@@ -5,6 +5,7 @@ import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
 import { sendNewOrderEmail } from '@/lib/email'
 import { generateVisitorToAdminLink } from '@/lib/whatsapp'
+import { createNotification } from '@/lib/notifications'
 
 const createOrderSchema = z.object({
   packId: z.string(),
@@ -56,6 +57,22 @@ export async function POST(req: NextRequest) {
       visitorMessage: data.visitorMessage,
       createdAt: order.createdAt,
     }).catch(console.error)
+
+    // In-app notification for all admin accounts (fire-and-forget)
+    prisma.user
+      .findMany({ where: { role: 'ADMIN' } })
+      .then((admins) => {
+        for (const admin of admins) {
+          createNotification({
+            userId: admin.id,
+            type: 'NEW_ORDER',
+            title: '🛒 Nouvelle commande manuelle',
+            message: `${data.visitorName} a commandé le pack ${pack.name} (${reference}).`,
+            actionUrl: '/admin/commandes',
+          }).catch(console.error)
+        }
+      })
+      .catch(console.error)
 
     const whatsappLink = generateVisitorToAdminLink({
       packName: pack.name,

@@ -6,10 +6,12 @@ interface Pack {
   name: string
   price: number
   description: string
-  nbModules: number
-  nbSeriesPerModule: number
+  moduleAccess: 'EE_EO' | 'ALL'
+  maxSessions: number
+  aiUsagePerDay: number
   durationDays: number
   isActive: boolean
+  isRecommended: boolean
   createdAt: string
 }
 
@@ -17,20 +19,29 @@ interface PackFormData {
   name: string
   price: string
   description: string
-  nbModules: string
-  nbSeriesPerModule: string
+  moduleAccess: 'EE_EO' | 'ALL'
+  maxSessions: string
+  aiUsagePerDay: string
   durationDays: string
   isActive: boolean
+  isRecommended: boolean
 }
 
 const emptyForm: PackFormData = {
   name: '',
   price: '',
   description: '',
-  nbModules: '4',
-  nbSeriesPerModule: '5',
+  moduleAccess: 'ALL',
+  maxSessions: '1',
+  aiUsagePerDay: '5',
   durationDays: '30',
   isActive: true,
+  isRecommended: false,
+}
+
+const moduleAccessLabels: Record<string, string> = {
+  EE_EO: 'Expression Écrite & Orale uniquement',
+  ALL: 'Tous les modules (CE, CO, EE, EO)',
 }
 
 export default function PacksAdminPage() {
@@ -44,8 +55,7 @@ export default function PacksAdminPage() {
 
   const loadPacks = () => {
     setLoading(true)
-    // Fetch all packs including inactive — admin-only endpoint shows all
-    fetch('/api/packs')
+    fetch('/api/packs?all=1')
       .then((r) => r.json())
       .then((data) => {
         if (Array.isArray(data)) setPacks(data)
@@ -71,10 +81,12 @@ export default function PacksAdminPage() {
       name: pack.name,
       price: String(pack.price),
       description: pack.description,
-      nbModules: String(pack.nbModules),
-      nbSeriesPerModule: String(pack.nbSeriesPerModule),
+      moduleAccess: pack.moduleAccess,
+      maxSessions: String(pack.maxSessions),
+      aiUsagePerDay: String(pack.aiUsagePerDay),
       durationDays: String(pack.durationDays),
       isActive: pack.isActive,
+      isRecommended: pack.isRecommended,
     })
     setShowForm(true)
     setError(null)
@@ -96,10 +108,12 @@ export default function PacksAdminPage() {
       name: form.name.trim(),
       price: parseInt(form.price, 10),
       description: form.description.trim(),
-      nbModules: parseInt(form.nbModules, 10),
-      nbSeriesPerModule: parseInt(form.nbSeriesPerModule, 10),
+      moduleAccess: form.moduleAccess,
+      maxSessions: parseInt(form.maxSessions, 10),
+      aiUsagePerDay: parseInt(form.aiUsagePerDay, 10),
       durationDays: parseInt(form.durationDays, 10),
       isActive: form.isActive,
+      isRecommended: form.isRecommended,
     }
 
     try {
@@ -138,7 +152,7 @@ export default function PacksAdminPage() {
     }
   }
 
-  const field = (
+  const inp = (
     label: string,
     key: keyof PackFormData,
     type: string = 'text',
@@ -178,73 +192,79 @@ export default function PacksAdminPage() {
         </div>
       )}
 
-      {/* Formulaire */}
+      {/* Form */}
       {showForm && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-          <h2 className="text-lg font-bold text-gray-900 mb-4">
+          <h2 className="text-lg font-bold text-gray-900 mb-5">
             {editingId ? 'Modifier le pack' : 'Nouveau pack'}
           </h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Row 1: name + price */}
             <div className="grid sm:grid-cols-2 gap-4">
-              {field('Nom du pack', 'name')}
-              {field('Prix (FCFA)', 'price', 'number', { min: 0 })}
+              {inp('Nom du pack', 'name')}
+              {inp('Prix (FCFA)', 'price', 'number', { min: 0 })}
             </div>
+
+            {/* Description */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
               <textarea
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-                rows={3}
+                rows={2}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue"
                 required
               />
             </div>
-            <div className="grid sm:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nb modules (1-4)</label>
-                <input
-                  type="number"
-                  min={1}
-                  max={4}
-                  value={form.nbModules}
-                  onChange={(e) => setForm((f) => ({ ...f, nbModules: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Séries / module</label>
-                <input
-                  type="number"
-                  min={1}
-                  value={form.nbSeriesPerModule}
-                  onChange={(e) => setForm((f) => ({ ...f, nbSeriesPerModule: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Durée (jours)</label>
-                <input
-                  type="number"
-                  min={1}
-                  value={form.durationDays}
-                  onChange={(e) => setForm((f) => ({ ...f, durationDays: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue"
-                  required
-                />
-              </div>
+
+            {/* Module access */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Accès aux modules
+              </label>
+              <select
+                value={form.moduleAccess}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, moduleAccess: e.target.value as 'EE_EO' | 'ALL' }))
+                }
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue bg-white"
+                required
+              >
+                <option value="ALL">ALL — Tous les modules (CE, CO, EE, EO)</option>
+                <option value="EE_EO">EE_EO — Expression Écrite &amp; Orale uniquement</option>
+              </select>
             </div>
-            <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={form.isActive}
-                onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))}
-                className="w-4 h-4 accent-tef-blue"
-              />
-              Pack actif (visible sur le site)
-            </label>
-            <div className="flex gap-3 pt-2">
+
+            {/* Numeric fields */}
+            <div className="grid sm:grid-cols-3 gap-4">
+              {inp('Sessions simultanées max', 'maxSessions', 'number', { min: 1 })}
+              {inp('Corrections IA / jour', 'aiUsagePerDay', 'number', { min: 0 })}
+              {inp("Durée d'accès (jours)", 'durationDays', 'number', { min: 1 })}
+            </div>
+
+            {/* Checkboxes */}
+            <div className="flex flex-wrap gap-6">
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.isActive}
+                  onChange={(e) => setForm((f) => ({ ...f, isActive: e.target.checked }))}
+                  className="w-4 h-4 accent-tef-blue"
+                />
+                Pack actif (visible sur le site)
+              </label>
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.isRecommended}
+                  onChange={(e) => setForm((f) => ({ ...f, isRecommended: e.target.checked }))}
+                  className="w-4 h-4 accent-tef-blue"
+                />
+                ⭐ Pack recommandé (badge affiché)
+              </label>
+            </div>
+
+            <div className="flex gap-3 pt-1">
               <button
                 type="submit"
                 disabled={submitting}
@@ -264,7 +284,7 @@ export default function PacksAdminPage() {
         </div>
       )}
 
-      {/* Liste */}
+      {/* Table */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         {loading ? (
           <div className="p-10 text-center text-gray-400">Chargement…</div>
@@ -275,34 +295,70 @@ export default function PacksAdminPage() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr>
-                  {['Nom', 'Prix', 'Modules', 'Durée', 'Statut', 'Actions'].map((h) => (
-                    <th
-                      key={h}
-                      className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
-                    >
-                      {h}
-                    </th>
-                  ))}
+                  {['Nom / Description', 'Prix', 'Accès', 'IA/j', 'Sessions', 'Durée', 'Statut', 'Actions'].map(
+                    (h) => (
+                      <th
+                        key={h}
+                        className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                      >
+                        {h}
+                      </th>
+                    )
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {packs.map((pack) => (
                   <tr key={pack.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3">
-                      <p className="font-medium text-gray-900">{pack.name}</p>
-                      <p className="text-xs text-gray-500 line-clamp-1">{pack.description}</p>
+                      <div className="flex items-center gap-2">
+                        <div>
+                          <p className="font-semibold text-gray-900">
+                            {pack.name}
+                            {pack.isRecommended && (
+                              <span className="ml-2 text-xs bg-tef-blue/10 text-tef-blue px-2 py-0.5 rounded-full font-bold">
+                                ⭐ Recommandé
+                              </span>
+                            )}
+                          </p>
+                          <p className="text-xs text-gray-500 line-clamp-1 max-w-[180px]">
+                            {pack.description}
+                          </p>
+                        </div>
+                      </div>
                     </td>
-                    <td className="px-4 py-3 font-semibold text-gray-900">
+                    <td className="px-4 py-3 font-semibold text-gray-900 whitespace-nowrap">
                       {pack.price.toLocaleString('fr-FR')} FCFA
                     </td>
-                    <td className="px-4 py-3 text-gray-600">
-                      {pack.nbModules} mod. × {pack.nbSeriesPerModule} séries
+                    <td className="px-4 py-3">
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${
+                          pack.moduleAccess === 'ALL'
+                            ? 'bg-blue-100 text-blue-700'
+                            : 'bg-purple-100 text-purple-700'
+                        }`}
+                      >
+                        {pack.moduleAccess}
+                      </span>
+                      <p className="text-xs text-gray-400 mt-0.5 hidden xl:block">
+                        {moduleAccessLabels[pack.moduleAccess]}
+                      </p>
                     </td>
-                    <td className="px-4 py-3 text-gray-600">{pack.durationDays} jours</td>
+                    <td className="px-4 py-3 text-gray-700 text-center font-medium">
+                      {pack.aiUsagePerDay}
+                    </td>
+                    <td className="px-4 py-3 text-gray-700 text-center font-medium">
+                      {pack.maxSessions}
+                    </td>
+                    <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                      {pack.durationDays} j
+                    </td>
                     <td className="px-4 py-3">
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                          pack.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
+                          pack.isActive
+                            ? 'bg-green-100 text-green-700'
+                            : 'bg-gray-100 text-gray-500'
                         }`}
                       >
                         {pack.isActive ? 'Actif' : 'Inactif'}

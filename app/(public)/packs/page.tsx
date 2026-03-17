@@ -1,129 +1,257 @@
 'use client'
 import { useState, useEffect } from 'react'
-import OrderModal from '@/components/ui/OrderModal'
+import PaymentModal from '@/components/ui/PaymentModal'
 
 interface Pack {
   id: string
   name: string
   price: number
   description: string
-  nbModules: number
-  nbSeriesPerModule: number
+  moduleAccess: 'EE_EO' | 'ALL'
+  maxSessions: number
+  aiUsagePerDay: number
   durationDays: number
+  isRecommended: boolean
+  isActive: boolean
+}
+
+interface Settings {
+  usdExchangeRate: number
+  discountRate: number
+}
+
+const moduleLabels: Record<string, string> = {
+  EE_EO: 'Expression Écrite & Orale uniquement',
+  ALL: 'Tous les modules (CE, CO, EE, EO)',
 }
 
 export default function PacksPage() {
   const [packs, setPacks] = useState<Pack[]>([])
+  const [settings, setSettings] = useState<Settings>({ usdExchangeRate: 0.00165, discountRate: 0 })
   const [loading, setLoading] = useState(true)
   const [selectedPack, setSelectedPack] = useState<Pack | null>(null)
-  const [modalOpen, setModalOpen] = useState(false)
+  const [payModalOpen, setPayModalOpen] = useState(false)
 
   useEffect(() => {
-    fetch('/api/packs')
-      .then((r) => r.json())
-      .then((data) => { if (Array.isArray(data)) setPacks(data); setLoading(false) })
+    Promise.all([
+      fetch('/api/packs').then((r) => r.json()),
+      fetch('/api/settings').then((r) => r.json()),
+    ])
+      .then(([p, s]) => {
+        if (Array.isArray(p)) setPacks(p)
+        if (s?.usdExchangeRate) setSettings(s)
+        setLoading(false)
+      })
       .catch(() => setLoading(false))
   }, [])
 
-  const modules = ['CE', 'CO', 'EE', 'EO']
-  const moduleNames: Record<string, string> = {
-    CE: 'Compréhension Écrite',
-    CO: 'Compréhension Orale',
-    EE: 'Expression Écrite',
-    EO: 'Expression Orale',
+  const finalPrice = (price: number) =>
+    Math.round(price * (1 - settings.discountRate / 100))
+
+  const usdPrice = (price: number) =>
+    (finalPrice(price) * settings.usdExchangeRate).toFixed(2)
+
+  const openPayment = (pack: Pack) => {
+    setSelectedPack(pack)
+    setPayModalOpen(true)
   }
 
   return (
     <div className="min-h-screen">
-      {/* Header */}
-      <section className="bg-tef-blue text-white py-14 px-4">
+      {/* Hero */}
+      <section className="bg-tef-blue text-white py-16 px-4">
         <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-3xl sm:text-4xl font-extrabold mb-3">Nos packs de préparation</h1>
-          <p className="text-blue-200 max-w-xl mx-auto">
-            Tous les packs incluent un accès complet aux séries d'entraînement et à la correction par IA.
+          <h1 className="text-3xl sm:text-4xl font-extrabold mb-4">
+            Nos packs de préparation TEF Canada
+          </h1>
+          <p className="text-blue-200 max-w-2xl mx-auto text-base leading-relaxed">
+            Paiement sécurisé via NotchPay · Orange Money · MTN MoMo · Visa · Mastercard.
+            Accès activé instantanément après confirmation du paiement.
           </p>
         </div>
       </section>
 
-      {/* Packs grid */}
-      <section className="py-14 px-4">
-        <div className="max-w-5xl mx-auto">
+      {/* Content */}
+      <section className="py-12 px-4">
+        <div className="max-w-6xl mx-auto">
           {loading ? (
-            <div className="text-center py-16 text-gray-400">Chargement des packs…</div>
-          ) : packs.length === 0 ? (
-            <div className="text-center py-16 text-gray-400">
-              <p className="text-5xl mb-4">📦</p>
-              <p>Aucun pack disponible pour le moment. Revenez bientôt !</p>
+            <div className="text-center py-20 text-gray-400">
+              <p className="text-4xl mb-4">📦</p>
+              <p>Chargement des packs…</p>
             </div>
           ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
-              {packs.map((pack) => (
-                <div key={pack.id} className="bg-white rounded-2xl shadow-md border border-gray-100 flex flex-col overflow-hidden">
-                  <div className="bg-tef-blue p-5 text-white">
-                    <h2 className="text-xl font-bold">{pack.name}</h2>
-                    <p className="text-3xl font-extrabold mt-2">
-                      {pack.price.toLocaleString('fr-FR')} <span className="text-base font-medium">FCFA</span>
-                    </p>
-                  </div>
-                  <div className="p-5 flex-1 space-y-4">
-                    <p className="text-sm text-gray-600">{pack.description}</p>
-                    <ul className="space-y-2">
-                      {modules.slice(0, pack.nbModules).map((code) => (
-                        <li key={code} className="flex items-center gap-2 text-sm text-gray-700">
-                          <span className="text-green-500 font-bold">✓</span>
-                          {moduleNames[code]}
-                        </li>
-                      ))}
-                      <li className="flex items-center gap-2 text-sm text-gray-700">
-                        <span className="text-green-500 font-bold">✓</span>
-                        {pack.nbSeriesPerModule} séries par module
-                      </li>
-                      <li className="flex items-center gap-2 text-sm text-gray-700">
-                        <span className="text-green-500 font-bold">✓</span>
-                        {pack.durationDays} jours d'accès
-                      </li>
-                      <li className="flex items-center gap-2 text-sm text-gray-700">
-                        <span className="text-green-500 font-bold">✓</span>
-                        Correction par IA (EE & EO)
-                      </li>
-                    </ul>
-                  </div>
-                  <div className="p-5 border-t">
-                    <button
-                      onClick={() => { setSelectedPack(pack); setModalOpen(true) }}
-                      className="w-full py-3 bg-tef-red text-white font-bold rounded-xl hover:bg-red-700 transition-colors"
-                    >
-                      Commander ce pack
-                    </button>
-                    <p className="text-xs text-center text-gray-400 mt-2">
-                      Paiement via Orange Money / MTN MoMo
-                    </p>
-                  </div>
+            <>
+              {/* Discount banner */}
+              {settings.discountRate > 0 && (
+                <div className="mb-8 flex items-center justify-center gap-2 px-6 py-3.5 bg-green-50 border border-green-300 rounded-2xl text-sm font-bold text-green-700 max-w-md mx-auto shadow-sm">
+                  🎉 Remise de {settings.discountRate}% appliquée sur tous les packs !
                 </div>
-              ))}
-            </div>
+              )}
+
+              {/* Packs grid */}
+              {packs.length === 0 ? (
+                <div className="text-center py-16 text-gray-400">
+                  <p className="text-5xl mb-4">📦</p>
+                  <p>Aucun pack disponible pour le moment. Revenez bientôt !</p>
+                </div>
+              ) : (
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                  {packs.map((pack) => {
+                    const discounted = finalPrice(pack.price)
+                    const hasDiscount = discounted < pack.price
+                    return (
+                      <div
+                        key={pack.id}
+                        className={`relative rounded-2xl border-2 flex flex-col transition-all ${
+                          pack.isRecommended
+                            ? 'border-tef-blue shadow-xl shadow-tef-blue/10'
+                            : 'border-gray-200 shadow-sm hover:shadow-md'
+                        }`}
+                      >
+                        {pack.isRecommended && (
+                          <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+                            <span className="bg-tef-blue text-white text-xs font-bold px-4 py-1.5 rounded-full shadow whitespace-nowrap">
+                              ⭐ Recommandé
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Pack header */}
+                        <div
+                          className={`px-5 pt-7 pb-4 rounded-t-2xl ${
+                            pack.isRecommended ? 'bg-tef-blue text-white' : 'bg-gray-50'
+                          }`}
+                        >
+                          <h3
+                            className={`font-extrabold text-lg ${
+                              pack.isRecommended ? 'text-white' : 'text-gray-900'
+                            }`}
+                          >
+                            {pack.name}
+                          </h3>
+                          <div className="flex items-baseline gap-1 mt-2">
+                            <span
+                              className={`text-3xl font-black ${
+                                pack.isRecommended ? 'text-white' : 'text-tef-blue'
+                              }`}
+                            >
+                              {discounted.toLocaleString('fr-FR')}
+                            </span>
+                            <span
+                              className={`text-sm font-medium ${
+                                pack.isRecommended ? 'text-blue-200' : 'text-gray-500'
+                              }`}
+                            >
+                              FCFA
+                            </span>
+                            {hasDiscount && (
+                              <span className="text-sm line-through text-red-300 ml-1">
+                                {pack.price.toLocaleString('fr-FR')}
+                              </span>
+                            )}
+                          </div>
+                          <p
+                            className={`text-xs mt-0.5 ${
+                              pack.isRecommended ? 'text-blue-200' : 'text-gray-400'
+                            }`}
+                          >
+                            ≈ ${usdPrice(pack.price)} USD
+                          </p>
+                        </div>
+
+                        {/* Pack features */}
+                        <div className="px-5 py-4 flex-1 space-y-2">
+                          <p className="text-xs text-gray-500 leading-relaxed mb-3">
+                            {pack.description}
+                          </p>
+                          <div className="flex items-start gap-2 text-xs text-gray-700">
+                            <span className="text-green-500 font-bold mt-0.5 flex-shrink-0">✓</span>
+                            <span>{moduleLabels[pack.moduleAccess]}</span>
+                          </div>
+                          <div className="flex items-start gap-2 text-xs text-gray-700">
+                            <span className="text-green-500 font-bold mt-0.5 flex-shrink-0">✓</span>
+                            <span>
+                              {pack.maxSessions} session{pack.maxSessions > 1 ? 's' : ''} simultanée{pack.maxSessions > 1 ? 's' : ''}
+                            </span>
+                          </div>
+                          <div className="flex items-start gap-2 text-xs text-gray-700">
+                            <span className="text-green-500 font-bold mt-0.5 flex-shrink-0">✓</span>
+                            <span>
+                              {pack.aiUsagePerDay} correction{pack.aiUsagePerDay > 1 ? 's' : ''} IA par jour
+                            </span>
+                          </div>
+                          <div className="flex items-start gap-2 text-xs text-gray-700">
+                            <span className="text-green-500 font-bold mt-0.5 flex-shrink-0">✓</span>
+                            <span>{pack.durationDays} jours d'accès</span>
+                          </div>
+                        </div>
+
+                        {/* CTA */}
+                        <div className="px-5 pb-5">
+                          <button
+                            onClick={() => openPayment(pack)}
+                            className={`w-full py-3 font-bold rounded-xl text-sm transition-colors ${
+                              pack.isRecommended
+                                ? 'bg-tef-blue text-white hover:bg-tef-blue-hover'
+                                : 'bg-gray-900 text-white hover:bg-gray-700'
+                            }`}
+                          >
+                            Payer →
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              <p className="text-center text-xs text-gray-400 mt-10">
+                🔒 Paiement sécurisé · Orange Money · MTN MoMo · Visa · Mastercard
+              </p>
+            </>
           )}
         </div>
       </section>
 
       {/* FAQ */}
       <section className="py-14 px-4 bg-gray-50">
-        <div className="max-w-2xl mx-auto space-y-6">
-          <h2 className="text-2xl font-bold text-center text-gray-900 mb-8">Questions fréquentes</h2>
-          {[
-            { q: 'Comment fonctionne le paiement ?', a: 'Tu commandes en ligne, puis tu envoies ton paiement par Orange Money ou MTN MoMo au +237 683 008 287. Ton compte est activé après confirmation.' },
-            { q: 'Quand mon compte est-il activé ?', a: 'Dans les heures qui suivent la confirmation de ton paiement. Tu reçois tes identifiants par email.' },
-            { q: 'Puis-je tester avant d\'acheter ?', a: 'Oui ! 3 séries gratuites par module sont disponibles sans inscription.' },
-          ].map(({ q, a }) => (
-            <div key={q} className="bg-white rounded-xl p-5 shadow-sm">
-              <h3 className="font-semibold text-gray-900 mb-2">{q}</h3>
-              <p className="text-sm text-gray-600">{a}</p>
-            </div>
-          ))}
+        <div className="max-w-2xl mx-auto">
+          <h2 className="text-2xl font-bold text-center text-gray-900 mb-8">
+            Questions fréquentes
+          </h2>
+          <div className="space-y-4">
+            {[
+              {
+                q: 'Comment fonctionne le paiement ?',
+                a: 'Clique sur "Payer →" pour choisir ta méthode de paiement : NotchPay (Orange Money, MTN MoMo, Visa, Mastercard) pour un accès immédiat, ou un virement manuel. Ton accès est activé automatiquement après confirmation.',
+              },
+              {
+                q: 'Quand mon compte est-il activé ?',
+                a: 'Instantanément si tu paies via NotchPay ! Pour les paiements manuels (Orange Money direct, MTN MoMo direct), ton compte est activé dans les 24h après validation par notre équipe.',
+              },
+              {
+                q: 'Puis-je tester avant d\'acheter ?',
+                a: 'Oui ! Crée un compte gratuit pour accéder aux séries gratuites de Compréhension Écrite (CE) et Compréhension Orale (CO). Aucune carte bancaire requise.',
+              },
+              {
+                q: 'Quelle est la différence entre les packs ?',
+                a: 'Le pack Special donne accès aux modules Expression Écrite et Orale uniquement. Les autres packs donnent accès à tous les modules. La différence porte sur le nombre de corrections IA par jour, de sessions simultanées et la durée d\'accès.',
+              },
+            ].map(({ q, a }) => (
+              <div key={q} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+                <h3 className="font-semibold text-gray-900 mb-2">{q}</h3>
+                <p className="text-sm text-gray-600 leading-relaxed">{a}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      <OrderModal isOpen={modalOpen} onClose={() => setModalOpen(false)} pack={selectedPack} />
+      <PaymentModal
+        isOpen={payModalOpen}
+        onClose={() => setPayModalOpen(false)}
+        pack={selectedPack}
+      />
     </div>
   )
 }

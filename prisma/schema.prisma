@@ -23,49 +23,78 @@ enum OrderStatus {
   REJECTED
 }
 
+enum ModuleAccess {
+  EE_EO
+  ALL
+}
+
+enum PaymentMethod {
+  NOTCHPAY
+  PAYPAL
+  ORANGE_MONEY
+  MTN_MOMO
+  MANUAL
+}
+
+enum NotificationType {
+  PAYMENT_CONFIRMED
+  ORDER_REJECTED
+  SUBSCRIPTION_EXPIRING
+  SUBSCRIPTION_EXPIRED
+  NEW_ORDER
+}
+
 model User {
-  id                 String    @id @default(cuid())
+  id                 String       @id @default(cuid())
   name               String
-  email              String    @unique
+  email              String       @unique
   password           String
-  role               Role      @default(SUBSCRIBER)
-  accountStatus      Status    @default(ACTIVE)
-  mustChangePassword Boolean   @default(false)
-  createdAt          DateTime  @default(now())
+  role               Role         @default(SUBSCRIBER)
+  accountStatus      Status       @default(ACTIVE)
+  mustChangePassword Boolean      @default(false)
+  cityOfResidence    String?
+  referenceCode      String?
+  createdAt          DateTime     @default(now())
   orders             Order[]
   attempts           Attempt[]
   results            Result[]
+  aiUsageLogs        AIUsageLog[]
+  notifications      Notification[]
 }
 
 model Pack {
-  id                String       @id @default(cuid())
-  name              String
-  price             Int
-  description       String
-  nbModules         Int
-  nbSeriesPerModule Int
-  durationDays      Int
-  isActive          Boolean      @default(true)
-  createdAt         DateTime     @default(now())
-  orders            Order[]
-  series            PackSeries[]
+  id            String       @id @default(cuid())
+  name          String
+  price         Int
+  description   String
+  moduleAccess  ModuleAccess @default(ALL)
+  maxSessions   Int          @default(1)
+  aiUsagePerDay Int          @default(0)
+  durationDays  Int          @default(30)
+  isActive      Boolean      @default(true)
+  isRecommended Boolean      @default(false)
+  createdAt     DateTime     @default(now())
+  orders        Order[]
+  series        PackSeries[]
 }
 
 model Order {
-  id             String      @id @default(cuid())
-  reference      String      @unique
-  visitorName    String
-  visitorEmail   String
-  visitorPhone   String
-  visitorMessage String?
-  userId         String?
-  packId         String
-  status         OrderStatus @default(PENDING)
-  activatedAt    DateTime?
-  expiresAt      DateTime?
-  createdAt      DateTime    @default(now())
-  user           User?       @relation(fields: [userId], references: [id])
-  pack           Pack        @relation(fields: [packId], references: [id])
+  id               String         @id @default(cuid())
+  reference        String         @unique
+  visitorName      String
+  visitorEmail     String
+  visitorPhone     String
+  visitorMessage   String?
+  userId           String?
+  packId           String
+  status           OrderStatus    @default(PENDING)
+  paymentMethod    PaymentMethod?
+  paymentReference String?
+  activatedAt      DateTime?
+  expiresAt        DateTime?
+  createdAt        DateTime       @default(now())
+  user             User?          @relation(fields: [userId], references: [id])
+  pack             Pack           @relation(fields: [packId], references: [id])
 
   @@index([status])
   @@index([userId])
@@ -85,7 +114,6 @@ model Series {
   id         String       @id @default(cuid())
   title      String
   moduleId   String
-  difficulty String
   isFree     Boolean      @default(false)
   createdAt  DateTime     @default(now())
   module     Module       @relation(fields: [moduleId], references: [id])
@@ -111,16 +139,17 @@ model Question {
   moduleId      String
   seriesId      String
   questionOrder Int
+  taskTitle     String?
   category      String?
   longText      String?
   imageUrl      String?
   audioUrl      String?
   question      String
-  optionA       String
-  optionB       String
-  optionC       String
-  optionD       String
-  correctAnswer String
+  optionA       String?
+  optionB       String?
+  optionC       String?
+  optionD       String?
+  correctAnswer String?
   explanation   String?
   series        Series  @relation(fields: [seriesId], references: [id])
 
@@ -160,4 +189,53 @@ model Result {
   user       User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, moduleCode])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+
+model PlatformSettings {
+  id                String   @id @default("default")
+  siteName          String   @default("Tef-Lab")
+  adminEmail        String   @default("tifuzzied@gmail.com")
+  whatsappNumber    String   @default("237683008287")
+  orangeMoneyNumber String   @default("237683008287")
+  mtnMomoNumber     String   @default("237683008287")
+  usdExchangeRate   Float    @default(0.00165)
+  discountRate      Float    @default(0)
+  updatedAt         DateTime @updatedAt
+}
+
+model AIUsageLog {
+  id     String @id @default(cuid())
+  userId String
+  date   String
+  count  Int    @default(0)
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@unique([userId, date])
+  @@index([userId])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  actionUrl String?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@index([createdAt])
 }

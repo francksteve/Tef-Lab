@@ -4,10 +4,30 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
 
+export async function GET(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const series = await prisma.series.findUnique({
+      where: { id: params.id },
+      include: { module: true },
+    })
+
+    if (!series) {
+      return NextResponse.json({ error: 'Série introuvable' }, { status: 404 })
+    }
+
+    return NextResponse.json(series)
+  } catch (error) {
+    console.error('[API_ERROR] GET /api/series/[id]', error)
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+  }
+}
+
 const updateSeriesSchema = z.object({
   title: z.string().min(1).optional(),
   moduleId: z.string().min(1).optional(),
-  difficulty: z.string().min(1).optional(),
   isFree: z.boolean().optional(),
 })
 

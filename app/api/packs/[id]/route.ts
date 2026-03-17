@@ -8,10 +8,12 @@ const updatePackSchema = z.object({
   name: z.string().min(1).optional(),
   price: z.number().int().positive().optional(),
   description: z.string().min(1).optional(),
-  nbModules: z.number().int().positive().optional(),
-  nbSeriesPerModule: z.number().int().positive().optional(),
+  moduleAccess: z.enum(['EE_EO', 'ALL']).optional(),
+  maxSessions: z.number().int().min(1).optional(),
+  aiUsagePerDay: z.number().int().min(0).optional(),
   durationDays: z.number().int().positive().optional(),
   isActive: z.boolean().optional(),
+  isRecommended: z.boolean().optional(),
   seriesIds: z.array(z.string()).optional(),
 })
 

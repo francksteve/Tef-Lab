@@ -11,7 +11,6 @@ interface Series {
   id: string
   title: string
   moduleId: string
-  difficulty: string
   isFree: boolean
   createdAt: string
   module: Module
@@ -21,27 +20,13 @@ interface Series {
 interface SeriesFormData {
   title: string
   moduleId: string
-  difficulty: string
   isFree: boolean
 }
 
 const emptyForm: SeriesFormData = {
   title: '',
   moduleId: '',
-  difficulty: 'moyen',
   isFree: false,
-}
-
-const difficultyLabel: Record<string, string> = {
-  facile: 'Facile',
-  moyen: 'Moyen',
-  difficile: 'Difficile',
-}
-
-const difficultyBg: Record<string, string> = {
-  facile: 'bg-green-100 text-green-700',
-  moyen: 'bg-orange-100 text-orange-700',
-  difficile: 'bg-red-100 text-red-700',
 }
 
 export default function SeriesAdminPage() {
@@ -87,7 +72,6 @@ export default function SeriesAdminPage() {
     setForm({
       title: s.title,
       moduleId: s.moduleId,
-      difficulty: s.difficulty,
       isFree: s.isFree,
     })
     setShowForm(true)
@@ -113,7 +97,7 @@ export default function SeriesAdminPage() {
         : false
       if (!isCurrentlyFree && currentFree >= 3) {
         setError(
-          'Ce module a déjà 3 séries gratuites. Désactivez la gratuité d\'une autre série d\'abord.'
+          "Ce module a déjà 3 séries gratuites. Désactivez la gratuité d'une autre série d'abord."
         )
         return
       }
@@ -217,38 +201,24 @@ export default function SeriesAdminPage() {
                 </select>
               </div>
             </div>
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Difficulté</label>
-                <select
-                  value={form.difficulty}
-                  onChange={(e) => setForm((f) => ({ ...f, difficulty: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue"
-                >
-                  <option value="facile">Facile</option>
-                  <option value="moyen">Moyen</option>
-                  <option value="difficile">Difficile</option>
-                </select>
-              </div>
-              <div className="flex flex-col justify-end">
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer pb-2">
-                  <input
-                    type="checkbox"
-                    checked={form.isFree}
-                    onChange={(e) => setForm((f) => ({ ...f, isFree: e.target.checked }))}
-                    className="w-4 h-4 accent-tef-blue"
-                  />
-                  Série gratuite
-                </label>
-                {form.moduleId && (
-                  <p className="text-xs text-gray-500">
-                    {selectedModuleFreeCount} / 3 série{selectedModuleFreeCount !== 1 ? 's' : ''} gratuite{selectedModuleFreeCount !== 1 ? 's' : ''} pour ce module
-                    {selectedModuleFreeCount >= 3 && !isEditingCurrentlyFree && (
-                      <span className="text-orange-600 font-medium"> — limite atteinte</span>
-                    )}
-                  </p>
-                )}
-              </div>
+            <div>
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={form.isFree}
+                  onChange={(e) => setForm((f) => ({ ...f, isFree: e.target.checked }))}
+                  className="w-4 h-4 accent-tef-blue"
+                />
+                Série gratuite
+              </label>
+              {form.moduleId && (
+                <p className="text-xs text-gray-500 mt-1">
+                  {selectedModuleFreeCount} / 3 série{selectedModuleFreeCount !== 1 ? 's' : ''} gratuite{selectedModuleFreeCount !== 1 ? 's' : ''} pour ce module
+                  {selectedModuleFreeCount >= 3 && !isEditingCurrentlyFree && (
+                    <span className="text-orange-600 font-medium"> — limite atteinte</span>
+                  )}
+                </p>
+              )}
             </div>
             <div className="flex gap-3 pt-2">
               <button
@@ -281,7 +251,7 @@ export default function SeriesAdminPage() {
             <table className="w-full text-sm">
               <thead className="bg-gray-50 border-b">
                 <tr>
-                  {['Titre', 'Module', 'Difficulté', 'Questions', 'Gratuite', 'Actions'].map((h) => (
+                  {['Titre', 'Module', 'Questions', 'Gratuite', 'Actions'].map((h) => (
                     <th
                       key={h}
                       className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
@@ -298,15 +268,6 @@ export default function SeriesAdminPage() {
                     <td className="px-4 py-3">
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-tef-blue/10 text-tef-blue">
                         {s.module.code}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                          difficultyBg[s.difficulty] ?? 'bg-gray-100 text-gray-600'
-                        }`}
-                      >
-                        {difficultyLabel[s.difficulty] ?? s.difficulty}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-gray-600">{s._count.questions}</td>

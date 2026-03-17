@@ -3,6 +3,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useSession, signOut } from 'next-auth/react'
+import NotificationBell from '@/components/ui/NotificationBell'
 
 const navLinks = [
   { href: '/', label: 'Accueil' },
@@ -24,9 +25,9 @@ export default function Navbar() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-1 shrink-0">
-            <span className="font-bold text-tef-blue text-xl tracking-tight">TEF CAN</span>
-            <span className="font-bold text-tef-red text-xl">237</span>
+          <Link href="/" className="flex items-center gap-2 shrink-0">
+            <img src="/logo.png" alt="TEF-LAB" className="h-5 w-auto object-contain" />
+            <span className="font-bold text-lg text-tef-blue">TEF-LAB</span>
           </Link>
 
           {/* Desktop links */}
@@ -56,6 +57,7 @@ export default function Navbar() {
                 >
                   {session.user.name?.split(' ')[0]}
                 </Link>
+                <NotificationBell />
                 <button
                   onClick={() => signOut({ callbackUrl: '/' })}
                   className="text-sm font-medium px-4 py-1.5 border border-gray-300 rounded-lg hover:border-tef-red hover:text-tef-red transition-colors"
@@ -115,6 +117,9 @@ export default function Navbar() {
                   >
                     Mon espace ({session.user.name?.split(' ')[0]})
                   </Link>
+                  <div className="px-3 py-1">
+                    <NotificationBell />
+                  </div>
                   <button
                     onClick={() => { setMenuOpen(false); signOut({ callbackUrl: '/' }) }}
                     className="block w-full text-left px-3 py-2 text-sm font-medium text-tef-red"

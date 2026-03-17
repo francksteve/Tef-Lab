@@ -7,7 +7,6 @@ import { authOptions } from '@/lib/auth'
 const createSeriesSchema = z.object({
   title: z.string().min(1, 'Le titre est requis'),
   moduleId: z.string().min(1, 'Le module est requis'),
-  difficulty: z.string().min(1, 'La difficulté est requise'),
   isFree: z.boolean().optional(),
 })
 
@@ -29,7 +28,7 @@ export async function GET(req: NextRequest) {
           select: { questions: true },
         },
       },
-      orderBy: [{ module: { code: 'asc' } }, { difficulty: 'asc' }, { title: 'asc' }],
+      orderBy: [{ module: { code: 'asc' } }, { title: 'asc' }],
     })
 
     return NextResponse.json(series)
@@ -53,7 +52,6 @@ export async function POST(req: NextRequest) {
       data: {
         title: data.title,
         moduleId: data.moduleId,
-        difficulty: data.difficulty,
         isFree: data.isFree ?? false,
       },
       include: {

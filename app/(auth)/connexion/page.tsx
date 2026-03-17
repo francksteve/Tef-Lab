@@ -38,9 +38,9 @@ export default function ConnexionPage() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-1 mb-4">
-            <span className="font-bold text-tef-blue text-2xl">TEF CAN</span>
-            <span className="font-bold text-tef-red text-2xl">237</span>
+          <Link href="/" className="inline-flex items-center gap-2 mb-4">
+            <img src="/logo.png" alt="TEF-LAB" className="h-6 w-auto object-contain" />
+            <span className="font-bold text-xl text-tef-blue">TEF-LAB</span>
           </Link>
           <h1 className="text-2xl font-extrabold text-gray-900">Connexion</h1>
           <p className="text-gray-500 text-sm mt-1">Accède à ton espace de préparation</p>
@@ -68,7 +68,12 @@ export default function ConnexionPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-sm font-medium text-gray-700">Mot de passe</label>
+                <Link href="/mot-de-passe-oublie" className="text-xs text-tef-blue hover:underline">
+                  Mot de passe oublié ?
+                </Link>
+              </div>
               <input
                 type="password"
                 required
@@ -91,10 +96,10 @@ export default function ConnexionPage() {
 
           <p className="text-center text-xs text-gray-400 mt-6">
             Pas encore de compte ?{' '}
-            <a href="https://wa.me/237683008287" target="_blank" rel="noopener noreferrer" className="text-tef-blue hover:underline">
-              Commande un pack
-            </a>{' '}
-            pour obtenir tes accès.
+            <Link href="/inscription" className="text-tef-blue hover:underline font-medium">
+              Crée un compte
+            </Link>{' '}
+            pour accéder à la plateforme.
           </p>
         </div>
       </div>

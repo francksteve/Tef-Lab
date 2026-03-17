@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
 import { sendOrderRejectedEmail } from '@/lib/email'
+import { createNotification } from '@/lib/notifications'
 
 export async function PATCH(
   req: NextRequest,
@@ -37,6 +38,18 @@ export async function PATCH(
       packName: order.pack.name,
       reference: order.reference,
     }).catch(console.error)
+
+    // In-app notification if user account exists (fire-and-forget)
+    const user = await prisma.user.findUnique({ where: { email: order.visitorEmail } })
+    if (user) {
+      createNotification({
+        userId: user.id,
+        type: 'ORDER_REJECTED',
+        title: '❌ Commande refusée',
+        message: `Votre commande ${order.reference} (${order.pack.name}) a été refusée. Contactez-nous pour plus d'informations.`,
+        actionUrl: '/contact',
+      }).catch(console.error)
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {

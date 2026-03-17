@@ -8,6 +8,7 @@ const updateQuestionSchema = z.object({
   moduleId: z.string().min(1).optional(),
   seriesId: z.string().min(1).optional(),
   questionOrder: z.number().int().nonnegative().optional(),
+  taskTitle: z.string().optional(),
   category: z.string().optional(),
   longText: z.string().optional(),
   imageUrl: z.string().optional(),

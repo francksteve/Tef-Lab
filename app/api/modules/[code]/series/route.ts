@@ -26,7 +26,7 @@ export async function GET(
           select: { questions: true },
         },
       },
-      orderBy: [{ difficulty: 'asc' }, { title: 'asc' }],
+      orderBy: [{ title: 'asc' }],
     })
 
     return NextResponse.json(series)

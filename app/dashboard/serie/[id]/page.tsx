@@ -15,7 +15,6 @@ interface Module {
 interface Series {
   id: string
   title: string
-  difficulty: string
   module: Module
 }
 
@@ -95,6 +94,10 @@ export default function QuizPage() {
   const [submitting, setSubmitting] = useState(false)
   const [startTime] = useState<number>(Date.now())
   const [timerExpired, setTimerExpired] = useState(false)
+  /** Tracks which audioUrls have been played — persists across question navigation */
+  const [playedAudios, setPlayedAudios] = useState<Record<string, boolean>>({})
+  /** CO auto-advance countdown in seconds (null = inactive) */
+  const [autoAdvanceCountdown, setAutoAdvanceCountdown] = useState<number | null>(null)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -124,6 +127,27 @@ export default function QuizPage() {
       .catch(() => setLoading(false))
   }, [seriesId, session, status, router])
 
+  /** Tick the auto-advance countdown down every second; advance when it hits 0 */
+  useEffect(() => {
+    if (autoAdvanceCountdown === null) return
+    if (autoAdvanceCountdown === 0) {
+      // Only started when not on last question, so advancing is always valid
+      setCurrentIndex((i) => i + 1)
+      setAutoAdvanceCountdown(null)
+      return
+    }
+    const timer = setTimeout(() => {
+      setAutoAdvanceCountdown((c) => (c !== null ? c - 1 : null))
+    }, 1000)
+    return () => clearTimeout(timer)
+  }, [autoAdvanceCountdown])
+
+  /** Cancel auto-advance (called on any manual navigation) */
+  const cancelAutoAdvance = () => setAutoAdvanceCountdown(null)
+
+  const moduleCode = series?.module?.code ?? 'CE'
+  const isCO = moduleCode === 'CO'
+
   const handleSubmit = useCallback(
     async (autoSubmit = false) => {
       if (submitted || submitting) return
@@ -150,7 +174,6 @@ export default function QuizPage() {
       setResult({ score, cecrlLevel, timeTaken, corrections })
       setSubmitted(true)
 
-      // Post attempt to API
       if (series) {
         try {
           await fetch('/api/attempts', {
@@ -221,7 +244,7 @@ export default function QuizPage() {
     )
   }
 
-  // Results view
+  // ── Results view ────────────────────────────────────────────────────────────
   if (submitted && result) {
     return (
       <div className="min-h-screen bg-gray-50">
@@ -333,10 +356,9 @@ export default function QuizPage() {
     )
   }
 
-  // Quiz view
+  // ── Quiz view ───────────────────────────────────────────────────────────────
   const currentQuestion = questions[currentIndex]
-  const moduleCode = series?.module?.code ?? 'CE'
-  const durationSeconds = moduleCode === 'CO' ? 40 * 60 : 60 * 60
+  const durationSeconds = isCO ? 40 * 60 : 60 * 60
   const answeredCount = Object.values(answers).filter(Boolean).length
 
   return (
@@ -371,69 +393,184 @@ export default function QuizPage() {
 
         {/* Question card */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-5">
-          {currentQuestion.audioUrl && (
-            <AudioPlayer
-              src={currentQuestion.audioUrl}
-              label="Écouter le document audio"
-            />
-          )}
 
-          {currentQuestion.imageUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={currentQuestion.imageUrl}
-              alt="Document visuel"
-              className="max-w-full rounded-lg border border-gray-200"
-            />
-          )}
+          {isCO ? (
+            // ── CO layout: context → audio (autoplay) → image → question → options ──
+            <>
+              {/* 1. Document / context */}
+              {currentQuestion.longText && (
+                <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 leading-relaxed border-l-4 border-tef-blue">
+                  <p className="text-xs font-semibold text-tef-blue mb-2 uppercase tracking-wide">
+                    Document / Contexte
+                  </p>
+                  {currentQuestion.longText}
+                </div>
+              )}
 
-          {currentQuestion.longText && (
-            <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 leading-relaxed border-l-4 border-tef-blue">
-              {currentQuestion.longText}
-            </div>
-          )}
+              {/* 2. Audio — autoplays on first encounter of this audioUrl */}
+              {currentQuestion.audioUrl && (
+                <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+                  <p className="text-xs font-semibold text-tef-blue mb-1 uppercase tracking-wide">
+                    Document audio
+                  </p>
+                  <p className="text-xs text-gray-500 mb-2 italic">
+                    Écoutez attentivement — cet audio ne peut être joué qu&apos;une seule fois.
+                  </p>
+                  <AudioPlayer
+                    key={currentQuestion.audioUrl}
+                    src={currentQuestion.audioUrl}
+                    label="Lancer l'audio"
+                    autoPlay={!playedAudios[currentQuestion.audioUrl]}
+                    initialPlayed={playedAudios[currentQuestion.audioUrl] ?? false}
+                    onPlayed={() => {
+                      setPlayedAudios((prev) => ({
+                        ...prev,
+                        [currentQuestion.audioUrl!]: true,
+                      }))
+                      // Start 10s auto-advance after audio ends (not on last question)
+                      if (currentIndex < questions.length - 1) {
+                        setAutoAdvanceCountdown(10)
+                      }
+                    }}
+                  />
+                </div>
+              )}
 
-          {currentQuestion.category && (
-            <p className="text-xs text-gray-400 italic">{currentQuestion.category}</p>
-          )}
-
-          <p className="font-semibold text-gray-900">{currentQuestion.question}</p>
-
-          <div className="space-y-2">
-            {optionLabels.map((opt) => {
-              const selected = answers[currentQuestion.id] === opt
-              return (
-                <button
-                  key={opt}
-                  onClick={() =>
-                    setAnswers((prev) => ({ ...prev, [currentQuestion.id]: opt }))
-                  }
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg border-2 text-left text-sm transition-all ${
-                    selected
-                      ? 'border-tef-blue bg-tef-blue/5 font-semibold text-tef-blue'
-                      : 'border-gray-200 hover:border-tef-blue hover:bg-gray-50'
-                  }`}
-                >
-                  <span
-                    className={`inline-flex items-center justify-center w-7 h-7 rounded-full border-2 font-bold text-xs flex-shrink-0 ${
-                      selected
-                        ? 'border-tef-blue bg-tef-blue text-white'
-                        : 'border-gray-300 text-gray-500'
-                    }`}
+              {/* Auto-advance countdown banner */}
+              {autoAdvanceCountdown !== null && (
+                <div className="flex items-center gap-3 px-4 py-3 bg-blue-50 border border-blue-200 rounded-xl">
+                  <span className="text-xl">⏭</span>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-blue-700">
+                      Question suivante dans{' '}
+                      <span className="font-black text-tef-blue text-base">
+                        {autoAdvanceCountdown}s
+                      </span>
+                    </p>
+                    <div className="mt-1.5 w-full bg-blue-200 rounded-full h-1.5">
+                      <div
+                        className="bg-tef-blue h-1.5 rounded-full transition-all duration-1000"
+                        style={{ width: `${(autoAdvanceCountdown / 10) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                  <button
+                    onClick={cancelAutoAdvance}
+                    className="text-xs text-blue-500 hover:text-blue-700 font-semibold underline shrink-0"
                   >
-                    {opt}
-                  </span>
-                  {getOption(currentQuestion, opt)}
-                </button>
-              )
-            })}
-          </div>
+                    Annuler
+                  </button>
+                </div>
+              )}
+
+              {/* 3. Image */}
+              {currentQuestion.imageUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={currentQuestion.imageUrl}
+                  alt="Document visuel"
+                  className="max-w-full rounded-lg border border-gray-200"
+                />
+              )}
+
+              {/* 4. Question */}
+              {currentQuestion.category && (
+                <p className="text-xs text-gray-400 italic">{currentQuestion.category}</p>
+              )}
+              <p className="font-semibold text-gray-900">{currentQuestion.question}</p>
+
+              {/* 5. Options */}
+              <div className="space-y-2">
+                {optionLabels.map((opt) => {
+                  const selected = answers[currentQuestion.id] === opt
+                  return (
+                    <button
+                      key={opt}
+                      onClick={() =>
+                        setAnswers((prev) => ({ ...prev, [currentQuestion.id]: opt }))
+                      }
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg border-2 text-left text-sm transition-all ${
+                        selected
+                          ? 'border-tef-blue bg-tef-blue/5 font-semibold text-tef-blue'
+                          : 'border-gray-200 hover:border-tef-blue hover:bg-gray-50'
+                      }`}
+                    >
+                      <span
+                        className={`inline-flex items-center justify-center w-7 h-7 rounded-full border-2 font-bold text-xs flex-shrink-0 ${
+                          selected
+                            ? 'border-tef-blue bg-tef-blue text-white'
+                            : 'border-gray-300 text-gray-500'
+                        }`}
+                      >
+                        {opt}
+                      </span>
+                      {getOption(currentQuestion, opt)}
+                    </button>
+                  )
+                })}
+              </div>
+            </>
+          ) : (
+            // ── CE layout: context → image → question → options ──
+            <>
+              {currentQuestion.longText && (
+                <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700 leading-relaxed border-l-4 border-tef-blue">
+                  {currentQuestion.longText}
+                </div>
+              )}
+
+              {currentQuestion.imageUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={currentQuestion.imageUrl}
+                  alt="Document visuel"
+                  className="max-w-full rounded-lg border border-gray-200"
+                />
+              )}
+
+              {currentQuestion.category && (
+                <p className="text-xs text-gray-400 italic">{currentQuestion.category}</p>
+              )}
+
+              <p className="font-semibold text-gray-900">{currentQuestion.question}</p>
+
+              <div className="space-y-2">
+                {optionLabels.map((opt) => {
+                  const selected = answers[currentQuestion.id] === opt
+                  return (
+                    <button
+                      key={opt}
+                      onClick={() =>
+                        setAnswers((prev) => ({ ...prev, [currentQuestion.id]: opt }))
+                      }
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg border-2 text-left text-sm transition-all ${
+                        selected
+                          ? 'border-tef-blue bg-tef-blue/5 font-semibold text-tef-blue'
+                          : 'border-gray-200 hover:border-tef-blue hover:bg-gray-50'
+                      }`}
+                    >
+                      <span
+                        className={`inline-flex items-center justify-center w-7 h-7 rounded-full border-2 font-bold text-xs flex-shrink-0 ${
+                          selected
+                            ? 'border-tef-blue bg-tef-blue text-white'
+                            : 'border-gray-300 text-gray-500'
+                        }`}
+                      >
+                        {opt}
+                      </span>
+                      {getOption(currentQuestion, opt)}
+                    </button>
+                  )
+                })}
+              </div>
+            </>
+          )}
         </div>
 
         {/* Navigation */}
         <div className="flex items-center justify-between gap-3">
           <button
-            onClick={() => setCurrentIndex((i) => Math.max(0, i - 1))}
+            onClick={() => { cancelAutoAdvance(); setCurrentIndex((i) => Math.max(0, i - 1)) }}
             disabled={currentIndex === 0}
             className="px-4 py-2 bg-white border border-gray-200 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
@@ -442,6 +579,7 @@ export default function QuizPage() {
 
           <button
             onClick={() => {
+              cancelAutoAdvance()
               setAnswers((prev) => ({ ...prev, [currentQuestion.id]: null }))
               if (currentIndex < questions.length - 1) {
                 setCurrentIndex((i) => i + 1)
@@ -454,7 +592,7 @@ export default function QuizPage() {
 
           {currentIndex < questions.length - 1 ? (
             <button
-              onClick={() => setCurrentIndex((i) => i + 1)}
+              onClick={() => { cancelAutoAdvance(); setCurrentIndex((i) => i + 1) }}
               className="px-4 py-2 bg-tef-blue text-white text-sm font-semibold rounded-lg hover:bg-tef-blue-hover transition-colors"
             >
               Suivant →
@@ -470,12 +608,12 @@ export default function QuizPage() {
           )}
         </div>
 
-        {/* Question overview */}
+        {/* Question overview grid */}
         <div className="flex flex-wrap gap-1.5">
           {questions.map((q, i) => (
             <button
               key={q.id}
-              onClick={() => setCurrentIndex(i)}
+              onClick={() => { cancelAutoAdvance(); setCurrentIndex(i) }}
               className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all ${
                 i === currentIndex
                   ? 'bg-tef-blue text-white ring-2 ring-tef-blue ring-offset-1'

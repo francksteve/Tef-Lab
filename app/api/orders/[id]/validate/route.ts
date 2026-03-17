@@ -5,6 +5,7 @@ import { nanoid } from 'nanoid'
 import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
 import { sendAccountActivatedEmail } from '@/lib/email'
+import { createNotification } from '@/lib/notifications'
 
 export async function PATCH(
   req: NextRequest,
@@ -66,6 +67,15 @@ export async function PATCH(
       activatedAt,
       expiresAt,
       modules: ['Compréhension Écrite (CE)', 'Compréhension Orale (CO)', 'Expression Écrite (EE)', 'Expression Orale (EO)'],
+    }).catch(console.error)
+
+    // In-app notification (fire-and-forget)
+    createNotification({
+      userId: user.id,
+      type: 'PAYMENT_CONFIRMED',
+      title: '✅ Votre compte est activé !',
+      message: `Accès au pack ${order.pack.name} jusqu'au ${expiresAt.toLocaleDateString('fr-FR')}.`,
+      actionUrl: '/dashboard',
     }).catch(console.error)
 
     return NextResponse.json({ success: true })

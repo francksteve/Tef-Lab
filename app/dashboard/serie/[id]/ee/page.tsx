@@ -16,6 +16,14 @@ interface Series {
   module: Module
 }
 
+interface EEQuestion {
+  id: string
+  category: string | null
+  taskTitle: string | null
+  longText: string | null
+  question: string
+}
+
 interface TaskScore {
   wordCount: number
   score: number
@@ -23,6 +31,7 @@ interface TaskScore {
   feedback: string
   strengths: string[]
   improvements: string[]
+  improvedText: string | null
 }
 
 interface EEResult {
@@ -49,6 +58,8 @@ export default function EEPage() {
   const seriesId = params.id as string
 
   const [series, setSeries] = useState<Series | null>(null)
+  const [task1Q, setTask1Q] = useState<EEQuestion | null>(null)
+  const [task2Q, setTask2Q] = useState<EEQuestion | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -64,13 +75,20 @@ export default function EEPage() {
       router.push('/connexion')
       return
     }
-    fetch(`/api/series/${seriesId}`)
-      .then((r) => r.json())
-      .then((data: unknown) => {
-        if (data && typeof data === 'object' && 'id' in data) {
-          setSeries(data as Series)
+    Promise.all([
+      fetch(`/api/series/${seriesId}`).then((r) => r.json()),
+      fetch(`/api/series/${seriesId}/questions`).then((r) => r.json()),
+    ])
+      .then(([seriesData, questionsData]: [unknown, unknown]) => {
+        if (seriesData && typeof seriesData === 'object' && 'id' in seriesData) {
+          setSeries(seriesData as Series)
         } else {
           setError('Série introuvable.')
+        }
+        if (Array.isArray(questionsData)) {
+          const qs = questionsData as EEQuestion[]
+          setTask1Q(qs.find((q) => q.category === 'SECTION_A') ?? null)
+          setTask2Q(qs.find((q) => q.category === 'SECTION_B') ?? null)
         }
         setLoading(false)
       })
@@ -253,19 +271,37 @@ export default function EEPage() {
         <div className="max-w-3xl mx-auto px-4 pt-16 pb-8 space-y-6">
           <div>
             <span className="inline-block px-3 py-1 bg-tef-blue text-white text-xs font-semibold rounded-full mb-3">
-              Tâche 1 / 2 — Suite d’article
+              Tâche 1 / 2 — Suite d'article
             </span>
             <h1 className="text-xl font-bold text-gray-900">{series?.title}</h1>
           </div>
 
+          {(task1Q?.taskTitle || task1Q?.longText) && (
+            <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-3">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                Document support — Début de l'article
+              </p>
+              {task1Q.taskTitle && (
+                <p className="text-base font-bold text-gray-900">{task1Q.taskTitle}</p>
+              )}
+              {task1Q.longText && (
+                <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
+                  {task1Q.longText}
+                </p>
+              )}
+            </div>
+          )}
+
           <div className="bg-white rounded-xl border border-gray-200 p-5">
             <p className="text-sm font-medium text-gray-700 mb-1">Consigne</p>
-            <p className="text-gray-600 text-sm leading-relaxed">{TASK1_CONSIGNE}</p>
+            <p className="text-gray-600 text-sm leading-relaxed">
+              {task1Q?.question ?? TASK1_CONSIGNE}
+            </p>
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Votre texte (suite de l’article)
+              Votre texte (suite de l'article)
             </label>
             <textarea
               value={task1Text}
@@ -311,9 +347,22 @@ export default function EEPage() {
           <h1 className="text-xl font-bold text-gray-900">{series?.title}</h1>
         </div>
 
+        {task2Q?.longText && (
+          <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-2">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              Document support — Phrase extraite du journal
+            </p>
+            <p className="text-sm text-gray-800 leading-relaxed italic">
+              {task2Q.longText}
+            </p>
+          </div>
+        )}
+
         <div className="bg-white rounded-xl border border-gray-200 p-5">
           <p className="text-sm font-medium text-gray-700 mb-1">Consigne</p>
-          <p className="text-gray-600 text-sm leading-relaxed">{TASK2_CONSIGNE}</p>
+          <p className="text-gray-600 text-sm leading-relaxed">
+            {task2Q?.question ?? TASK2_CONSIGNE}
+          </p>
         </div>
 
         <div>
@@ -357,6 +406,14 @@ export default function EEPage() {
   )
 }
 
+const NEXT_CECRL: Record<string, string> = {
+  A1: 'A2',
+  A2: 'B1',
+  B1: 'B2',
+  B2: 'C1',
+  C1: 'C2',
+}
+
 function TaskResultCard({
   taskNumber,
   label,
@@ -366,6 +423,9 @@ function TaskResultCard({
   label: string
   score: TaskScore
 }) {
+  const [showImproved, setShowImproved] = useState(false)
+  const nextLevel = NEXT_CECRL[score.cecrlLevel]
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
       <div className="flex items-center justify-between">
@@ -396,7 +456,7 @@ function TaskResultCard({
       )}
       {score.improvements.length > 0 && (
         <div>
-          <p className="text-xs font-semibold text-orange-700 mb-1">Axes d’amélioration</p>
+          <p className="text-xs font-semibold text-orange-700 mb-1">Axes d'amélioration</p>
           <ul className="space-y-1">
             {score.improvements.map((s, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
@@ -405,6 +465,43 @@ function TaskResultCard({
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {/* Improved text section */}
+      {score.improvedText && nextLevel && (
+        <div className="border-t border-gray-100 pt-4">
+          <button
+            onClick={() => setShowImproved((v) => !v)}
+            className="flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+          >
+            <span className="text-base">✨</span>
+            {showImproved
+              ? 'Masquer la version améliorée'
+              : `Voir la version niveau ${nextLevel}`}
+            <span className={`transition-transform duration-200 ${showImproved ? 'rotate-180' : ''}`}>
+              ▾
+            </span>
+          </button>
+
+          {showImproved && (
+            <div className="mt-3 bg-indigo-50 border border-indigo-200 rounded-xl p-4 space-y-2">
+              <p className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">
+                ✨ Exemple de réponse niveau {nextLevel}
+              </p>
+              <p className="text-sm text-indigo-900 leading-relaxed whitespace-pre-wrap">
+                {score.improvedText}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {score.cecrlLevel === 'C2' && (
+        <div className="border-t border-gray-100 pt-4">
+          <p className="text-sm text-gray-400 italic">
+            🏆 Niveau maximum C2 atteint — félicitations !
+          </p>
         </div>
       )}
     </div>

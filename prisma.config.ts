@@ -7,8 +7,13 @@ export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
+    seed: 'node node_modules/ts-node/dist/bin.js -r dotenv/config --compiler-options {"module":"CommonJS"} prisma/seed.ts',
   },
   datasource: {
-    url: process.env["DATABASE_URL"] ?? "postgresql://localhost:5432/tef_lab_dev",
+    // Use port 5432 (session mode) for schema engine — PgBouncer port 6543 (transaction mode)
+    // doesn't support prepared statements required by Prisma migrations.
+    url: (process.env["DIRECT_URL"] ?? process.env["DATABASE_URL"] ?? "postgresql://localhost:5432/tef_lab_dev")
+      .replace(":6543/", ":5432/")
+      .replace("sslmode=require", "sslmode=no-verify"),
   },
 });
