@@ -186,7 +186,7 @@ function AnswerOptions({
 }
 
 // ── Category header pill ──────────────────────────────────────────────────────
-function CategoryHeader({ category, subCategory }: { category?: string | null; subCategory?: string | null }) {
+function _CategoryHeader({ category, subCategory }: { category?: string | null; subCategory?: string | null }) {
   const label = CE_CATEGORY_LABELS[category ?? ''] ?? category
   if (!label) return null
   return (
