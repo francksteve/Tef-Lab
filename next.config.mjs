@@ -4,8 +4,10 @@ const nextConfig = {
     // Les warnings <img> ne bloquent pas le build en production
     ignoreDuringBuilds: true,
   },
-  // Prisma driver adapters nécessitent serverExternalPackages
-  serverExternalPackages: ['@prisma/adapter-pg', 'pg'],
+  experimental: {
+    // Prisma driver adapters doivent rester côté serveur Node.js (Next.js 14)
+    serverComponentsExternalPackages: ['@prisma/adapter-pg', 'pg'],
+  },
 };
 
 export default nextConfig;
