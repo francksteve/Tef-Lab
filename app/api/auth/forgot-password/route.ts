@@ -4,6 +4,10 @@ import crypto from 'crypto'
 import { prisma } from '@/lib/prisma'
 import { sendPasswordResetEmail } from '@/lib/email'
 import { config } from '@/lib/config'
+import { createRateLimiter } from '@/lib/rate-limit'
+
+// 3 password-reset requests per IP per 15 minutes
+const forgotPasswordLimiter = createRateLimiter({ windowMs: 15 * 60_000, max: 3 })
 
 const schema = z.object({
   email: z.string().email('Email invalide'),
@@ -11,6 +15,19 @@ const schema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limiting: 3 attempts per IP per 15 min
+    const ip =
+      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+      req.headers.get('x-real-ip') ??
+      'unknown'
+    const rl = forgotPasswordLimiter.check(ip)
+    if (!rl.allowed) {
+      // Return same-shape 200 response to avoid enumeration via error differences
+      return NextResponse.json({
+        message: 'Si cet email existe, un lien de réinitialisation a été envoyé.',
+      })
+    }
+
     const body = await req.json()
     const parsed = schema.safeParse(body)
     if (!parsed.success) {

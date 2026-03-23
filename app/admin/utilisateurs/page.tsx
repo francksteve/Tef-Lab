@@ -18,23 +18,49 @@ interface User {
 }
 
 type FilterType = 'Tous' | 'Abonnés' | 'Admins'
+type SortKey = 'name' | 'status' | 'pack' | 'createdAt'
+type SortDir = 'asc' | 'desc'
 
-const roleLabel: Record<string, string> = {
-  ADMIN: 'Admin',
-  SUBSCRIBER: 'Abonné',
-  VISITOR: 'Visiteur',
+function getActivePack(user: User): { name: string; daysLeft: number } | null {
+  const order = user.orders[0]
+  if (!order?.pack || !order.expiresAt) return null
+  const daysLeft = Math.ceil((new Date(order.expiresAt).getTime() - Date.now()) / 86400000)
+  if (daysLeft <= 0) return null
+  return { name: order.pack.name, daysLeft }
 }
 
-const roleBg: Record<string, string> = {
-  ADMIN: 'bg-purple-100 text-purple-700',
-  SUBSCRIBER: 'bg-blue-100 text-blue-700',
-  VISITOR: 'bg-gray-100 text-gray-600',
+interface SortHeaderProps {
+  label: string
+  col: SortKey
+  sortKey: SortKey
+  sortDir: SortDir
+  onSort: (col: SortKey) => void
+  className?: string
+}
+
+function SortHeader({ label, col, sortKey, sortDir, onSort, className = '' }: SortHeaderProps) {
+  const active = sortKey === col
+  return (
+    <th
+      className={`px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider cursor-pointer select-none hover:bg-blue-700 transition-colors ${className}`}
+      onClick={() => onSort(col)}
+    >
+      <span className="inline-flex items-center gap-1">
+        {label}
+        <span className={`text-[10px] ${active ? 'text-yellow-300' : 'text-blue-300'}`}>
+          {active ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}
+        </span>
+      </span>
+    </th>
+  )
 }
 
 export default function UtilisateursPage() {
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<FilterType>('Tous')
+  const [sortKey, setSortKey] = useState<SortKey>('createdAt')
+  const [sortDir, setSortDir] = useState<SortDir>('desc')
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -60,6 +86,15 @@ export default function UtilisateursPage() {
   useEffect(() => {
     loadUsers()
   }, [])
+
+  const handleSort = (col: SortKey) => {
+    if (col === sortKey) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortKey(col)
+      setSortDir('asc')
+    }
+  }
 
   const toggleStatus = async (user: User) => {
     const newStatus = user.accountStatus === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE'
@@ -92,10 +127,32 @@ export default function UtilisateursPage() {
     return true
   })
 
+  const sorted = [...filtered].sort((a, b) => {
+    let cmp = 0
+    switch (sortKey) {
+      case 'name':
+        cmp = a.name.localeCompare(b.name, 'fr')
+        break
+      case 'status':
+        cmp = a.accountStatus.localeCompare(b.accountStatus)
+        break
+      case 'pack': {
+        const pa = getActivePack(a)?.name ?? ''
+        const pb = getActivePack(b)?.name ?? ''
+        cmp = pa.localeCompare(pb, 'fr')
+        break
+      }
+      case 'createdAt':
+        cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        break
+    }
+    return sortDir === 'asc' ? cmp : -cmp
+  })
+
   const filters: FilterType[] = ['Tous', 'Abonnés', 'Admins']
 
   return (
-    <div className="p-6 space-y-6 max-w-6xl mx-auto">
+    <div className="p-6 space-y-6 max-w-7xl mx-auto">
       <div>
         <h1 className="text-2xl font-extrabold text-gray-900">Utilisateurs</h1>
         <p className="text-gray-500 text-sm mt-1">Gérez les comptes abonnés et administrateurs</p>
@@ -123,7 +180,7 @@ export default function UtilisateursPage() {
           </button>
         ))}
         <span className="ml-auto text-sm text-gray-400 self-center">
-          {filtered.length} utilisateur{filtered.length !== 1 ? 's' : ''}
+          {sorted.length} utilisateur{sorted.length !== 1 ? 's' : ''}
         </span>
       </div>
 
@@ -131,73 +188,111 @@ export default function UtilisateursPage() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         {loading ? (
           <div className="p-10 text-center text-gray-400">Chargement…</div>
-        ) : filtered.length === 0 ? (
+        ) : sorted.length === 0 ? (
           <div className="p-10 text-center text-gray-400">Aucun utilisateur trouvé</div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b">
+              <thead className="bg-tef-blue text-white">
                 <tr>
-                  {['Nom', 'Email', 'Rôle', 'Statut', 'Créé le', 'Actions'].map((h) => (
-                    <th
-                      key={h}
-                      className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
-                    >
-                      {h}
-                    </th>
-                  ))}
+                  <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider w-10">N°</th>
+                  <SortHeader label="Nom"           col="name"      sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+                  <SortHeader label="Statut"         col="status"    sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+                  <SortHeader label="Pack en cours"  col="pack"      sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="hidden md:table-cell" />
+                  <SortHeader label="Créé le"        col="createdAt" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="hidden sm:table-cell" />
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Mail</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y">
-                {filtered.map((user) => (
-                  <tr key={user.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3">
-                      <p className="font-medium text-gray-900">{user.name}</p>
-                      {user.mustChangePassword && (
-                        <p className="text-xs text-orange-500">Doit changer son mdp</p>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-gray-600">{user.email}</td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${roleBg[user.role] ?? 'bg-gray-100 text-gray-600'}`}
-                      >
-                        {roleLabel[user.role] ?? user.role}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+              <tbody>
+                {sorted.map((user, index) => {
+                  const activePack = getActivePack(user)
+                  const isEven = index % 2 === 0
+                  return (
+                    <tr
+                      key={user.id}
+                      className={`border-b border-blue-100 transition-colors hover:bg-blue-100 ${
+                        isEven ? 'bg-white' : 'bg-blue-50'
+                      }`}
+                    >
+                      {/* N° */}
+                      <td className="px-3 py-3 text-xs font-semibold text-tef-blue text-center">
+                        {index + 1}
+                      </td>
+
+                      {/* Nom */}
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-gray-900">{user.name}</p>
+                        {user.mustChangePassword && (
+                          <p className="text-xs text-orange-500">Doit changer son mdp</p>
+                        )}
+                      </td>
+
+                      {/* Statut */}
+                      <td className="px-4 py-3">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                           user.accountStatus === 'ACTIVE'
                             ? 'bg-green-100 text-green-700'
                             : 'bg-red-100 text-red-700'
-                        }`}
-                      >
-                        {user.accountStatus === 'ACTIVE' ? 'Actif' : 'Suspendu'}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-xs text-gray-500">
-                      {new Date(user.createdAt).toLocaleDateString('fr-FR')}
-                    </td>
-                    <td className="px-4 py-3">
-                      <button
-                        onClick={() => toggleStatus(user)}
-                        disabled={actionLoading === user.id}
-                        className={`px-3 py-1 text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 ${
-                          user.accountStatus === 'ACTIVE'
-                            ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                            : 'bg-green-100 text-green-700 hover:bg-green-200'
-                        }`}
-                      >
-                        {actionLoading === user.id
-                          ? '…'
-                          : user.accountStatus === 'ACTIVE'
-                          ? 'Suspendre'
-                          : 'Réactiver'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                        }`}>
+                          {user.accountStatus === 'ACTIVE' ? 'Actif' : 'Suspendu'}
+                        </span>
+                      </td>
+
+                      {/* Pack en cours */}
+                      <td className="px-4 py-3 hidden md:table-cell">
+                        {activePack ? (
+                          <div className="flex flex-col gap-0.5">
+                            <span className="font-medium text-gray-800 text-xs">{activePack.name}</span>
+                            <span className={`inline-flex items-center gap-0.5 text-[11px] font-semibold ${
+                              activePack.daysLeft > 6 ? 'text-green-600' : 'text-red-600'
+                            }`}>
+                              <span>{activePack.daysLeft > 6 ? '🟢' : '🔴'}</span>
+                              {activePack.daysLeft}j restants
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-gray-300 text-xs">—</span>
+                        )}
+                      </td>
+
+                      {/* Créé le */}
+                      <td className="px-4 py-3 text-xs text-gray-500 hidden sm:table-cell">
+                        {new Date(user.createdAt).toLocaleDateString('fr-FR')}
+                      </td>
+
+                      {/* Mail */}
+                      <td className="px-4 py-3">
+                        <a
+                          href={`mailto:${user.email}`}
+                          title={`Écrire à ${user.name}`}
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-tef-blue hover:bg-blue-100 transition-colors text-xs font-medium"
+                        >
+                          ✉️ Mail
+                        </a>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-4 py-3">
+                        <button
+                          onClick={() => toggleStatus(user)}
+                          disabled={actionLoading === user.id}
+                          className={`px-3 py-1 text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 ${
+                            user.accountStatus === 'ACTIVE'
+                              ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                              : 'bg-green-100 text-green-700 hover:bg-green-200'
+                          }`}
+                        >
+                          {actionLoading === user.id
+                            ? '…'
+                            : user.accountStatus === 'ACTIVE'
+                            ? 'Suspendre'
+                            : 'Réactiver'}
+                        </button>
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>

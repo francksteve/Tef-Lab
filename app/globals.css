@@ -3,10 +3,29 @@
 @tailwind utilities;
 
 html {
-  font-size: 18.5px;
+  font-size: 14.5px;
 }
 
 :root {
   --tef-blue: #003087;
   --tef-red: #E30613;
+}
+
+/* ── Copy / text-selection lock ─────────────────────────────────────────── */
+*,
+*::before,
+*::after {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+/* Allow selection inside form controls so users can type & edit normally */
+input,
+textarea,
+select,
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  user-select: text;
 }

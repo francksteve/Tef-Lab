@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
+import { createRateLimiter } from '@/lib/rate-limit'
+
+// 5 registration attempts per IP per 15 minutes
+const registerLimiter = createRateLimiter({ windowMs: 15 * 60_000, max: 5 })
 
 const registerSchema = z
   .object({
@@ -26,6 +30,19 @@ const registerSchema = z
 
 export async function POST(req: NextRequest) {
   try {
+    // Rate limiting: 5 attempts per IP per 15 min
+    const ip =
+      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+      req.headers.get('x-real-ip') ??
+      'unknown'
+    const rl = registerLimiter.check(ip)
+    if (!rl.allowed) {
+      return NextResponse.json(
+        { error: `Trop de tentatives. Réessayez dans ${rl.retryAfter} seconde(s).` },
+        { status: 429, headers: { 'Retry-After': String(rl.retryAfter) } }
+      )
+    }
+
     const body = await req.json()
     const parsed = registerSchema.safeParse(body)
 

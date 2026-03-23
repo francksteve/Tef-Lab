@@ -22,7 +22,11 @@ interface Question {
   questionOrder: number
   taskTitle?: string | null
   category?: string | null
+  subCategory?: string | null
   longText?: string | null
+  consigne?: string | null
+  comment?: string | null
+  description?: string | null
   imageUrl?: string | null
   audioUrl?: string | null
   question: string
@@ -38,7 +42,11 @@ interface QuestionFormData {
   questionOrder: string
   taskTitle: string
   category: string
+  subCategory: string
   longText: string
+  consigne: string
+  comment: string
+  description: string
   imageUrl: string
   audioUrl: string
   question: string
@@ -48,13 +56,26 @@ interface QuestionFormData {
   optionD: string
   correctAnswer: 'A' | 'B' | 'C' | 'D' | ''
   explanation: string
+  // For Q18-21: 4 texts with titles
+  text1Title: string
+  text1Content: string
+  text2Title: string
+  text2Content: string
+  text3Title: string
+  text3Content: string
+  text4Title: string
+  text4Content: string
 }
 
 const emptyForm: QuestionFormData = {
   questionOrder: '1',
   taskTitle: '',
   category: '',
+  subCategory: '',
   longText: '',
+  consigne: '',
+  comment: '',
+  description: '',
   imageUrl: '',
   audioUrl: '',
   question: '',
@@ -64,21 +85,34 @@ const emptyForm: QuestionFormData = {
   optionD: '',
   correctAnswer: 'A',
   explanation: '',
+  text1Title: '',
+  text1Content: '',
+  text2Title: '',
+  text2Content: '',
+  text3Title: '',
+  text3Content: '',
+  text4Title: '',
+  text4Content: '',
 }
 
 const CE_CATEGORIES = [
-  { value: 'Q1-7', label: 'Q1–7 : Documents de la vie quotidienne' },
-  { value: 'Q8-17', label: 'Q8–17 : Phrases et textes lacunaires' },
-  { value: 'Q18-22', label: 'Q18–22 : Lecture rapide / Graphiques' },
+  { value: 'Q1-7',   label: 'Q1–7 : Documents de la vie quotidienne' },
+  { value: 'Q8-17',  label: 'Q8–17 : Phrases et textes lacunaires' },
+  { value: 'Q18-21', label: 'Q18–21 : Lecture rapide de textes' },
+  { value: 'Q22',    label: 'Q22 : Lecture rapide de graphiques' },
   { value: 'Q23-32', label: 'Q23–32 : Documents administratifs et professionnels' },
   { value: 'Q33-40', label: 'Q33–40 : Articles de presse' },
 ]
 
 const CO_CATEGORIES = [
-  { value: 'Q1-4', label: 'Q1–4 : Conversations avec dessins' },
-  { value: 'Q5-20', label: 'Q5–20 : Annonces / Répondeurs / Micros-trottoirs' },
-  { value: 'Q21-30', label: 'Q21–30 : Chroniques radio / Interviews' },
-  { value: 'Q31-40', label: 'Q31–40 : Documents audio divers' },
+  { value: 'Q1-4',   label: 'Q1–4 : Conversations avec dessins',          consigne: 'Vous allez entendre des conversations entre deux personnes. Indiquez à quel dessin correspond chaque conversation.' },
+  { value: 'Q5-8',   label: 'Q5–8 : Annonces publiques',                  consigne: 'Écoutez l\'annonce et répondez à la question.' },
+  { value: 'Q9-14',  label: 'Q9–14 : Messages sur répondeur téléphonique', consigne: 'Écoutez le message et répondez à la question.' },
+  { value: 'Q15-20', label: 'Q15–20 : Micro-trottoirs',                    consigne: 'Écoutez attentivement.' },
+  { value: 'Q21-22', label: 'Q21–22 : Chroniques audio',                   consigne: 'Écoutez la chronique et répondez à la question.' },
+  { value: 'Q23-28', label: 'Q23–28 : Interviews',                         consigne: 'Écoutez l\'interview et répondez aux deux questions.' },
+  { value: 'Q29-30', label: 'Q29–30 : Reportages RFI',                     consigne: 'Écoutez le reportage et répondez aux deux questions.' },
+  { value: 'Q31-40', label: 'Q31–40 : Documents audio divers',             consigne: 'Écoutez le document audio et répondez à la question.' },
 ]
 
 const EE_SECTIONS = [
@@ -139,6 +173,7 @@ export default function QuestionsAdminPage() {
   const [form, setForm] = useState<QuestionFormData>(emptyForm)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [moduleFilter, setModuleFilter] = useState<string>('')
 
   useEffect(() => {
     fetch('/api/series')
@@ -188,11 +223,33 @@ export default function QuestionsAdminPage() {
 
   const openEdit = (q: Question) => {
     setEditingId(q.id)
+
+    // Parse Q18-21 JSON texts if present
+    let text1Title = '', text1Content = '', text2Title = '', text2Content = ''
+    let text3Title = '', text3Content = '', text4Title = '', text4Content = ''
+    if (q.category === 'Q18-21' && q.longText) {
+      try {
+        const texts = JSON.parse(q.longText) as Array<{ title: string; content: string }>
+        text1Title = texts[0]?.title ?? ''
+        text1Content = texts[0]?.content ?? ''
+        text2Title = texts[1]?.title ?? ''
+        text2Content = texts[1]?.content ?? ''
+        text3Title = texts[2]?.title ?? ''
+        text3Content = texts[2]?.content ?? ''
+        text4Title = texts[3]?.title ?? ''
+        text4Content = texts[3]?.content ?? ''
+      } catch { /* not JSON, skip */ }
+    }
+
     setForm({
       questionOrder: String(q.questionOrder),
       taskTitle: q.taskTitle ?? '',
       category: q.category ?? '',
-      longText: q.longText ?? '',
+      subCategory: q.subCategory ?? '',
+      longText: q.category === 'Q18-21' ? '' : (q.longText ?? ''),
+      consigne: q.consigne ?? '',
+      comment: q.comment ?? '',
+      description: q.description ?? '',
       imageUrl: q.imageUrl ?? '',
       audioUrl: q.audioUrl ?? '',
       question: q.question,
@@ -202,6 +259,10 @@ export default function QuestionsAdminPage() {
       optionD: q.optionD ?? '',
       correctAnswer: (q.correctAnswer as 'A' | 'B' | 'C' | 'D') ?? 'A',
       explanation: q.explanation ?? '',
+      text1Title, text1Content,
+      text2Title, text2Content,
+      text3Title, text3Content,
+      text4Title, text4Content,
     })
     setShowForm(true)
     setError(null)
@@ -216,13 +277,31 @@ export default function QuestionsAdminPage() {
     setSubmitting(true)
     setError(null)
 
+    // Build longText for Q18-21 as JSON
+    let longTextValue: string | undefined
+    if (form.category === 'Q18-21') {
+      const texts = [
+        { title: form.text1Title, content: form.text1Content },
+        { title: form.text2Title, content: form.text2Content },
+        { title: form.text3Title, content: form.text3Content },
+        { title: form.text4Title, content: form.text4Content },
+      ]
+      longTextValue = JSON.stringify(texts)
+    } else {
+      longTextValue = form.longText || undefined
+    }
+
     const payload: Record<string, unknown> = {
       moduleId: selectedSeries.moduleId,
       seriesId: selectedSeriesId,
       questionOrder: parseInt(form.questionOrder, 10),
       taskTitle: form.taskTitle || undefined,
       category: form.category || undefined,
-      longText: form.longText || undefined,
+      subCategory: form.subCategory || undefined,
+      longText: longTextValue,
+      consigne: form.consigne || undefined,
+      comment: form.comment || undefined,
+      description: form.description || undefined,
       imageUrl: form.imageUrl || undefined,
       audioUrl: form.audioUrl || undefined,
       question: form.question,
@@ -277,62 +356,280 @@ export default function QuestionsAdminPage() {
     </div>
   )
 
-  // ─── CE / CO form ────────────────────────────────────────────────────────────
-  const renderQCMForm = () => {
-    const categories = moduleCode === 'CE' ? CE_CATEGORIES : CO_CATEGORIES
+  // ─── Common CE/CO fields ─────────────────────────────────────────────────────
+  const orderField = (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">Ordre</label>
+      <input type="number" min={1} value={form.questionOrder} onChange={(e) => set('questionOrder', e.target.value)}
+        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue" required />
+    </div>
+  )
+
+  const answerFields = (
+    <>
+      <div className="grid sm:grid-cols-2 gap-4">
+        {(['A', 'B', 'C', 'D'] as const).map((opt) => inputField(`Option ${opt}`, `option${opt}` as keyof QuestionFormData, true))}
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Bonne réponse</label>
+        <div className="flex gap-4">
+          {(['A', 'B', 'C', 'D'] as const).map((opt) => (
+            <label key={opt} className="flex items-center gap-1.5 cursor-pointer">
+              <input type="radio" name="correctAnswer" value={opt} checked={form.correctAnswer === opt}
+                onChange={() => set('correctAnswer', opt)} className="accent-tef-blue" />
+              <span className="text-sm text-gray-700">Option {opt}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+      {inputField('Explication de la réponse', 'explanation', false, true)}
+    </>
+  )
+
+  // ─── CE form: category-specific ──────────────────────────────────────────────
+  const renderCEForm = () => {
+    const cat = form.category
+
+    const categorySelector = (
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Catégorie</label>
+        <select value={form.category} onChange={(e) => set('category', e.target.value)}
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue" required>
+          <option value="">-- Sélectionner --</option>
+          {CE_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+        </select>
+      </div>
+    )
+
+    // No category yet — show selector + hint
+    if (!cat) {
+      return (
+        <div className="space-y-4">
+          <div className="grid sm:grid-cols-2 gap-4">{orderField}{categorySelector}</div>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-700">
+            Sélectionnez une catégorie pour afficher les champs appropriés.
+          </div>
+        </div>
+      )
+    }
+
+    // ── Q1-7 : Documents de la vie quotidienne ──
+    // Admin: Image (optionnel) → Texte du document (optionnel) → Question → Réponses
+    if (cat === 'Q1-7') {
+      return (
+        <div className="space-y-4">
+          <div className="grid sm:grid-cols-2 gap-4">{orderField}{categorySelector}</div>
+          <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-xs text-blue-700">
+            💡 Fournissez soit une image, soit un texte (ou les deux). L&apos;image est affichée en priorité si les deux sont présents.
+          </div>
+          <FileUpload type="image" value={form.imageUrl} onChange={(url) => set('imageUrl', url)} label="Image du document (annonce, affiche, lettre…)" />
+          {inputField('Texte du document', 'longText', false, true, 'Saisissez le contenu textuel du document si vous n\'avez pas d\'image (annonce, affiche, publicité, lettre…)')}
+          {inputField('Énoncé de la question', 'question', true, true, 'Saisissez la question posée au candidat…')}
+          {answerFields}
+        </div>
+      )
+    }
+
+    // ── Q8-17 : Phrases et textes lacunaires ──
+    // Admin: SubCatégorie → Phrase ou Texte(+titre) → Question → Réponses
+    if (cat === 'Q8-17') {
+      return (
+        <div className="space-y-4">
+          <div className="grid sm:grid-cols-2 gap-4">{orderField}{categorySelector}</div>
+          {/* SubCategory selection */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Type <span className="text-red-500">*</span></label>
+            <div className="flex gap-6">
+              {(['Phrases', 'Textes'] as const).map((sc) => (
+                <label key={sc} className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="subCategory" value={sc} checked={form.subCategory === sc}
+                    onChange={() => set('subCategory', sc)} className="accent-tef-blue" required={!form.subCategory} />
+                  <span className="text-sm text-gray-700 font-medium">{sc}</span>
+                </label>
+              ))}
+            </div>
+            <p className="text-xs text-gray-400 mt-1">Phrases : Q8–13 · Textes : Q14–17</p>
+          </div>
+          {/* Title — only for Textes */}
+          {form.subCategory === 'Textes' && inputField('Titre du texte', 'taskTitle', false, false, 'Ex : La pollution dans les villes…')}
+          {/* Phrase or Text */}
+          {inputField(
+            form.subCategory === 'Textes' ? 'Texte lacunaire' : 'Phrase lacunaire',
+            'longText', true, true,
+            form.subCategory === 'Textes'
+              ? 'Saisissez le texte avec les espaces vides (ex : … est arrivé ____ à 8h)…'
+              : 'Saisissez la phrase avec le(s) trou(s) (ex : Il ____ parti hier)…'
+          )}
+          {inputField('Énoncé de la question', 'question', true, true, 'Saisissez la question posée au candidat…')}
+          {answerFields}
+        </div>
+      )
+    }
+
+    // ── Q18-21 : Lecture rapide de textes ──
+    // Admin: 4 Textes(+titres) → Question → Réponses
+    if (cat === 'Q18-21') {
+      return (
+        <div className="space-y-4">
+          <div className="grid sm:grid-cols-2 gap-4">{orderField}{categorySelector}</div>
+          <p className="text-xs text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+            📖 Saisissez les 4 textes courts qui seront affichés en grille 2×2 pour le candidat.
+          </p>
+          {([1, 2, 3, 4] as const).map((n) => (
+            <div key={n} className="border border-gray-200 rounded-xl p-4 space-y-3 bg-gray-50">
+              <p className="text-sm font-semibold text-gray-800">Texte {n}</p>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Titre du texte {n} <span className="text-red-500">*</span></label>
+                <input type="text"
+                  value={form[`text${n}Title` as keyof QuestionFormData] as string}
+                  onChange={(e) => set(`text${n}Title` as keyof QuestionFormData, e.target.value)}
+                  placeholder={`Ex : Document ${n}…`}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue bg-white"
+                  required />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Contenu du texte {n} <span className="text-red-500">*</span></label>
+                <textarea
+                  value={form[`text${n}Content` as keyof QuestionFormData] as string}
+                  onChange={(e) => set(`text${n}Content` as keyof QuestionFormData, e.target.value)}
+                  rows={4}
+                  placeholder={`Saisissez le contenu du texte ${n}…`}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue bg-white"
+                  required />
+              </div>
+            </div>
+          ))}
+          {inputField('Énoncé de la question', 'question', true, true, 'Saisissez la question posée au candidat…')}
+          {answerFields}
+        </div>
+      )
+    }
+
+    // ── Q22 : Lecture rapide de graphiques ──
+    // Admin: Consigne → Image → Question → Commentaire(opt) → Réponses
+    if (cat === 'Q22') {
+      return (
+        <div className="space-y-4">
+          <div className="grid sm:grid-cols-2 gap-4">{orderField}{categorySelector}</div>
+          {inputField('Consigne', 'consigne', true, true, 'Ex : Observez ce graphique et répondez aux questions…')}
+          <FileUpload type="image" value={form.imageUrl} onChange={(url) => set('imageUrl', url)} label="Image du graphique" />
+          {inputField('Énoncé de la question', 'question', true, true, 'Saisissez la question posée au candidat…')}
+          {inputField('Commentaire', 'comment', false, true, 'Commentaire ou note optionnelle sous la question…')}
+          {answerFields}
+        </div>
+      )
+    }
+
+    // ── Q23-32 : Documents administratifs et professionnels ──
+    // Admin: Consigne → Image → Texte complémentaire(opt,+titre) → Question → Réponses
+    if (cat === 'Q23-32') {
+      return (
+        <div className="space-y-4">
+          <div className="grid sm:grid-cols-2 gap-4">{orderField}{categorySelector}</div>
+          {inputField('Consigne', 'consigne', true, true, 'Ex : Lisez ce document et répondez aux questions…')}
+          <FileUpload type="image" value={form.imageUrl} onChange={(url) => set('imageUrl', url)} label="Image du document" />
+          {inputField('Titre du texte complémentaire', 'taskTitle', false, false, 'Titre du texte additionnel (si nécessaire)…')}
+          {inputField('Texte complémentaire', 'longText', false, true, 'Texte additionnel accompagnant le document (optionnel)…')}
+          {inputField('Énoncé de la question', 'question', true, true, 'Saisissez la question posée au candidat…')}
+          {answerFields}
+        </div>
+      )
+    }
+
+    // ── Q33-40 : Articles de presse ──
+    // Admin: Consigne → Texte(+titre) → Question → Réponses
+    if (cat === 'Q33-40') {
+      return (
+        <div className="space-y-4">
+          <div className="grid sm:grid-cols-2 gap-4">{orderField}{categorySelector}</div>
+          {inputField('Consigne', 'consigne', true, true, 'Ex : Lisez cet article et répondez aux questions…')}
+          {inputField('Titre de l\'article', 'taskTitle', true, false, 'Ex : La crise du logement en France…')}
+          {inputField('Texte de l\'article', 'longText', true, true, 'Saisissez le texte complet de l\'article…')}
+          {inputField('Énoncé de la question', 'question', true, true, 'Saisissez la question posée au candidat…')}
+          {answerFields}
+        </div>
+      )
+    }
+
+    // Fallback (unknown category)
+    return (
+      <div className="space-y-4">
+        <div className="grid sm:grid-cols-2 gap-4">{orderField}{categorySelector}</div>
+        {inputField('Énoncé de la question', 'question', true, true)}
+        {answerFields}
+      </div>
+    )
+  }
+
+  // ─── CO form ──────────────────────────────────────────────────────────────────
+  const renderCOForm = () => {
+    const selectedCat = CO_CATEGORIES.find((c) => c.value === form.category)
     return (
       <div className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Ordre</label>
-            <input type="number" min={1} value={form.questionOrder} onChange={(e) => set('questionOrder', e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue" required />
-          </div>
+          {orderField}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Catégorie <span className="text-gray-400 font-normal">(optionnel)</span></label>
             <select value={form.category} onChange={(e) => set('category', e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue">
               <option value="">-- Sélectionner --</option>
-              {categories.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+              {CO_CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
             </select>
           </div>
         </div>
 
-        {inputField(
-          moduleCode === 'CE' ? 'Texte support (passage à lire)' : 'Transcription / Contexte',
-          'longText', false, true,
-          moduleCode === 'CE' ? 'Copiez ici le texte à lire avant les questions…' : 'Transcription optionnelle du document audio…'
+        {/* Consigne preview — auto-displayed from category in quiz */}
+        {selectedCat && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-xs text-blue-700">
+            <span className="font-semibold">Consigne affichée au candidat : </span>{selectedCat.consigne}
+          </div>
         )}
 
-        <div className={`grid gap-4 ${moduleCode === 'CO' ? 'sm:grid-cols-2' : 'sm:grid-cols-1'}`}>
-          <FileUpload type="image" value={form.imageUrl} onChange={(url) => set('imageUrl', url)}
-            label={moduleCode === 'CO' ? 'Image (Q1–4 avec dessins)' : 'Image'} />
-          {moduleCode === 'CO' && (
-            <FileUpload type="audio" value={form.audioUrl} onChange={(url) => set('audioUrl', url)}
-              label="Fichier audio (lecture unique)" required />
-          )}
+        {/* Transcription audio */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Transcription du document audio{' '}
+            <span className="text-gray-400 font-normal">(optionnel)</span>
+          </label>
+          <textarea
+            value={form.longText}
+            onChange={(e) => set('longText', e.target.value)}
+            rows={5}
+            placeholder="Saisissez ici la transcription complète ou partielle du document audio. Ce texte sera affiché dans la colonne gauche pendant l'écoute."
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue"
+          />
+          <p className="text-xs text-gray-400 mt-1">
+            La transcription est affichée dans la zone de contexte à gauche de la question pendant l&apos;examen.
+          </p>
+        </div>
+
+        {/* Question posée — Micro-trottoirs uniquement (Q15-20) */}
+        {form.category === 'Q15-20' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Question posée{' '}
+              <span className="text-gray-400 font-normal">(Micro-trottoir)</span>
+            </label>
+            <input
+              type="text"
+              value={form.description}
+              onChange={(e) => set('description', e.target.value)}
+              placeholder="Ex : Que pensez-vous de l'usage des réseaux sociaux par les jeunes ?"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue"
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              La question posée par l&apos;interviewer sera affichée avant l&apos;énoncé de la question pendant l&apos;examen.
+            </p>
+          </div>
+        )}
+
+        <div className="grid sm:grid-cols-2 gap-4">
+          <FileUpload type="image" value={form.imageUrl} onChange={(url) => set('imageUrl', url)} label="Image (Q1–4 avec dessins)" />
+          <FileUpload type="audio" value={form.audioUrl} onChange={(url) => set('audioUrl', url)} label="Fichier audio (lecture unique)" required />
         </div>
 
         {inputField('Énoncé de la question', 'question', true, true, 'Saisissez la question posée au candidat…')}
-
-        <div className="grid sm:grid-cols-2 gap-4">
-          {(['A', 'B', 'C', 'D'] as const).map((opt) => inputField(`Option ${opt}`, `option${opt}` as keyof QuestionFormData, true))}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">Bonne réponse</label>
-          <div className="flex gap-4">
-            {(['A', 'B', 'C', 'D'] as const).map((opt) => (
-              <label key={opt} className="flex items-center gap-1.5 cursor-pointer">
-                <input type="radio" name="correctAnswer" value={opt} checked={form.correctAnswer === opt}
-                  onChange={() => set('correctAnswer', opt)} className="accent-tef-blue" />
-                <span className="text-sm text-gray-700">Option {opt}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {inputField('Explication de la réponse', 'explanation', false, true)}
+        {answerFields}
       </div>
     )
   }
@@ -363,7 +660,7 @@ export default function QuestionsAdminPage() {
         {moduleCode === 'EE' && form.category === 'SECTION_A' && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Titre de l'article <span className="text-gray-400 font-normal">(optionnel)</span>
+              Titre de l&apos;article <span className="text-gray-400 font-normal">(optionnel)</span>
             </label>
             <input
               type="text"
@@ -372,7 +669,26 @@ export default function QuestionsAdminPage() {
               placeholder="Ex : Mariages au sommet, Un lion sème la panique…"
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue"
             />
-            <p className="text-xs text-gray-400 mt-1">Affiché en gras avant le début de l'article pendant le test.</p>
+            <p className="text-xs text-gray-400 mt-1">Affiché en gras avant le début de l&apos;article pendant le test.</p>
+          </div>
+        )}
+
+        {/* Titre de l'annonce (EO only) — affiché avant le texte */}
+        {moduleCode === 'EO' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Titre de l&apos;annonce / publicité <span className="text-gray-400 font-normal">(optionnel si image)</span>
+            </label>
+            <input
+              type="text"
+              value={form.taskTitle}
+              onChange={(e) => set('taskTitle', e.target.value)}
+              placeholder="Ex : Offre d'emploi — Assistant(e) commercial(e), Festival de Jazz 2025…"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue"
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Affiché en gras centré au-dessus du texte de l&apos;annonce. Obligatoire quand aucune image n&apos;est fournie.
+            </p>
           </div>
         )}
 
@@ -397,8 +713,8 @@ export default function QuestionsAdminPage() {
               label="Image de l'annonce / publicité (optionnel)"
             />
             <p className="text-xs text-gray-400 mt-1">
-              Uploadez une image de l'annonce réelle (scan ou capture d'une publicité, offre d'emploi, etc.).
-              Si les deux sont fournis, l'image est affichée en priorité.
+              Uploadez une image de l&apos;annonce réelle (scan ou capture d&apos;une publicité, offre d&apos;emploi, etc.).
+              Si les deux sont fournis, l&apos;image est affichée en priorité.
             </p>
           </div>
         )}
@@ -435,19 +751,39 @@ export default function QuestionsAdminPage() {
       {/* Series selector grouped by module */}
       <div className="bg-white rounded-xl border border-gray-200 p-5">
         <label className="block text-sm font-medium text-gray-700 mb-2">Sélectionner une série</label>
-        <select value={selectedSeriesId} onChange={(e) => handleSeriesChange(e.target.value)}
-          className="w-full sm:w-96 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue">
-          <option value="">-- Choisir une série --</option>
-          {(['CE', 'CO', 'EE', 'EO'] as const).map((code) => {
-            const group = series.filter((s) => s.module.code === code)
-            if (!group.length) return null
-            return (
-              <optgroup key={code} label={`Module ${code}`}>
-                {group.map((s) => <option key={s.id} value={s.id}>{s.title}</option>)}
-              </optgroup>
-            )
-          })}
-        </select>
+        <div className="flex flex-wrap items-center gap-3">
+          <select value={selectedSeriesId} onChange={(e) => handleSeriesChange(e.target.value)}
+            className="flex-1 min-w-0 sm:max-w-sm border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue">
+            <option value="">-- Choisir une série --</option>
+            {(['CE', 'CO', 'EE', 'EO'] as const).map((code) => {
+              if (moduleFilter && moduleFilter !== code) return null
+              const group = series.filter((s) => s.module.code === code)
+              if (!group.length) return null
+              return (
+                <optgroup key={code} label={`Module ${code}`}>
+                  {group.map((s) => <option key={s.id} value={s.id}>{s.title}</option>)}
+                </optgroup>
+              )
+            })}
+          </select>
+
+          {/* Module filter buttons */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {(['', 'CE', 'CO', 'EE', 'EO'] as const).map((code) => (
+              <button
+                key={code || 'all'}
+                onClick={() => setModuleFilter(code)}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
+                  moduleFilter === code
+                    ? 'bg-tef-blue text-white shadow-sm'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                {code || 'Tous'}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {selectedSeriesId && selectedSeries && (
@@ -483,7 +819,7 @@ export default function QuestionsAdminPage() {
                 {editingId ? (isTask ? 'Modifier la section' : 'Modifier la question') : (isTask ? 'Nouvelle section' : 'Nouvelle question')}
               </h2>
               <form onSubmit={handleSubmit} className="space-y-4">
-                {isQCM ? renderQCMForm() : renderTaskForm()}
+                {isTask ? renderTaskForm() : moduleCode === 'CE' ? renderCEForm() : renderCOForm()}
                 <div className="flex gap-3 pt-3 border-t border-gray-100">
                   <button type="submit" disabled={submitting}
                     className="px-5 py-2 bg-tef-blue text-white text-sm font-semibold rounded-lg hover:bg-tef-blue-hover disabled:opacity-50 transition-colors">
@@ -537,6 +873,12 @@ export default function QuestionsAdminPage() {
                               )}
                             </div>
                           )}
+                          {moduleCode === 'EO' && q.taskTitle && (
+                            <div>
+                              <p className="text-xs font-medium text-gray-500 mb-0.5">Titre de l&apos;annonce</p>
+                              <p className="text-sm text-gray-800 font-semibold">{q.taskTitle}</p>
+                            </div>
+                          )}
                           <div>
                             <p className="text-xs font-medium text-gray-500 mb-0.5">Consigne</p>
                             <p className="text-sm text-gray-900">{q.question}</p>
@@ -561,9 +903,12 @@ export default function QuestionsAdminPage() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="inline-flex items-center justify-center w-6 h-6 bg-tef-blue text-white text-xs font-bold rounded-full flex-shrink-0">{q.questionOrder}</span>
                           {q.category && <span className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">{q.category}</span>}
+                          {q.subCategory && <span className="text-xs text-purple-700 bg-purple-100 px-1.5 py-0.5 rounded">{q.subCategory}</span>}
                           {q.audioUrl && <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded">🎵 Audio</span>}
                           {q.imageUrl && <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">🖼 Image</span>}
+                          {q.consigne && <span className="text-xs bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded">📋 Consigne</span>}
                         </div>
+                        {q.consigne && <p className="text-xs text-yellow-700 italic line-clamp-1">{q.consigne}</p>}
                         {q.longText && <p className="text-xs text-gray-400 italic line-clamp-1">{q.longText}</p>}
                         <p className="text-sm text-gray-900 font-medium line-clamp-2">{q.question}</p>
                         <div className="flex flex-wrap gap-x-3 text-xs text-gray-500">

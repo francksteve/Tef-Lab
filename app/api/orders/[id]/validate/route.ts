@@ -29,25 +29,34 @@ export async function PATCH(
       )
     }
 
-    const tempPassword = nanoid(8)
-    const hashedPassword = await bcrypt.hash(tempPassword, 12)
-
     const activatedAt = new Date()
     const expiresAt = new Date(
       activatedAt.getTime() + order.pack.durationDays * 86400000
     )
 
-    const user = await prisma.user.upsert({
-      where: { email: order.visitorEmail },
-      update: {},
-      create: {
-        name: order.visitorName,
-        email: order.visitorEmail,
-        password: hashedPassword,
-        role: 'SUBSCRIBER',
-        mustChangePassword: true,
-      },
-    })
+    // ── Separate path: existing user vs. new user
+    const existingUser = await prisma.user.findUnique({ where: { email: order.visitorEmail } })
+
+    let user: { id: string }
+    let tempPassword: string | null = null
+
+    if (existingUser) {
+      // Existing account — just link the order, no password change needed
+      user = existingUser
+    } else {
+      // New account — create with temporary password
+      tempPassword = nanoid(8)
+      const hashedPassword = await bcrypt.hash(tempPassword, 12)
+      user = await prisma.user.create({
+        data: {
+          name: order.visitorName,
+          email: order.visitorEmail,
+          password: hashedPassword,
+          role: 'SUBSCRIBER',
+          mustChangePassword: true,
+        },
+      })
+    }
 
     await prisma.order.update({
       where: { id: params.id },
@@ -63,7 +72,7 @@ export async function PATCH(
       visitorName: order.visitorName,
       visitorEmail: order.visitorEmail,
       packName: order.pack.name,
-      tempPassword,
+      tempPassword: tempPassword ?? '(compte existant)',
       activatedAt,
       expiresAt,
       modules: ['Compréhension Écrite (CE)', 'Compréhension Orale (CO)', 'Expression Écrite (EE)', 'Expression Orale (EO)'],

@@ -293,13 +293,13 @@ export default function PacksAdminPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b">
+              <thead className="bg-tef-blue text-white">
                 <tr>
                   {['Nom / Description', 'Prix', 'Accès', 'IA/j', 'Sessions', 'Durée', 'Statut', 'Actions'].map(
                     (h) => (
                       <th
                         key={h}
-                        className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider whitespace-nowrap"
+                        className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider whitespace-nowrap"
                       >
                         {h}
                       </th>
@@ -307,9 +307,9 @@ export default function PacksAdminPage() {
                   )}
                 </tr>
               </thead>
-              <tbody className="divide-y">
-                {packs.map((pack) => (
-                  <tr key={pack.id} className="hover:bg-gray-50">
+              <tbody>
+                {packs.map((pack, index) => (
+                  <tr key={pack.id} className={`border-b border-blue-100 transition-colors hover:bg-blue-100 ${index % 2 === 0 ? 'bg-white' : 'bg-blue-50'}`}>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <div>

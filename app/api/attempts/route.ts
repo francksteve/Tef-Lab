@@ -59,6 +59,8 @@ export async function POST(req: NextRequest) {
           moduleCode: data.moduleCode,
           score: { not: null },
         },
+        orderBy: { completedAt: 'desc' },
+        take: 50,
       })
 
       const avgScore =

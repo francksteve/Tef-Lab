@@ -75,6 +75,24 @@ export async function DELETE(
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
     }
 
+    // Refuse deletion if active (non-expired) VALIDATED orders reference this pack
+    const now = new Date()
+    const activeOrderCount = await prisma.order.count({
+      where: {
+        packId: params.id,
+        status: 'VALIDATED',
+        expiresAt: { gt: now },
+      },
+    })
+    if (activeOrderCount > 0) {
+      return NextResponse.json(
+        {
+          error: `Impossible de supprimer ce pack : ${activeOrderCount} abonnement(s) actif(s) y sont rattachés. Désactivez le pack plutôt que de le supprimer.`,
+        },
+        { status: 409 }
+      )
+    }
+
     await prisma.packSeries.deleteMany({ where: { packId: params.id } })
     await prisma.pack.delete({ where: { id: params.id } })
 

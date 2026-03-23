@@ -31,7 +31,8 @@ interface TaskScore {
   feedback: string
   strengths: string[]
   improvements: string[]
-  improvedText: string | null
+  annotatedText: string | null
+  improvedText?: string | null
 }
 
 interface EEResult {
@@ -68,6 +69,7 @@ export default function EEPage() {
   const [task2Text, setTask2Text] = useState('')
   const [result, setResult] = useState<EEResult | null>(null)
   const [aiError, setAiError] = useState<string | null>(null)
+  const [showExitConfirm, setShowExitConfirm] = useState(false)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -97,6 +99,17 @@ export default function EEPage() {
         setLoading(false)
       })
   }, [seriesId, session, status, router])
+
+  // Prevent accidental tab/window close during exam
+  useEffect(() => {
+    if (phase === 'results' || phase === 'submitting') return
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [phase])
 
   const handleTask1TimeUp = useCallback(() => {
     setPhase('task2')
@@ -266,14 +279,23 @@ export default function EEPage() {
     const task1Count = countWords(task1Text)
     const task1OK = task1Count >= TASK1_MIN
     return (
+      <>
       <div className="min-h-screen bg-gray-50">
         <Timer durationSeconds={25 * 60} onTimeUp={handleTask1TimeUp} />
         <div className="max-w-3xl mx-auto px-4 pt-16 pb-8 space-y-6">
-          <div>
-            <span className="inline-block px-3 py-1 bg-tef-blue text-white text-xs font-semibold rounded-full mb-3">
-              Tâche 1 / 2 — Suite d'article
-            </span>
-            <h1 className="text-xl font-bold text-gray-900">{series?.title}</h1>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <span className="inline-block px-3 py-1 bg-tef-blue text-white text-xs font-semibold rounded-full mb-3">
+                Tâche 1 / 2 — Suite d&apos;article
+              </span>
+              <h1 className="text-xl font-bold text-gray-900">{series?.title}</h1>
+            </div>
+            <button
+              onClick={() => setShowExitConfirm(true)}
+              className="flex-shrink-0 px-3 py-1.5 text-xs font-medium text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-red-600 hover:border-red-200 transition-colors"
+            >
+              ✕ Abandonner
+            </button>
           </div>
 
           {(task1Q?.taskTitle || task1Q?.longText) && (
@@ -329,6 +351,34 @@ export default function EEPage() {
           )}
         </div>
       </div>
+      {showExitConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 space-y-4">
+            <div className="text-center">
+              <span className="text-4xl">⚠️</span>
+              <h2 className="text-lg font-bold text-gray-900 mt-2">Quitter le test ?</h2>
+              <p className="text-sm text-gray-600 mt-2 leading-relaxed">
+                Vos réponses ne seront pas enregistrées et votre progression sera perdue.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="w-full px-4 py-2.5 bg-tef-red text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Quitter sans soumettre
+              </button>
+              <button
+                onClick={() => setShowExitConfirm(false)}
+                className="w-full px-4 py-2.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      </>
     )
   }
 
@@ -337,14 +387,23 @@ export default function EEPage() {
   const task2OK = task2Count >= TASK2_MIN
 
   return (
+    <>
     <div className="min-h-screen bg-gray-50">
       <Timer durationSeconds={35 * 60} onTimeUp={handleTask2TimeUp} />
       <div className="max-w-3xl mx-auto px-4 pt-16 pb-8 space-y-6">
-        <div>
-          <span className="inline-block px-3 py-1 bg-tef-red text-white text-xs font-semibold rounded-full mb-3">
-            Tâche 2 / 2 — Lettre au journal
-          </span>
-          <h1 className="text-xl font-bold text-gray-900">{series?.title}</h1>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <span className="inline-block px-3 py-1 bg-tef-red text-white text-xs font-semibold rounded-full mb-3">
+              Tâche 2 / 2 — Lettre au journal
+            </span>
+            <h1 className="text-xl font-bold text-gray-900">{series?.title}</h1>
+          </div>
+          <button
+            onClick={() => setShowExitConfirm(true)}
+            className="flex-shrink-0 px-3 py-1.5 text-xs font-medium text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-red-600 hover:border-red-200 transition-colors"
+          >
+            ✕ Abandonner
+          </button>
         </div>
 
         {task2Q?.longText && (
@@ -403,6 +462,34 @@ export default function EEPage() {
         </div>
       </div>
     </div>
+    {showExitConfirm && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+        <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 space-y-4">
+          <div className="text-center">
+            <span className="text-4xl">⚠️</span>
+            <h2 className="text-lg font-bold text-gray-900 mt-2">Quitter le test ?</h2>
+            <p className="text-sm text-gray-600 mt-2 leading-relaxed">
+              Vos réponses ne seront pas enregistrées et votre progression sera perdue.
+            </p>
+          </div>
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="w-full px-4 py-2.5 bg-tef-red text-white font-semibold rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Quitter sans soumettre
+            </button>
+            <button
+              onClick={() => setShowExitConfirm(false)}
+              className="w-full px-4 py-2.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   )
 }
 
@@ -412,6 +499,77 @@ const NEXT_CECRL: Record<string, string> = {
   B1: 'B2',
   B2: 'C1',
   C1: 'C2',
+}
+
+/**
+ * Parses AI-annotated text containing <del>…</del> and <ins>…</ins> tags
+ * and renders them as styled React elements:
+ *   <del> → red strikethrough  (error to fix)
+ *   <ins> → green underline    (correction)
+ */
+function renderAnnotatedText(text: string): React.ReactNode {
+  const parts = text.split(/(<del>[\s\S]*?<\/del>|<ins>[\s\S]*?<\/ins>)/g)
+  return parts.map((part, i) => {
+    if (part.startsWith('<del>')) {
+      const content = part.replace(/^<del>/, '').replace(/<\/del>$/, '')
+      return (
+        <span key={i} className="line-through text-red-600 bg-red-50 px-0.5 rounded">
+          {content}
+        </span>
+      )
+    }
+    if (part.startsWith('<ins>')) {
+      const content = part.replace(/^<ins>/, '').replace(/<\/ins>$/, '')
+      return (
+        <span key={i} className="text-green-700 bg-green-50 px-0.5 rounded underline decoration-green-600">
+          {content}
+        </span>
+      )
+    }
+    return <span key={i}>{part}</span>
+  })
+}
+
+/**
+ * Renders the improvedText for Task 1:
+ * - Paragraph headers (e.g. "1er paragraphe (Rappel des faits) :") → bold indigo
+ * - Bracket annotations [connecteur logique] → indigo pill
+ * - Empty lines → visual spacing
+ */
+function renderImprovedText(text: string): React.ReactNode {
+  const lines = text.split('\n')
+  return lines.map((line, lineIdx) => {
+    if (line.trim() === '') {
+      return <div key={lineIdx} className="h-2" />
+    }
+    // Detect paragraph headers
+    const isHeader = /^[0-9]e[r]?\w*\s+paragraphe\s*\(/i.test(line.trim())
+    if (isHeader) {
+      return (
+        <p key={lineIdx} className="font-bold text-indigo-700 mt-3 mb-0.5 text-sm">
+          {line}
+        </p>
+      )
+    }
+    // Render inline [annotation] tags in indigo pills
+    const parts = line.split(/(\[[^\]]+\])/g)
+    return (
+      <p key={lineIdx} className="text-sm text-gray-800 leading-relaxed">
+        {parts.map((part, i) =>
+          /^\[.+\]$/.test(part) ? (
+            <span
+              key={i}
+              className="inline-block text-[10px] font-semibold text-indigo-600 bg-indigo-50 border border-indigo-200 px-1 rounded mx-0.5 leading-none py-0.5 align-middle"
+            >
+              {part}
+            </span>
+          ) : (
+            <span key={i}>{part}</span>
+          )
+        )}
+      </p>
+    )
+  })
 }
 
 function TaskResultCard({
@@ -424,6 +582,7 @@ function TaskResultCard({
   score: TaskScore
 }) {
   const [showImproved, setShowImproved] = useState(false)
+  const [showImprovedFull, setShowImprovedFull] = useState(false)
   const nextLevel = NEXT_CECRL[score.cecrlLevel]
 
   return (
@@ -468,30 +627,73 @@ function TaskResultCard({
         </div>
       )}
 
-      {/* Improved text section */}
-      {score.improvedText && nextLevel && (
+      {/* Annotated corrections section */}
+      {score.annotatedText && nextLevel && (
         <div className="border-t border-gray-100 pt-4">
           <button
             onClick={() => setShowImproved((v) => !v)}
-            className="flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+            className="flex items-center gap-2 text-sm font-semibold text-orange-600 hover:text-orange-800 transition-colors"
           >
-            <span className="text-base">✨</span>
+            <span className="text-base">✏️</span>
             {showImproved
-              ? 'Masquer la version améliorée'
-              : `Voir la version niveau ${nextLevel}`}
+              ? 'Masquer les corrections'
+              : 'Voir les corrections de ton texte'}
             <span className={`transition-transform duration-200 ${showImproved ? 'rotate-180' : ''}`}>
               ▾
             </span>
           </button>
 
           {showImproved && (
-            <div className="mt-3 bg-indigo-50 border border-indigo-200 rounded-xl p-4 space-y-2">
-              <p className="text-xs font-semibold text-indigo-700 uppercase tracking-wide">
-                ✨ Exemple de réponse niveau {nextLevel}
+            <div className="mt-3 bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
+              {/* Legend */}
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-amber-800 font-semibold pb-2 border-b border-amber-200">
+                <span>Corrections pour atteindre le niveau {nextLevel} :</span>
+                <span className="flex items-center gap-1 font-normal">
+                  <span className="line-through text-red-600 bg-red-50 px-1 rounded">erreur</span>
+                  <span className="text-gray-500">= à corriger</span>
+                </span>
+                <span className="flex items-center gap-1 font-normal">
+                  <span className="text-green-700 bg-green-50 px-1 rounded underline decoration-green-600">correction</span>
+                  <span className="text-gray-500">= texte corrigé</span>
+                </span>
+              </div>
+              {/* Annotated text */}
+              <p className="text-sm text-gray-800 leading-relaxed whitespace-pre-wrap">
+                {renderAnnotatedText(score.annotatedText)}
               </p>
-              <p className="text-sm text-indigo-900 leading-relaxed whitespace-pre-wrap">
-                {score.improvedText}
-              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── Production corrigée complète (Task 1 only) ── */}
+      {taskNumber === 1 && score.improvedText && nextLevel && (
+        <div className="border-t border-gray-100 pt-4">
+          <button
+            onClick={() => setShowImprovedFull((v) => !v)}
+            className="flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors"
+          >
+            <span className="text-base">📝</span>
+            {showImprovedFull
+              ? 'Masquer la production corrigée'
+              : `Production corrigée — structure 4 paragraphes (niveau ${nextLevel})`}
+            <span className={`transition-transform duration-200 ${showImprovedFull ? 'rotate-180' : ''}`}>
+              ▾
+            </span>
+          </button>
+
+          {showImprovedFull && (
+            <div className="mt-3 bg-indigo-50 border border-indigo-200 rounded-xl p-4">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-indigo-800 font-semibold pb-2 border-b border-indigo-200 mb-3">
+                <span>Réécriture au niveau {nextLevel} avec annotations pédagogiques :</span>
+                <span className="flex items-center gap-1 font-normal">
+                  <span className="text-[10px] font-semibold text-indigo-600 bg-white border border-indigo-200 px-1 rounded">[procédé]</span>
+                  <span className="text-gray-500">= technique utilisée</span>
+                </span>
+              </div>
+              <div className="space-y-0.5">
+                {renderImprovedText(score.improvedText)}
+              </div>
             </div>
           )}
         </div>

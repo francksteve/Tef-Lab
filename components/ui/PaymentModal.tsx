@@ -326,13 +326,12 @@ export default function PaymentModal({ isOpen, onClose, pack }: Props) {
                           setSelectedMethod(method)
                           setStep('manual_form')
                         }}
-                        className={`rounded-xl border-2 p-3 text-left transition-all ${
+                        className={`rounded-xl border-2 p-3 text-center transition-all ${
                           isSelected ? cfg.borderColor + ' bg-gray-50' : 'border-gray-200 hover:border-gray-400'
                         }`}
                       >
-                        <div className="text-2xl mb-1">{cfg.icon}</div>
                         <p className="font-bold text-sm text-gray-900">{cfg.label}</p>
-                        <p className="text-xs text-gray-500 mt-0.5 leading-tight">{cfg.sub}</p>
+                        <p className="text-xs text-gray-500 mt-1 leading-tight">{cfg.sub}</p>
                       </button>
                     )
                   })}
@@ -353,12 +352,9 @@ export default function PaymentModal({ isOpen, onClose, pack }: Props) {
 
               {/* Instructions */}
               <div className={`rounded-xl border-2 ${methodConfig[selectedMethod].borderColor} p-4 space-y-2`}>
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">{methodConfig[selectedMethod].icon}</span>
-                  <div>
-                    <p className="font-bold text-gray-900">{methodConfig[selectedMethod].label}</p>
-                    <p className="text-xs text-gray-500">Paiement manuel — activation sous 24h</p>
-                  </div>
+                <div>
+                  <p className="font-bold text-gray-900">{methodConfig[selectedMethod].label}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Paiement manuel — activation sous 24h</p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-3 text-sm">
                   <p className="text-gray-600 text-xs leading-relaxed">

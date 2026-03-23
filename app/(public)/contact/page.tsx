@@ -37,13 +37,13 @@ const faqs = [
 ]
 
 export default function ContactPage() {
-  const [form, setForm] = useState({ name: '', email: '', message: '' })
+  const [form, setForm] = useState({ name: '', message: '' })
   const [submitted, setSubmitted] = useState(false)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const text = `Bonjour TEF-LAB,\n\nMon nom : ${form.name}\nEmail : ${form.email}\n\n${form.message}`
+    const text = `Bonjour TEF-LAB,\n\nMon nom : ${form.name}\n\n${form.message}`
     window.open(`https://wa.me/237683008287?text=${encodeURIComponent(text)}`, '_blank')
     setSubmitted(true)
   }
@@ -121,28 +121,22 @@ export default function ContactPage() {
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <h2 className="text-lg font-bold text-gray-900 mb-1">Envoyer un message</h2>
+                <p className="text-xs text-gray-500">
+                  Ton message sera pré-rempli sur WhatsApp pour une réponse rapide.
+                </p>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Nom *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Ton prénom *</label>
                   <input
                     type="text"
                     required
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    placeholder="Marie"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                  <input
-                    type="email"
-                    required
-                    value={form.email}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Message *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Ton message *</label>
                   <textarea
                     required
                     rows={5}
@@ -154,9 +148,9 @@ export default function ContactPage() {
                 </div>
                 <button
                   type="submit"
-                  className="w-full py-3 bg-tef-blue text-white font-semibold rounded-lg hover:bg-tef-blue-hover transition-colors"
+                  className="w-full py-3 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition-colors flex items-center justify-center gap-2"
                 >
-                  Envoyer via WhatsApp
+                  💬 Envoyer sur WhatsApp
                 </button>
               </form>
             )}

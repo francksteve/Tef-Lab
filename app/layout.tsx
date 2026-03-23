@@ -9,6 +9,18 @@ export const metadata: Metadata = {
   title: 'TEF-LAB — Prépare ton TEF Canada',
   description:
     'Plateforme de préparation au TEF Canada pour les candidats camerounais. Entraîne-toi sur les 4 modules : Compréhension Écrite, Compréhension Orale, Expression Écrite et Expression Orale.',
+  openGraph: {
+    title: 'TEF-LAB — Prépare ton TEF Canada',
+    description: 'Plateforme de préparation au TEF Canada pour les candidats camerounais.',
+    siteName: 'TEF-LAB',
+    locale: 'fr_FR',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'TEF-LAB — Prépare ton TEF Canada',
+    description: 'Plateforme de préparation au TEF Canada pour les candidats camerounais.',
+  },
 }
 
 export const viewport: Viewport = {

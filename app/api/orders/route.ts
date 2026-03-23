@@ -13,7 +13,15 @@ const createOrderSchema = z.object({
   visitorEmail: z.string().email('Email invalide'),
   visitorPhone: z
     .string()
-    .regex(/^\+237[0-9]{9}$/, 'Format: +237XXXXXXXXX'),
+    .transform((v) => v.replace(/[\s\-().]/g, '')) // strip spaces, dashes, dots, parens
+    .pipe(
+      z
+        .string()
+        .regex(
+          /^(\+?237|0)[0-9]{8,9}$/,
+          'Numéro invalide. Formats acceptés : +237XXXXXXXXX, 237XXXXXXXXX, 06XXXXXXXX'
+        )
+    ),
   visitorMessage: z.string().optional(),
 })
 

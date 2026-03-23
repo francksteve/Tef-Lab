@@ -353,7 +353,7 @@ export default function MentionsLegalesPage() {
           <p className="text-blue-300 text-sm font-medium mb-2 uppercase tracking-widest">Légal</p>
           <h1 className="text-3xl sm:text-4xl font-extrabold mb-3">Mentions légales</h1>
           <p className="text-blue-200 text-sm">
-            Dernière mise à jour : mars 2025 &nbsp;·&nbsp; Plateforme TEF-LAB, préparation au TEF Canada
+            Dernière mise à jour : mars 2026 &nbsp;·&nbsp; Plateforme TEF-LAB, préparation au TEF Canada
           </p>
         </div>
       </section>

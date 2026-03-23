@@ -136,7 +136,7 @@ export default function ResetPasswordPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-2 mb-4">
-            <img src="/logo.png" alt="TEF-LAB" className="h-6 w-auto object-contain" />
+            <img src="/logo.png" alt="TEF-LAB" className="h-12 w-auto object-contain rounded-xl" />
             <span className="font-bold text-xl text-tef-blue">TEF-LAB</span>
           </Link>
           <h1 className="text-2xl font-extrabold text-gray-900">Réinitialiser le mot de passe</h1>

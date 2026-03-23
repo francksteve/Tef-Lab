@@ -270,6 +270,7 @@ export interface PaymentConfirmedEmailData {
   clientName: string
   clientEmail: string
   packName: string
+  price: number
   reference: string
   activatedAt: Date
   expiresAt: Date
@@ -277,6 +278,7 @@ export interface PaymentConfirmedEmailData {
 }
 
 export async function sendPaymentConfirmedEmail(data: PaymentConfirmedEmailData): Promise<void> {
+  const firstName = data.clientName.split(' ')[0]
   const formatDate = (d: Date) =>
     new Date(d).toLocaleDateString('fr-FR', {
       timeZone: 'Africa/Douala',
@@ -309,19 +311,30 @@ export async function sendPaymentConfirmedEmail(data: PaymentConfirmedEmailData)
         <div style="width:64px; height:64px; background:#d1fae5; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:28px;">✅</div>
       </div>
 
-      <h2 style="color:#003087; margin-top:0; text-align:center;">Paiement confirmé !</h2>
-      <p style="color:#444; line-height:1.6; text-align:center;">
-        Bonjour <strong>${data.clientName}</strong>,<br>
-        Votre paiement a été reçu et votre abonnement TEF-LAB est maintenant actif.
-      </p>
+      <h2 style="color:#003087; margin-top:0; text-align:center;">Pack activé avec succès !</h2>
+
+      <!-- Message personnalisé -->
+      <div style="background:#f0fff4; border-left:4px solid #22c55e; border-radius:4px; padding:16px 20px; margin-bottom:24px;">
+        <p style="margin:0; color:#15803d; font-size:16px; line-height:1.7;">
+          Salut <strong>${firstName}</strong>,<br>
+          Vous venez d'activer le pack <strong>${data.packName}</strong> —
+          ceci vous a coûté <strong>${data.price.toLocaleString('fr-FR')} FCFA</strong>.<br>
+          Merci de votre confiance.<br>
+          <em>La team TEF-LAB</em>
+        </p>
+      </div>
 
       <!-- Récapitulatif -->
-      <div style="background:#f0f4ff; border-radius:8px; padding:20px; margin:24px 0;">
+      <div style="background:#f0f4ff; border-radius:8px; padding:20px; margin-bottom:24px;">
         <h3 style="color:#003087; margin:0 0 16px; font-size:15px; text-transform:uppercase; letter-spacing:0.5px;">Récapitulatif de votre abonnement</h3>
         <table style="width:100%; border-collapse:collapse;">
           <tr style="border-bottom:1px solid #dde6ff;">
             <td style="padding:10px 0; font-weight:bold; color:#003087; width:40%;">Pack</td>
             <td style="padding:10px 0; font-weight:bold; color:#003087;">${data.packName}</td>
+          </tr>
+          <tr style="border-bottom:1px solid #dde6ff;">
+            <td style="padding:10px 0; font-weight:bold; color:#555;">Montant payé</td>
+            <td style="padding:10px 0; font-weight:bold; color:#003087;">${data.price.toLocaleString('fr-FR')} FCFA</td>
           </tr>
           <tr style="border-bottom:1px solid #dde6ff;">
             <td style="padding:10px 0; font-weight:bold; color:#555;">Référence</td>
@@ -359,7 +372,7 @@ export async function sendPaymentConfirmedEmail(data: PaymentConfirmedEmailData)
 
     <!-- Pied de page -->
     <div style="background:#f5f5f5; padding:16px 32px; text-align:center; color:#888; font-size:12px;">
-      © 2025 TEF-LAB · <a href="${config.siteUrl}" style="color:#0055B3; text-decoration:none;">tef-lab.com</a>
+      © ${new Date().getFullYear()} TEF-LAB · <a href="${config.siteUrl}" style="color:#0055B3; text-decoration:none;">tef-lab.com</a>
     </div>
   </div>
 </body>
@@ -369,7 +382,188 @@ export async function sendPaymentConfirmedEmail(data: PaymentConfirmedEmailData)
   await transporter.sendMail({
     from: config.smtp.from,
     to: data.clientEmail,
-    subject: `[TEF-LAB] ✅ Paiement confirmé — Pack ${data.packName}`,
+    subject: `[TEF-LAB] ✅ Pack ${data.packName} activé — Merci !`,
+    html,
+  })
+}
+
+// ─── Template 6 : Pack expiré → Client ─────────────────────────────────────
+
+export interface PackExpiredEmailData {
+  clientName: string
+  clientEmail: string
+  packName: string
+}
+
+export async function sendPackExpiredEmail(data: PackExpiredEmailData): Promise<void> {
+  const firstName = data.clientName.split(' ')[0]
+
+  const html = `
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"><title>Votre pack TEF-LAB a expiré</title></head>
+<body style="font-family: Arial, sans-serif; background:#f5f5f5; margin:0; padding:20px;">
+  <div style="max-width:600px; margin:0 auto; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+    <!-- En-tête -->
+    <div style="background:#003087; padding:24px 32px;">
+      <h1 style="color:#fff; margin:0; font-size:22px; font-weight:900;">TEF-LAB</h1>
+      <p style="color:#cce0ff; margin:6px 0 0;">Information sur votre abonnement</p>
+    </div>
+
+    <!-- Corps -->
+    <div style="padding:32px;">
+      <div style="text-align:center; margin-bottom:24px;">
+        <div style="width:64px; height:64px; background:#fef2f2; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:28px;">⏰</div>
+      </div>
+
+      <h2 style="color:#E30613; margin-top:0; text-align:center;">Votre pack a expiré</h2>
+
+      <!-- Message personnalisé -->
+      <div style="background:#fef2f2; border-left:4px solid #E30613; border-radius:4px; padding:16px 20px; margin-bottom:24px;">
+        <p style="margin:0; color:#991b1b; font-size:16px; line-height:1.7;">
+          Salut <strong>${firstName}</strong>,<br>
+          Votre pack <strong>${data.packName}</strong> est arrivé à expiration.<br>
+          Bien vouloir le renouveler pour continuer votre formation.<br>
+          Merci de votre confiance.<br>
+          <em>La team TEF-LAB</em>
+        </p>
+      </div>
+
+      <!-- Bouton renouvellement -->
+      <div style="text-align:center; margin:28px 0 16px;">
+        <a href="${config.siteUrl}/packs"
+           style="display:inline-block; background:#E30613; color:#fff; text-decoration:none;
+                  padding:16px 40px; border-radius:8px; font-size:16px; font-weight:bold;">
+          Renouveler mon pack →
+        </a>
+      </div>
+
+      <p style="color:#666; font-size:13px; line-height:1.6; text-align:center;">
+        Des questions sur le renouvellement ? Contactez-nous sur WhatsApp au<br>
+        <a href="https://wa.me/${config.adminWhatsapp}" style="color:#25D366; font-weight:bold;">+237 683 008 287</a>
+      </p>
+    </div>
+
+    <!-- Pied de page -->
+    <div style="background:#f5f5f5; padding:16px 32px; text-align:center; color:#888; font-size:12px;">
+      © ${new Date().getFullYear()} TEF-LAB · <a href="${config.siteUrl}" style="color:#0055B3; text-decoration:none;">tef-lab.com</a>
+    </div>
+  </div>
+</body>
+</html>
+`
+
+  await transporter.sendMail({
+    from: config.smtp.from,
+    to: data.clientEmail,
+    subject: `[TEF-LAB] ⏰ Votre pack ${data.packName} a expiré — Renouvelez maintenant`,
+    html,
+  })
+}
+
+// ─── Template 7 : Paiement automatisé reçu → Admin ─────────────────────────
+
+export interface AdminPaymentNotificationData {
+  clientName: string
+  clientEmail: string
+  packName: string
+  price: number
+  reference: string
+  paymentMethod: string
+  activatedAt: Date
+  expiresAt: Date
+}
+
+export async function sendAdminPaymentNotification(data: AdminPaymentNotificationData): Promise<void> {
+  const formatDate = (d: Date) =>
+    new Date(d).toLocaleString('fr-FR', {
+      timeZone: 'Africa/Douala',
+      dateStyle: 'long',
+      timeStyle: 'short',
+    })
+
+  const html = `
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"><title>Nouveau paiement automatique – TEF-LAB</title></head>
+<body style="font-family: Arial, sans-serif; background:#f5f5f5; margin:0; padding:20px;">
+  <div style="max-width:600px; margin:0 auto; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+    <!-- En-tête -->
+    <div style="background:#003087; padding:24px 32px;">
+      <h1 style="color:#fff; margin:0; font-size:22px; font-weight:900;">TEF-LAB</h1>
+      <p style="color:#cce0ff; margin:6px 0 0;">💳 Nouveau paiement automatique reçu</p>
+    </div>
+
+    <!-- Corps -->
+    <div style="padding:32px;">
+      <div style="background:#d1fae5; border-left:4px solid #22c55e; border-radius:4px; padding:14px 18px; margin-bottom:24px;">
+        <p style="margin:0; color:#166534; font-size:15px; font-weight:bold;">
+          ✅ Paiement confirmé via ${data.paymentMethod} — ${data.price.toLocaleString('fr-FR')} FCFA
+        </p>
+      </div>
+
+      <h3 style="color:#003087; border-bottom:2px solid #E30613; padding-bottom:8px;">Détails du paiement</h3>
+      <table style="width:100%; border-collapse:collapse; margin-bottom:24px;">
+        <tr style="background:#f0f4ff;">
+          <td style="padding:10px 14px; font-weight:bold; color:#003087; width:40%;">Référence</td>
+          <td style="padding:10px 14px; font-family:monospace;">${data.reference}</td>
+        </tr>
+        <tr>
+          <td style="padding:10px 14px; font-weight:bold; color:#003087;">Pack</td>
+          <td style="padding:10px 14px; font-weight:bold;">${data.packName}</td>
+        </tr>
+        <tr style="background:#f0f4ff;">
+          <td style="padding:10px 14px; font-weight:bold; color:#003087;">Montant</td>
+          <td style="padding:10px 14px; font-weight:bold; color:#003087; font-size:16px;">${data.price.toLocaleString('fr-FR')} FCFA</td>
+        </tr>
+        <tr>
+          <td style="padding:10px 14px; font-weight:bold; color:#003087;">Méthode</td>
+          <td style="padding:10px 14px;">${data.paymentMethod}</td>
+        </tr>
+        <tr style="background:#f0f4ff;">
+          <td style="padding:10px 14px; font-weight:bold; color:#003087;">Activé le</td>
+          <td style="padding:10px 14px;">${formatDate(data.activatedAt)}</td>
+        </tr>
+        <tr>
+          <td style="padding:10px 14px; font-weight:bold; color:#003087;">Expire le</td>
+          <td style="padding:10px 14px; color:#E30613; font-weight:bold;">${formatDate(data.expiresAt)}</td>
+        </tr>
+      </table>
+
+      <h3 style="color:#003087; border-bottom:2px solid #E30613; padding-bottom:8px;">Informations client</h3>
+      <table style="width:100%; border-collapse:collapse; margin-bottom:24px;">
+        <tr style="background:#f0f4ff;">
+          <td style="padding:10px 14px; font-weight:bold; color:#003087; width:40%;">Nom</td>
+          <td style="padding:10px 14px;">${data.clientName}</td>
+        </tr>
+        <tr>
+          <td style="padding:10px 14px; font-weight:bold; color:#003087;">Email</td>
+          <td style="padding:10px 14px;"><a href="mailto:${data.clientEmail}" style="color:#0055B3;">${data.clientEmail}</a></td>
+        </tr>
+      </table>
+
+      <div style="text-align:center;">
+        <a href="${config.siteUrl}/admin/commandes"
+           style="display:inline-block; background:#003087; color:#fff; text-decoration:none;
+                  padding:12px 28px; border-radius:6px; font-size:15px;">
+          Voir dans l'administration →
+        </a>
+      </div>
+    </div>
+
+    <!-- Pied de page -->
+    <div style="background:#f5f5f5; padding:16px 32px; text-align:center; color:#888; font-size:12px;">
+      © ${new Date().getFullYear()} TEF-LAB — Notification automatique
+    </div>
+  </div>
+</body>
+</html>
+`
+
+  await transporter.sendMail({
+    from: config.smtp.from,
+    to: config.adminEmail,
+    subject: `[TEF-LAB] 💳 Paiement reçu — ${data.clientName} · Pack ${data.packName} · ${data.price.toLocaleString('fr-FR')} FCFA`,
     html,
   })
 }

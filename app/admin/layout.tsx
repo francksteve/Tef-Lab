@@ -54,7 +54,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       )}
       {/* Force password change banner */}
       {mustChange && pathname !== '/admin/changer-mot-de-passe' && (
-        <div className="bg-red-600 text-white px-4 py-3 text-sm font-medium text-center flex items-center justify-center gap-3">
+        <div className="bg-red-600 text-white px-4 py-3 text-xs sm:text-sm font-medium text-center flex items-center justify-center gap-3">
           ⚠️ Vous utilisez le mot de passe par défaut. Veuillez le modifier immédiatement pour sécuriser votre compte.
           <Link href="/admin/changer-mot-de-passe" className="underline font-bold hover:text-red-100">
             Modifier maintenant →
@@ -64,9 +64,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Mobile header */}
       <header className="md:hidden bg-tef-blue text-white px-4 h-14 flex items-center justify-between flex-shrink-0">
-        <Link href="/admin" className="flex items-center gap-2">
-          <img src="/logo.png" alt="TEF-LAB" className="h-4 w-auto object-contain" />
-          <span className="font-bold text-base text-white">TEF-LAB</span>
+        <Link href="/admin" className="flex items-center gap-2.5">
+          <img src="/logo.png" alt="TEF-LAB" className="h-9 w-auto object-contain rounded-xl" />
+          <div className="flex flex-col leading-none">
+            <span className="font-extrabold text-base tracking-wide text-white leading-none">
+              TEF<span className="text-red-400">-</span>LAB
+            </span>
+            <span className="text-[10px] font-semibold tracking-widest uppercase text-blue-300 mt-0.5">
+              Admin
+            </span>
+          </div>
         </Link>
         <div className="flex items-center gap-1">
           <NotificationBell dark />
@@ -122,11 +129,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <aside className="w-56 bg-tef-blue text-white hidden md:flex flex-col flex-shrink-0">
           <div className="px-5 py-6 flex items-start justify-between">
             <div>
-              <Link href="/" className="flex items-center gap-2">
-                <img src="/logo.png" alt="TEF-LAB" className="h-4 w-auto object-contain" />
-                <span className="font-bold text-base text-white">TEF-LAB</span>
+              <Link href="/" className="flex items-center gap-2.5">
+                <img src="/logo.png" alt="TEF-LAB" className="h-9 w-auto object-contain rounded-xl" />
+                <div className="flex flex-col leading-none">
+                  <span className="font-extrabold text-base tracking-wide text-white leading-none">
+                    TEF<span className="text-red-400">-</span>LAB
+                  </span>
+                  <span className="text-[10px] font-semibold tracking-widest uppercase text-blue-300 mt-0.5">
+                    Administration
+                  </span>
+                </div>
               </Link>
-              <p className="text-blue-300 text-xs mt-1">Administration</p>
             </div>
             <NotificationBell dark />
           </div>
@@ -189,14 +202,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <main className="flex-1 bg-gray-50 overflow-auto">{children}</main>
 
           {/* Footer */}
-          <footer className="bg-tef-blue text-white py-4 text-center text-xs flex-shrink-0">
-            <p className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-blue-200">
-              <Link href="/" className="hover:text-white transition-colors">Accueil</Link>
-              <Link href="/packs" className="hover:text-white transition-colors">Packs</Link>
-              <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
-              <Link href="/mentions-legales" className="hover:text-white transition-colors">Mentions légales</Link>
-            </p>
-            <p className="text-blue-300 mt-1">© 2025 TEF-LAB. Tous droits réservés.</p>
+          <footer className="bg-tef-blue text-white py-3 text-center text-xs flex-shrink-0">
+            <p className="text-blue-300">© {new Date().getFullYear()} TEF-LAB — Administration</p>
           </footer>
         </div>
       </div>

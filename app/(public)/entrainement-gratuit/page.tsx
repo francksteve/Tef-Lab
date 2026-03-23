@@ -41,8 +41,8 @@ export default function EntrainementGratuitPage() {
           <div className="text-5xl mb-4">🎁</div>
           <h1 className="text-3xl sm:text-4xl font-extrabold mb-3">Entraînement Gratuit</h1>
           <p className="text-blue-200 mb-5">
-            Teste-toi sur les 2 modules de compréhension du TEF Canada sans créer de compte.
-            3 séries disponibles par module.
+            Teste-toi sur les modules de compréhension du TEF Canada sans créer de compte.
+            Des séries gratuites disponibles pour commencer dès maintenant.
           </p>
           <div className="inline-flex items-start gap-3 bg-white/10 border border-white/20 rounded-xl px-5 py-3 text-sm text-blue-100 text-left max-w-md mx-auto">
             <span className="text-lg shrink-0">✍️🎤</span>

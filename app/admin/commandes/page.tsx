@@ -100,17 +100,20 @@ export default function CommandesPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b">
+              <thead className="bg-tef-blue text-white">
                 <tr>
-                  {['Référence', 'Client', 'Pack', 'Statut', 'Date', 'Actions'].map((h) => (
-                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">{h}</th>
-                  ))}
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-white uppercase hidden sm:table-cell">Référence</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-white uppercase">Client</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-white uppercase">Pack</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-white uppercase">Statut</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-white uppercase hidden sm:table-cell">Date</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-white uppercase">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y">
-                {orders.map((order) => (
-                  <tr key={order.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-mono text-xs text-gray-600">{order.reference}</td>
+              <tbody>
+                {orders.map((order, index) => (
+                  <tr key={order.id} className={`border-b border-blue-100 transition-colors hover:bg-blue-100 ${index % 2 === 0 ? 'bg-white' : 'bg-blue-50'}`}>
+                    <td className="px-4 py-3 font-mono text-xs text-gray-600 hidden sm:table-cell">{order.reference}</td>
                     <td className="px-4 py-3">
                       <p className="font-medium text-gray-900">{order.visitorName}</p>
                       <p className="text-xs text-gray-500">{order.visitorEmail}</p>
@@ -132,7 +135,7 @@ export default function CommandesPage() {
                         {statusLabel[order.status]}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-xs text-gray-500">
+                    <td className="px-4 py-3 text-xs text-gray-500 hidden sm:table-cell">
                       {new Date(order.createdAt).toLocaleDateString('fr-FR')}
                     </td>
                     <td className="px-4 py-3">

@@ -93,7 +93,7 @@ model Order {
   activatedAt      DateTime?
   expiresAt        DateTime?
   createdAt        DateTime       @default(now())
-  user             User?          @relation(fields: [userId], references: [id])
+  user             User?          @relation(fields: [userId], references: [id], onDelete: SetNull)
   pack             Pack           @relation(fields: [packId], references: [id])
 
   @@index([status])
@@ -141,7 +141,11 @@ model Question {
   questionOrder Int
   taskTitle     String?
   category      String?
+  subCategory   String?
   longText      String?
+  consigne      String?
+  comment       String?
+  description   String?
   imageUrl      String?
   audioUrl      String?
   question      String
@@ -172,7 +176,7 @@ model Attempt {
   cecrlLevel   String?
   timeTaken    Int?
   completedAt  DateTime @default(now())
-  user         User     @relation(fields: [userId], references: [id])
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   series       Series   @relation(fields: [seriesId], references: [id])
 
   @@index([userId])
@@ -186,7 +190,7 @@ model Result {
   avgScore   Float
   cecrlLevel String
   createdAt  DateTime @default(now())
-  user       User     @relation(fields: [userId], references: [id])
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, moduleCode])
 }
@@ -215,11 +219,12 @@ model PlatformSettings {
 }
 
 model AIUsageLog {
-  id     String @id @default(cuid())
-  userId String
-  date   String
-  count  Int    @default(0)
-  user   User   @relation(fields: [userId], references: [id])
+  id        String   @id @default(cuid())
+  userId    String
+  date      String
+  count     Int      @default(0)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, date])
   @@index([userId])

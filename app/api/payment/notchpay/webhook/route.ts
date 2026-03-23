@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { prisma } from '@/lib/prisma'
-import { sendPaymentConfirmedEmail } from '@/lib/email'
+import { sendPaymentConfirmedEmail, sendAdminPaymentNotification } from '@/lib/email'
 import { createNotification } from '@/lib/notifications'
 
 /**
@@ -36,12 +36,18 @@ export async function POST(req: NextRequest) {
     const signature = req.headers.get('x-notch-signature') ?? ''
     const hashKey = process.env.NOTCHPAY_HASH ?? ''
 
-    // Verify signature only if hash key is configured
-    if (hashKey && signature) {
-      if (!verifySignature(rawBody, signature, hashKey)) {
-        console.warn('[NOTCHPAY WEBHOOK] Invalid signature')
-        return NextResponse.json({ error: 'Signature invalide' }, { status: 401 })
-      }
+    // Signature verification is mandatory — reject if hash key or signature is missing
+    if (!hashKey) {
+      console.error('[NOTCHPAY WEBHOOK] NOTCHPAY_HASH env variable is not configured')
+      return NextResponse.json({ error: 'Configuration serveur incorrecte' }, { status: 500 })
+    }
+    if (!signature) {
+      console.warn('[NOTCHPAY WEBHOOK] Missing x-notch-signature header')
+      return NextResponse.json({ error: 'Signature manquante' }, { status: 401 })
+    }
+    if (!verifySignature(rawBody, signature, hashKey)) {
+      console.warn('[NOTCHPAY WEBHOOK] Invalid signature')
+      return NextResponse.json({ error: 'Signature invalide' }, { status: 401 })
     }
 
     const event = JSON.parse(rawBody)
@@ -111,17 +117,32 @@ export async function POST(req: NextRequest) {
       })
     }
 
-    // Send confirmation email to client (fire-and-forget — don't block response)
+    // Send confirmation email to client (fire-and-forget)
     sendPaymentConfirmedEmail({
       clientName: order.visitorName,
       clientEmail: order.visitorEmail,
       packName: order.pack.name,
+      price: order.pack.price,
       reference: order.reference,
       activatedAt: now,
       expiresAt,
       moduleAccess: order.pack.moduleAccess,
     }).catch((err) => {
       console.error('[NOTCHPAY WEBHOOK] Failed to send confirmation email:', err)
+    })
+
+    // Notify admin of automated payment (fire-and-forget)
+    sendAdminPaymentNotification({
+      clientName: order.visitorName,
+      clientEmail: order.visitorEmail,
+      packName: order.pack.name,
+      price: order.pack.price,
+      reference: order.reference,
+      paymentMethod: 'NotchPay',
+      activatedAt: now,
+      expiresAt,
+    }).catch((err) => {
+      console.error('[NOTCHPAY WEBHOOK] Failed to send admin notification:', err)
     })
 
     return NextResponse.json({ received: true })

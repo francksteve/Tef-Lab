@@ -33,6 +33,7 @@ interface Attempt {
   id: string
   moduleCode: string
   score?: number | null
+  aiScore?: number | null
   cecrlLevel?: string | null
   timeTaken?: number | null
   completedAt: string
@@ -99,6 +100,8 @@ function DashboardContent() {
   const [series, setSeries] = useState<Series[]>([])
   const [attempts, setAttempts] = useState<Attempt[]>([])
   const [accessLevel, setAccessLevel] = useState<AccessLevel>('FREE')
+  const [expiresAt, setExpiresAt] = useState<string | null>(null)
+  const [packName, setPackName] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [upgradeOpen, setUpgradeOpen] = useState(false)
   const [upgradeReason, setUpgradeReason] = useState('')
@@ -138,6 +141,8 @@ function DashboardContent() {
         const level: AccessLevel = sub?.accessLevel ?? 'FREE'
         loadedAccessLevel.current = level
         setAccessLevel(level)
+        setExpiresAt(sub?.subscription?.expiresAt ?? null)
+        setPackName(sub?.subscription?.pack?.name ?? null)
         setLoading(false)
       })
       .catch(() => setLoading(false))
@@ -208,6 +213,10 @@ function DashboardContent() {
   const firstName = session?.user?.name?.split(' ')[0] ?? 'Candidat'
   const badge = getAccessBadge(accessLevel)
 
+  const daysLeft = expiresAt
+    ? Math.max(0, Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 86400000))
+    : null
+
   const seriesByModule: Record<string, Series[]> = {}
   series.forEach((s) => {
     const code = s.module.code
@@ -216,6 +225,17 @@ function DashboardContent() {
   })
 
   const recentAttempts = attempts.slice(0, 10)
+
+  // Set of series titles the user has already passed (for highlighting)
+  const attemptedSeriesTitles = new Set(attempts.map((a) => a.series.title))
+
+  // Sort series by the trailing number in their title (CE Série 1 → 1, CE Série 12 → 12)
+  const sortSeriesByOrder = (arr: Series[]): Series[] =>
+    [...arr].sort((a, b) => {
+      const numA = parseInt(a.title.match(/(\d+)\s*$/)?.[1] ?? '0')
+      const numB = parseInt(b.title.match(/(\d+)\s*$/)?.[1] ?? '0')
+      return numA - numB
+    })
 
   const getSeriesLink = (s: Series) => {
     const code = s.module.code
@@ -268,17 +288,31 @@ function DashboardContent() {
           <div>
             <h1 className="text-2xl font-extrabold">Bonjour {firstName} 👋</h1>
             <p className="text-blue-200 text-sm mt-1">
-              Préparez le TEF Canada avec vos séries d'entraînement personnalisées.
+              Prépare le TEF Canada avec tes séries d&apos;entraînement personnalisées.
             </p>
           </div>
           <div className="flex flex-col items-end gap-2">
-            <span className={`px-3 py-1.5 rounded-full text-xs font-bold ${badge.color}`}>
-              {badge.label}
-            </span>
-            {accessLevel !== 'ALL' && (
+            {session?.user?.role !== 'ADMIN' && daysLeft !== null && (
+              <span
+                className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 ${
+                  daysLeft > 6
+                    ? 'bg-green-500/20 text-green-100 ring-1 ring-green-400/40'
+                    : 'bg-red-500/20 text-red-100 ring-1 ring-red-400/40'
+                }`}
+              >
+                <span>{daysLeft > 6 ? '🟢' : '🔴'}</span>
+                {daysLeft}j restants
+              </span>
+            )}
+            {session?.user?.role !== 'ADMIN' && (
+              <span className={`px-3 py-1.5 rounded-full text-xs font-bold ${badge.color}`}>
+                {badge.label}
+              </span>
+            )}
+            {session?.user?.role !== 'ADMIN' && accessLevel !== 'ALL' && (
               <button
                 onClick={() => openUpgrade('Accédez à plus de séries et de corrections IA.')}
-                className="text-xs text-blue-200 hover:text-white underline transition-colors"
+                className="px-4 py-2 bg-white text-tef-blue font-bold rounded-lg text-xs hover:bg-blue-50 transition-colors"
               >
                 Mettre à niveau →
               </button>
@@ -288,12 +322,39 @@ function DashboardContent() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-10">
+
+        {/* ─── Subscription status card ─── */}
+        {session?.user?.role !== 'ADMIN' && daysLeft !== null && packName && expiresAt && (
+          <div className={`rounded-xl px-5 py-4 border flex flex-wrap items-center justify-between gap-3 ${
+            daysLeft > 6
+              ? 'bg-green-50 border-green-200'
+              : 'bg-red-50 border-red-200'
+          }`}>
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">{daysLeft > 6 ? '✅' : '⚠️'}</span>
+              <div>
+                <p className="font-semibold text-sm text-gray-900">Pack <span className="text-tef-blue">{packName}</span> actif</p>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Expire le {new Date(expiresAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </p>
+              </div>
+            </div>
+            <span className={`px-3 py-1.5 rounded-full text-sm font-bold ${
+              daysLeft > 6
+                ? 'bg-green-100 text-green-700'
+                : 'bg-red-100 text-red-700'
+            }`}>
+              {daysLeft}j restants
+            </span>
+          </div>
+        )}
+
         {/* Modules */}
         <section>
           <h2 className="text-lg font-bold text-gray-900 mb-4">Les 4 modules TEF Canada</h2>
-          <div className="grid sm:grid-cols-2 gap-5">
+          <div className="grid grid-cols-1 gap-5">
             {moduleOrder.map((code) => {
-              const moduleSeries = seriesByModule[code] ?? []
+              const moduleSeries = sortSeriesByOrder(seriesByModule[code] ?? [])
               const sampleModule = moduleSeries[0]?.module
               const lockedCount = moduleSeries.filter((s) => isSeriesLocked(s, accessLevel)).length
               const unlockedCount = moduleSeries.length - lockedCount
@@ -315,7 +376,7 @@ function DashboardContent() {
                       </h3>
                       <div className="flex flex-wrap items-center gap-2 mt-1.5">
                         <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white border border-gray-200 text-xs font-semibold text-gray-700">
-                          ✅ {unlockedCount} série{unlockedCount !== 1 ? 's' : ''} accessible{unlockedCount !== 1 ? 's' : ''}
+                          {unlockedCount} série{unlockedCount !== 1 ? 's' : ''} accessible{unlockedCount !== 1 ? 's' : ''}
                         </span>
                         {lockedCount > 0 && (
                           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white border border-gray-200 text-xs font-medium text-gray-400">
@@ -326,51 +387,62 @@ function DashboardContent() {
                     </div>
                   </div>
 
-                  {/* ── Series list ── */}
-                  <div className="px-5 py-3 flex-1 divide-y divide-gray-50">
+                  {/* ── Series list — horizontal chips ── */}
+                  <div className="px-5 py-3 flex-1">
                     {moduleSeries.length === 0 ? (
                       <p className="text-xs text-gray-400 italic py-2">Aucune série disponible</p>
                     ) : (
-                      visibleSeries.map((s, i) => {
-                        const locked = isSeriesLocked(s, accessLevel)
-                        if (locked) {
+                      <div className="flex flex-row flex-wrap gap-2">
+                        {visibleSeries.map((s, i) => {
+                          const locked = isSeriesLocked(s, accessLevel)
+                          if (locked) {
+                            return (
+                              <button
+                                key={s.id}
+                                onClick={() =>
+                                  openUpgrade(
+                                    `La série "${s.title}" nécessite un abonnement pour y accéder.`
+                                  )
+                                }
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-400 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"
+                              >
+                                <span className="w-4 h-4 flex items-center justify-center rounded-full bg-gray-200 text-[10px] font-bold flex-shrink-0">
+                                  {i + 1}
+                                </span>
+                                <span className="max-w-[160px] truncate">{s.title}</span>
+                                <span className="text-xs flex-shrink-0">🔒</span>
+                              </button>
+                            )
+                          }
+                          const attempted = attemptedSeriesTitles.has(s.title)
                           return (
-                            <button
+                            <Link
                               key={s.id}
-                              onClick={() =>
-                                openUpgrade(
-                                  `La série "${s.title}" nécessite un abonnement pour y accéder.`
-                                )
-                              }
-                              className="w-full flex items-center gap-2.5 py-2.5 text-sm text-gray-400 hover:text-gray-600 transition-colors text-left group"
+                              href={getSeriesLink(s)}
+                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg transition-colors group ${
+                                attempted
+                                  ? 'text-green-800 bg-green-50 border border-green-300 hover:border-green-500 hover:bg-green-100'
+                                  : 'text-gray-800 bg-white border border-gray-200 hover:border-tef-blue hover:text-tef-blue'
+                              }`}
                             >
-                              <span className="shrink-0 w-5 h-5 flex items-center justify-center rounded-full bg-gray-100 text-xs font-bold text-gray-400">
+                              <span className={`w-4 h-4 flex items-center justify-center rounded-full text-[10px] font-bold flex-shrink-0 ${
+                                attempted ? 'bg-green-500 text-white' : 'bg-tef-blue/10 text-tef-blue'
+                              }`}>
                                 {i + 1}
                               </span>
-                              <span className="flex-1 truncate">{s.title}</span>
-                              <span className="shrink-0 text-base">🔒</span>
-                            </button>
+                              <span className="max-w-[160px] truncate">{s.title}</span>
+                              {attempted && (
+                                <span className="text-green-600 flex-shrink-0 text-[10px] font-bold">✓</span>
+                              )}
+                              {s.isFree && !attempted && (
+                                <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 font-medium flex-shrink-0">
+                                  Gratuite
+                                </span>
+                              )}
+                            </Link>
                           )
-                        }
-                        return (
-                          <Link
-                            key={s.id}
-                            href={getSeriesLink(s)}
-                            className="flex items-center gap-2.5 py-2.5 text-sm text-gray-800 hover:text-tef-blue transition-colors group"
-                          >
-                            <span className="shrink-0 w-5 h-5 flex items-center justify-center rounded-full bg-tef-blue/10 text-xs font-bold text-tef-blue">
-                              {i + 1}
-                            </span>
-                            <span className="flex-1 truncate group-hover:underline">{s.title}</span>
-                            {s.isFree && (
-                              <span className="shrink-0 text-xs px-1.5 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">
-                                Gratuite
-                              </span>
-                            )}
-                            <span className="shrink-0 text-tef-blue opacity-0 group-hover:opacity-100 transition-opacity">→</span>
-                          </Link>
-                        )
-                      })
+                        })}
+                      </div>
                     )}
                   </div>
 
@@ -411,8 +483,8 @@ function DashboardContent() {
           </div>
         </section>
 
-        {/* Upgrade CTA for non-ALL users */}
-        {accessLevel !== 'ALL' && (
+        {/* Upgrade CTA for non-ALL users (not shown for admin) */}
+        {accessLevel !== 'ALL' && session?.user?.role !== 'ADMIN' && (
           <section className="bg-gradient-to-r from-tef-blue to-blue-700 rounded-2xl p-6 text-white">
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
               <div className="flex-1">
@@ -476,11 +548,15 @@ function DashboardContent() {
                         <td className="px-4 py-3 text-gray-700">{attempt.series.title}</td>
                         <td className="px-4 py-3">
                           {attempt.score !== null && attempt.score !== undefined ? (
+                            // CE / CO — score entier /40
                             <span className="font-semibold text-tef-blue">
                               {attempt.score}/40
                             </span>
-                          ) : attempt.cecrlLevel ? (
-                            <span className="text-green-600 font-semibold">IA</span>
+                          ) : attempt.aiScore !== null && attempt.aiScore !== undefined ? (
+                            // EE / EO — score IA /100
+                            <span className="font-semibold text-green-600">
+                              {Math.round(attempt.aiScore)}/100
+                            </span>
                           ) : (
                             <span className="text-gray-400">—</span>
                           )}

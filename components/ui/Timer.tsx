@@ -36,7 +36,7 @@ export default function Timer({ durationSeconds, onTimeUp }: TimerProps) {
 
   return (
     <div
-      className={`fixed top-0 left-0 right-0 z-50 text-center py-2 font-bold text-lg transition-colors ${
+      className={`fixed top-0 left-0 right-0 z-50 h-[40px] flex items-center justify-center font-bold text-base transition-colors ${
         remaining === 0
           ? 'bg-gray-600 text-white'
           : isUrgent

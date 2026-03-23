@@ -101,15 +101,15 @@ export default function HomePage() {
       <section className="bg-gradient-to-br from-tef-blue to-blue-800 text-white py-20 px-4">
         <div className="max-w-4xl mx-auto text-center space-y-6">
           <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-1.5 text-sm font-medium">
-            🍁 Certifié IRCC — Reconnu pour l'immigration au Canada
+            🍁 Prépare-toi à l&apos;examen officiel reconnu par l&apos;IRCC
           </div>
           <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight">
             Réussis ton <span className="text-yellow-300">TEF Canada</span><br />
-            et concrétise ton projet d&apos;immigration 🇨🇦
+            et concrétise ton projet d&apos;immigration
           </h1>
           <p className="text-lg text-blue-100 max-w-2xl mx-auto">
-            Votre projet d&apos;immigration au Canada commence par une étape clé : un bon score au TEF Canada.
-            Préparez chaque module avec des séries réalistes et une correction personnalisée par IA.
+            Ton projet d&apos;immigration au Canada commence par une étape clé : un bon score au TEF Canada.
+            Entraîne-toi sur les 4 modules avec des séries réalistes et une correction personnalisée par IA.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
@@ -277,7 +277,7 @@ export default function HomePage() {
                             : 'bg-gray-900 text-white hover:bg-gray-700'
                         }`}
                       >
-                        Payer →
+                        S&apos;abonner →
                       </button>
                     </div>
                   </div>

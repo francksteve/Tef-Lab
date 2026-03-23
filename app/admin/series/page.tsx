@@ -249,21 +249,21 @@ export default function SeriesAdminPage() {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b">
+              <thead className="bg-tef-blue text-white">
                 <tr>
                   {['Titre', 'Module', 'Questions', 'Gratuite', 'Actions'].map((h) => (
                     <th
                       key={h}
-                      className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider"
+                      className="px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider"
                     >
                       {h}
                     </th>
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y">
-                {series.map((s) => (
-                  <tr key={s.id} className="hover:bg-gray-50">
+              <tbody>
+                {series.map((s, index) => (
+                  <tr key={s.id} className={`border-b border-blue-100 transition-colors hover:bg-blue-100 ${index % 2 === 0 ? 'bg-white' : 'bg-blue-50'}`}>
                     <td className="px-4 py-3 font-medium text-gray-900">{s.title}</td>
                     <td className="px-4 py-3">
                       <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-tef-blue/10 text-tef-blue">

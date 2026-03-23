@@ -25,9 +25,16 @@ export default function Navbar() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 shrink-0">
-            <img src="/logo.png" alt="TEF-LAB" className="h-5 w-auto object-contain" />
-            <span className="font-bold text-lg text-tef-blue">TEF-LAB</span>
+          <Link href="/" className="flex items-center gap-2.5 shrink-0">
+            <img src="/logo.png" alt="TEF-LAB" className="h-10 w-auto object-contain rounded-xl" />
+            <div className="flex flex-col leading-none">
+              <span className="font-extrabold text-lg tracking-wide text-tef-blue leading-none">
+                TEF<span className="text-tef-red">-</span>LAB
+              </span>
+              <span className="text-[10px] font-semibold tracking-widest uppercase text-gray-400 mt-0.5">
+                Prépa TEF Canada
+              </span>
+            </div>
           </Link>
 
           {/* Desktop links */}
@@ -66,12 +73,20 @@ export default function Navbar() {
                 </button>
               </>
             ) : (
-              <Link
-                href="/connexion"
-                className="text-sm font-semibold px-5 py-2 bg-tef-blue text-white rounded-lg hover:bg-tef-blue-hover transition-colors"
-              >
-                Connexion
-              </Link>
+              <>
+                <Link
+                  href="/inscription"
+                  className="text-sm font-semibold px-5 py-2 border border-tef-blue text-tef-blue rounded-lg hover:bg-tef-blue hover:text-white transition-colors"
+                >
+                  S&apos;inscrire
+                </Link>
+                <Link
+                  href="/connexion"
+                  className="text-sm font-semibold px-5 py-2 bg-tef-blue text-white rounded-lg hover:bg-tef-blue-hover transition-colors"
+                >
+                  Connexion
+                </Link>
+              </>
             )}
           </div>
 
@@ -128,13 +143,22 @@ export default function Navbar() {
                   </button>
                 </>
               ) : (
-                <Link
-                  href="/connexion"
-                  onClick={() => setMenuOpen(false)}
-                  className="block mx-3 mt-1 text-center py-2 bg-tef-blue text-white rounded-lg text-sm font-semibold"
-                >
-                  Connexion
-                </Link>
+                <>
+                  <Link
+                    href="/inscription"
+                    onClick={() => setMenuOpen(false)}
+                    className="block mx-3 mt-1 text-center py-2 border border-tef-blue text-tef-blue rounded-lg text-sm font-semibold"
+                  >
+                    S&apos;inscrire gratuitement
+                  </Link>
+                  <Link
+                    href="/connexion"
+                    onClick={() => setMenuOpen(false)}
+                    className="block mx-3 mt-1 text-center py-2 bg-tef-blue text-white rounded-lg text-sm font-semibold"
+                  >
+                    Connexion
+                  </Link>
+                </>
               )}
             </div>
           </div>

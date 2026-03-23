@@ -5,6 +5,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
 import { EE_SCORING_PROMPT } from '@/lib/scoring'
+import { canAccessSeries, checkAndIncrementAIUsage } from '@/lib/access'
 import { config } from '@/lib/config'
 
 const eeScoringSchema = z.object({
@@ -22,18 +23,39 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
     }
 
+    const userId = session.user.id
     const body = await req.json()
     const data = eeScoringSchema.parse(body)
 
-    // Verify series exists
-    const series = await prisma.series.findUnique({
-      where: { id: data.seriesId },
-    })
-
+    // ── 1. Verify series exists
+    const series = await prisma.series.findUnique({ where: { id: data.seriesId } })
     if (!series) {
       return NextResponse.json({ error: 'Série introuvable' }, { status: 404 })
     }
 
+    // ── 2. Verify user has access to this series
+    const hasAccess = await canAccessSeries(userId, data.seriesId)
+    if (!hasAccess) {
+      return NextResponse.json(
+        { error: 'Accès non autorisé à cette série. Abonnez-vous pour accéder à la correction IA.' },
+        { status: 403 }
+      )
+    }
+
+    // ── 3. Check and consume AI quota
+    const quota = await checkAndIncrementAIUsage(userId)
+    if (!quota.allowed) {
+      return NextResponse.json(
+        {
+          error: `Quota de corrections IA atteint pour aujourd'hui (${quota.limit}/jour). Revenez demain ou passez à un pack supérieur.`,
+          remaining: 0,
+          limit: quota.limit,
+        },
+        { status: 429 }
+      )
+    }
+
+    // ── 4. Call Anthropic
     const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-5',
       max_tokens: 2048,
@@ -47,14 +69,24 @@ export async function POST(req: NextRequest) {
     })
 
     const rawText = (message.content[0] as { type: string; text: string }).text
-    // Strip markdown code fences if present (```json ... ``` or ``` ... ```)
     const jsonText = rawText.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim()
-    const result = JSON.parse(jsonText)
 
-    return NextResponse.json(result)
+    // ── 5. Safe JSON parse
+    let result: unknown
+    try {
+      result = JSON.parse(jsonText)
+    } catch {
+      console.error('[API_ERROR] POST /api/scoring/ee — JSON parse failed:', rawText.slice(0, 200))
+      return NextResponse.json(
+        { error: 'La correction IA a renvoyé une réponse invalide. Veuillez réessayer.' },
+        { status: 502 }
+      )
+    }
+
+    return NextResponse.json({ ...result as object, aiQuotaRemaining: quota.remaining })
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.issues }, { status: 400 })
+      return NextResponse.json({ error: error.issues[0]?.message ?? 'Données invalides' }, { status: 400 })
     }
     console.error('[API_ERROR] POST /api/scoring/ee', error)
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })

@@ -33,7 +33,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             href={isAdmin ? '/admin' : '/'}
             className="flex items-center gap-2 flex-shrink-0"
           >
-            <img src="/logo.png" alt="TEF-LAB" className="h-4 w-auto object-contain" />
+            <img src="/logo.png" alt="TEF-LAB" className="h-9 w-auto object-contain rounded-xl" />
             <span className="font-bold text-base text-tef-blue">TEF-LAB</span>
           </Link>
 
@@ -44,6 +44,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               className="text-gray-700 hover:text-tef-blue transition-colors"
             >
               Mon espace
+            </Link>
+            <Link
+              href="/dashboard/performance"
+              className="text-gray-700 hover:text-tef-blue transition-colors flex items-center gap-1"
+            >
+              <span>📊</span> Performance
             </Link>
             {isAdmin && (
               <Link

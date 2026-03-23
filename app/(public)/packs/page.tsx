@@ -31,6 +31,7 @@ export default function PacksPage() {
   const [loading, setLoading] = useState(true)
   const [selectedPack, setSelectedPack] = useState<Pack | null>(null)
   const [payModalOpen, setPayModalOpen] = useState(false)
+  const [openFaq, setOpenFaq] = useState<number | null>(null)
 
   useEffect(() => {
     Promise.all([
@@ -223,7 +224,7 @@ export default function PacksPage() {
             {[
               {
                 q: 'Comment fonctionne le paiement ?',
-                a: 'Clique sur "Payer →" pour choisir ta méthode de paiement : NotchPay (Orange Money, MTN MoMo, Visa, Mastercard) pour un accès immédiat, ou un virement manuel. Ton accès est activé automatiquement après confirmation.',
+                a: 'Clique sur "S\'abonner →" pour choisir ta méthode de paiement : NotchPay (Orange Money, MTN MoMo, Visa, Mastercard) pour un accès immédiat, ou un virement manuel. Ton accès est activé automatiquement après confirmation.',
               },
               {
                 q: 'Quand mon compte est-il activé ?',
@@ -237,10 +238,22 @@ export default function PacksPage() {
                 q: 'Quelle est la différence entre les packs ?',
                 a: 'Le pack Special donne accès aux modules Expression Écrite et Orale uniquement. Les autres packs donnent accès à tous les modules. La différence porte sur le nombre de corrections IA par jour, de sessions simultanées et la durée d\'accès.',
               },
-            ].map(({ q, a }) => (
-              <div key={q} className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-                <h3 className="font-semibold text-gray-900 mb-2">{q}</h3>
-                <p className="text-sm text-gray-600 leading-relaxed">{a}</p>
+            ].map(({ q, a }, i) => (
+              <div key={q} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <button
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-gray-50 transition-colors"
+                >
+                  <span className="font-semibold text-gray-900 text-sm leading-snug">{q}</span>
+                  <span className={`flex-shrink-0 text-tef-blue text-sm transition-transform duration-200 ${openFaq === i ? 'rotate-180' : ''}`}>
+                    ▾
+                  </span>
+                </button>
+                {openFaq === i && (
+                  <div className="px-5 pb-5 text-sm text-gray-600 leading-relaxed border-t border-gray-100 pt-4">
+                    {a}
+                  </div>
+                )}
               </div>
             ))}
           </div>
