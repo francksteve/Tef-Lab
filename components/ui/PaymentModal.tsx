@@ -38,14 +38,14 @@ const methodConfig: Record<PayMethod, { label: string; sub: string; icon: string
   },
   orange_money: {
     label: 'Orange Money',
-    sub: 'Paiement manuel — activation sous 24h',
+    sub: 'Paiement manuel — activation sous 5-10 min',
     icon: '🟠',
     color: 'bg-white text-gray-900',
     borderColor: 'border-orange-400',
   },
   mtn_momo: {
     label: 'MTN MoMo',
-    sub: 'Paiement manuel — activation sous 24h',
+    sub: 'Paiement manuel — activation sous 5-10 min',
     icon: '🟡',
     color: 'bg-white text-gray-900',
     borderColor: 'border-yellow-400',
@@ -354,13 +354,13 @@ export default function PaymentModal({ isOpen, onClose, pack }: Props) {
               <div className={`rounded-xl border-2 ${methodConfig[selectedMethod].borderColor} p-4 space-y-2`}>
                 <div>
                   <p className="font-bold text-gray-900">{methodConfig[selectedMethod].label}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">Paiement manuel — activation sous 24h</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Paiement manuel — activation sous 5-10 min</p>
                 </div>
                 <div className="bg-gray-50 rounded-lg p-3 text-sm">
                   <p className="text-gray-600 text-xs leading-relaxed">
                     Envoyez <strong className="text-gray-900">{finalPrice.toLocaleString('fr-FR')} FCFA</strong> au numéro{' '}
                     <strong className="text-gray-900">+{phoneNumber}</strong> par {methodConfig[selectedMethod].label},
-                    puis validez ci-dessous. Nous activerons votre compte dans les 24h.
+                    puis validez ci-dessous. Nous activerons votre compte en 5-10 min.
                   </p>
                 </div>
               </div>

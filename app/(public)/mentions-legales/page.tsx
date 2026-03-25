@@ -119,7 +119,7 @@ const sections = [
         </p>
         <ul className="list-disc pl-5 mt-3 space-y-1">
           <li><strong>NotchPay</strong> — pour les paiements en XAF (Orange Money, MTN MoMo, Visa, Mastercard)</li>
-          <li><strong>Paiement manuel</strong> — via Orange Money ou MTN MoMo, avec activation sous 24 h après vérification</li>
+          <li><strong>Paiement manuel</strong> — via Orange Money ou MTN MoMo, avec activation en 5-10 min après vérification</li>
         </ul>
         <p className="mt-3">
           Chaque abonnement est à durée déterminée (généralement 30 jours à compter de la date d&apos;activation).

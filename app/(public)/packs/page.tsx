@@ -228,7 +228,7 @@ export default function PacksPage() {
               },
               {
                 q: 'Quand mon compte est-il activé ?',
-                a: 'Instantanément si tu paies via NotchPay ! Pour les paiements manuels (Orange Money direct, MTN MoMo direct), ton compte est activé dans les 24h après validation par notre équipe.',
+                a: 'Instantanément si tu paies via NotchPay ! Pour les paiements manuels (Orange Money direct, MTN MoMo direct), ton compte est activé en 5-10 min après validation par notre équipe.',
               },
               {
                 q: 'Puis-je tester avant d\'acheter ?',
