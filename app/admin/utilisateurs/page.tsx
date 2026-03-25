@@ -96,6 +96,24 @@ export default function UtilisateursPage() {
     }
   }
 
+  const deleteUser = async (user: User) => {
+    if (!confirm(`Supprimer définitivement le compte de ${user.name} (${user.email}) ?\n\nCette action est irréversible. Toutes ses données seront supprimées.`)) return
+    setActionLoading(user.id + '_delete')
+    try {
+      const res = await fetch(`/api/users/${user.id}`, { method: 'DELETE' })
+      if (res.ok) {
+        setUsers((prev) => prev.filter((u) => u.id !== user.id))
+      } else {
+        const data = await res.json()
+        setError(data?.error ?? 'Erreur lors de la suppression.')
+      }
+    } catch {
+      setError('Erreur lors de la suppression.')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
   const toggleStatus = async (user: User) => {
     const newStatus = user.accountStatus === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE'
     const action = newStatus === 'SUSPENDED' ? 'suspendre' : 'réactiver'
@@ -274,21 +292,37 @@ export default function UtilisateursPage() {
 
                       {/* Actions */}
                       <td className="px-4 py-3">
-                        <button
-                          onClick={() => toggleStatus(user)}
-                          disabled={actionLoading === user.id}
-                          className={`px-3 py-1 text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 ${
-                            user.accountStatus === 'ACTIVE'
-                              ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                              : 'bg-green-100 text-green-700 hover:bg-green-200'
-                          }`}
-                        >
-                          {actionLoading === user.id
-                            ? '…'
-                            : user.accountStatus === 'ACTIVE'
-                            ? 'Suspendre'
-                            : 'Réactiver'}
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => toggleStatus(user)}
+                            disabled={actionLoading === user.id || actionLoading === user.id + '_delete'}
+                            className={`px-3 py-1 text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 ${
+                              user.accountStatus === 'ACTIVE'
+                                ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                                : 'bg-green-100 text-green-700 hover:bg-green-200'
+                            }`}
+                          >
+                            {actionLoading === user.id
+                              ? '…'
+                              : user.accountStatus === 'ACTIVE'
+                              ? 'Suspendre'
+                              : 'Réactiver'}
+                          </button>
+                          {user.role !== 'ADMIN' && (
+                            <button
+                              onClick={() => deleteUser(user)}
+                              disabled={actionLoading === user.id || actionLoading === user.id + '_delete'}
+                              title="Supprimer ce compte"
+                              className="p-1.5 rounded-lg bg-gray-100 text-gray-400 hover:bg-red-100 hover:text-red-600 transition-colors disabled:opacity-50"
+                            >
+                              {actionLoading === user.id + '_delete' ? '…' : (
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                              )}
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   )

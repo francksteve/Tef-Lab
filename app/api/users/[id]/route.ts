@@ -95,3 +95,29 @@ export async function PATCH(
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
   }
 }
+
+export async function DELETE(
+  req: NextRequest,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session || session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Non autorisé' }, { status: 401 })
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: params.id } })
+    if (!user) {
+      return NextResponse.json({ error: 'Utilisateur introuvable' }, { status: 404 })
+    }
+    if (user.role === 'ADMIN') {
+      return NextResponse.json({ error: 'Impossible de supprimer un administrateur.' }, { status: 403 })
+    }
+
+    await prisma.user.delete({ where: { id: params.id } })
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('[API_ERROR] DELETE /api/users/[id]', error)
+    return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 })
+  }
+}
