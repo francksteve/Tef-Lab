@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { createRateLimiter } from '@/lib/rate-limit'
+import { sendWelcomeEmail } from '@/lib/email'
 
 // 5 registration attempts per IP per 15 minutes
 const registerLimiter = createRateLimiter({ windowMs: 15 * 60_000, max: 5 })
@@ -77,8 +78,13 @@ export async function POST(req: NextRequest) {
       },
     })
 
+    // Send welcome email (non-blocking)
+    sendWelcomeEmail({ name, email }).catch((err) =>
+      console.error('[REGISTER] Failed to send welcome email:', err)
+    )
+
     return NextResponse.json(
-      { message: 'Compte créé avec succès. Vous pouvez maintenant vous connecter.' },
+      { message: 'Compte créé avec succès.' },
       { status: 201 }
     )
   } catch (error) {

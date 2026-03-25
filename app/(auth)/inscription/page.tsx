@@ -61,7 +61,7 @@ export default function InscriptionPage() {
           redirect: false,
         })
         if (result?.ok) {
-          router.push('/packs?nouveau=1')
+          router.push('/dashboard')
         } else {
           // Auto-login failed (unlikely) — fall back to login page
           setTimeout(() => router.push('/connexion?inscrit=1'), 1500)
@@ -83,7 +83,7 @@ export default function InscriptionPage() {
           <div className="text-5xl">🎉</div>
           <h2 className="text-xl font-extrabold text-gray-900">Compte créé avec succès !</h2>
           <p className="text-gray-600 text-sm">
-            Bienvenue sur TEF-LAB. Connexion en cours, redirection vers les packs…
+            Bienvenue sur TEF-LAB. Connexion en cours, redirection vers ton espace…
           </p>
         </div>
       </div>

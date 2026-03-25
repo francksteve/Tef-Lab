@@ -639,6 +639,78 @@ export async function sendPasswordResetEmail(data: PasswordResetEmailData): Prom
   })
 }
 
+// ─── Template 8 : Bienvenue → Nouvel inscrit ────────────────────────────────
+
+export interface WelcomeEmailData {
+  name: string
+  email: string
+}
+
+export async function sendWelcomeEmail(data: WelcomeEmailData): Promise<void> {
+  const firstName = data.name.split(' ')[0]
+
+  const html = `
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"><title>Bienvenue sur TEF-LAB</title></head>
+<body style="font-family: Arial, sans-serif; background:#f5f5f5; margin:0; padding:20px;">
+  <div style="max-width:600px; margin:0 auto; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
+    <div style="background:#003087; padding:24px 32px;">
+      <h1 style="color:#fff; margin:0; font-size:22px; font-weight:900;">TEF-LAB</h1>
+      <p style="color:#cce0ff; margin:6px 0 0;">Bienvenue dans ta préparation TEF Canada</p>
+    </div>
+    <div style="padding:32px;">
+      <div style="text-align:center; margin-bottom:24px;">
+        <div style="width:64px; height:64px; background:#dbeafe; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:28px;">🎉</div>
+      </div>
+      <h2 style="color:#003087; margin-top:0; text-align:center;">Compte créé avec succès !</h2>
+      <div style="background:#f0f4ff; border-left:4px solid #003087; border-radius:4px; padding:16px 20px; margin-bottom:24px;">
+        <p style="margin:0; color:#1e3a8a; font-size:16px; line-height:1.7;">
+          Salut <strong>${firstName}</strong>,<br>
+          Ton compte TEF-LAB est maintenant actif. Tu peux commencer immédiatement
+          à t'entraîner sur les séries gratuites de Compréhension Écrite (CE)
+          et Compréhension Orale (CO).<br><br>
+          Pour accéder aux modules Expression Écrite (EE) et Expression Orale (EO),
+          choisis un pack adapté à tes objectifs.<br><br>
+          <em>Bonne préparation ! — La team TEF-LAB</em>
+        </p>
+      </div>
+      <div style="background:#f9fafb; border-radius:8px; padding:20px; margin-bottom:24px;">
+        <h3 style="color:#003087; margin:0 0 14px; font-size:14px; text-transform:uppercase; letter-spacing:0.5px;">Avec ton compte gratuit</h3>
+        <ul style="margin:0; padding-left:20px; color:#444; font-size:14px; line-height:2;">
+          <li>Séries CE et CO gratuites disponibles immédiatement</li>
+          <li>Suivi de ta progression en temps réel</li>
+          <li>Résultats et niveau CECRL après chaque série</li>
+        </ul>
+      </div>
+      <div style="text-align:center; margin:28px 0 16px;">
+        <a href="${config.siteUrl}/dashboard"
+           style="display:inline-block; background:#003087; color:#fff; text-decoration:none;
+                  padding:16px 40px; border-radius:8px; font-size:16px; font-weight:bold;">
+          Accéder à mon espace →
+        </a>
+      </div>
+      <p style="color:#666; font-size:13px; line-height:1.6; text-align:center;">
+        Une question ? Contactez-nous sur WhatsApp au
+        <a href="https://wa.me/${config.adminWhatsapp}" style="color:#25D366; font-weight:bold;">+237 683 008 287</a>
+      </p>
+    </div>
+    <div style="background:#f5f5f5; padding:16px 32px; text-align:center; color:#888; font-size:12px;">
+      © ${new Date().getFullYear()} TEF-LAB · <a href="${config.siteUrl}" style="color:#0055B3; text-decoration:none;">tef-lab.com</a>
+    </div>
+  </div>
+</body>
+</html>
+`
+
+  await transporter.sendMail({
+    from: config.smtp.from,
+    to: data.email,
+    subject: '[TEF-LAB] Bienvenue ! Ton compte est prêt',
+    html,
+  })
+}
+
 // ─── Template 3 : Commande rejetée → Client ────────────────────────────────
 
 export async function sendOrderRejectedEmail(data: OrderRejectedEmailData): Promise<void> {
