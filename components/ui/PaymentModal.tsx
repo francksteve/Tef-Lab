@@ -25,7 +25,7 @@ interface Props {
   pack: Pack | null
 }
 
-type PayMethod = 'notchpay' | 'orange_money' | 'mtn_momo'
+type PayMethod = 'notchpay' | 'paypal' | 'orange_money' | 'mtn_momo'
 type Step = 'choose' | 'manual_form' | 'manual_success'
 
 const methodConfig: Record<PayMethod, { label: string; sub: string; icon: string; color: string; borderColor: string }> = {
@@ -35,6 +35,13 @@ const methodConfig: Record<PayMethod, { label: string; sub: string; icon: string
     icon: '⚡',
     color: 'bg-tef-blue text-white',
     borderColor: 'border-tef-blue',
+  },
+  paypal: {
+    label: 'PayPal',
+    sub: 'Carte bancaire · Compte PayPal (USD)',
+    icon: '🌐',
+    color: 'bg-[#003087] text-white',
+    borderColor: 'border-[#003087]',
   },
   orange_money: {
     label: 'Orange Money',
@@ -130,6 +137,40 @@ export default function PaymentModal({ isOpen, onClose, pack }: Props) {
       }
     } catch {
       setPayError('Erreur réseau. Réessayez.')
+    } finally {
+      setPaying(false)
+    }
+  }
+
+  const handlePayPal = async () => {
+    setPayError('')
+    const errors: Record<string, string> = {}
+    if (contactForm.name.trim().length < 2) errors.name = 'Nom requis (2 caractères min.)'
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactForm.email)) errors.email = 'Email invalide'
+    setContactErrors(errors)
+    if (Object.keys(errors).length > 0) return
+    setSelectedMethod('paypal')
+    setPaying(true)
+    try {
+      const res = await fetch('/api/payment/paypal/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          packId: pack!.id,
+          customerName: contactForm.name,
+          customerEmail: contactForm.email,
+        }),
+      })
+      const data = await res.json()
+      if (res.ok && data.paymentUrl) {
+        window.location.href = data.paymentUrl
+      } else {
+        setPayError(data?.error ?? 'Erreur lors de l\'initialisation PayPal.')
+        setSelectedMethod(null)
+      }
+    } catch {
+      setPayError('Erreur réseau. Réessayez.')
+      setSelectedMethod(null)
     } finally {
       setPaying(false)
     }
@@ -303,6 +344,33 @@ export default function PaymentModal({ isOpen, onClose, pack }: Props) {
                       {paying && selectedMethod !== 'orange_money' && selectedMethod !== 'mtn_momo'
                         ? 'Redirection en cours…'
                         : `Payer ${finalPrice.toLocaleString('fr-FR')} FCFA`}
+                    </button>
+                  </div>
+                </div>
+
+                {/* PayPal */}
+                <div className="rounded-xl border-2 border-[#003087] overflow-hidden mb-3">
+                  <div className="bg-[#003087]/5 px-4 py-3 flex items-start gap-3">
+                    <span className="text-2xl flex-shrink-0">🌐</span>
+                    <div className="flex-1">
+                      <p className="font-bold text-gray-900 text-sm">PayPal</p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        Carte bancaire internationale · Compte PayPal
+                      </p>
+                      <span className="inline-flex items-center mt-1 gap-1 text-xs font-semibold text-green-600">
+                        ✓ Accès activé immédiatement
+                      </span>
+                    </div>
+                  </div>
+                  <div className="px-4 pb-4 pt-2">
+                    <button
+                      onClick={handlePayPal}
+                      disabled={paying}
+                      className="w-full py-3 bg-[#003087] text-white font-bold rounded-xl text-sm hover:bg-[#002060] disabled:opacity-50 transition-colors"
+                    >
+                      {paying && selectedMethod === 'paypal'
+                        ? 'Redirection en cours…'
+                        : `Payer avec PayPal — $${usd} USD`}
                     </button>
                   </div>
                 </div>
