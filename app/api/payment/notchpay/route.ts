@@ -69,6 +69,7 @@ export async function POST(req: NextRequest) {
         currency: 'XAF',
         email: customerEmail,
         phone: notchPayPhone,
+        name: customerName,
         description: `TEF-LAB — Pack ${pack.name}`,
         reference,
         callback: `${siteUrl}/api/payment/notchpay/webhook`,
