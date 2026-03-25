@@ -117,6 +117,7 @@ export default function PaymentModal({ isOpen, onClose, pack }: Props) {
   const handleNotchPay = async () => {
     setPayError('')
     if (!validateContact()) return
+    setSelectedMethod('notchpay')
     setPaying(true)
     try {
       const res = await fetch('/api/payment/notchpay', {
@@ -325,7 +326,7 @@ export default function PaymentModal({ isOpen, onClose, pack }: Props) {
                     <div className="flex-1">
                       <p className="font-bold text-gray-900 text-sm">Paiement automatique</p>
                       <p className="text-xs text-gray-500 mt-0.5">
-                        Orange Money · MTN MoMo · Visa · Mastercard
+                        Orange Money · MTN MoMo
                       </p>
                       <span className="inline-flex items-center mt-1 gap-1 text-xs font-semibold text-green-600">
                         ✓ Accès activé immédiatement
@@ -341,7 +342,7 @@ export default function PaymentModal({ isOpen, onClose, pack }: Props) {
                       disabled={paying}
                       className="w-full py-3 bg-tef-blue text-white font-bold rounded-xl text-sm hover:bg-tef-blue-hover disabled:opacity-50 transition-colors"
                     >
-                      {paying && selectedMethod !== 'orange_money' && selectedMethod !== 'mtn_momo'
+                      {paying && selectedMethod === 'notchpay'
                         ? 'Redirection en cours…'
                         : `Payer ${finalPrice.toLocaleString('fr-FR')} FCFA`}
                     </button>
@@ -382,27 +383,54 @@ export default function PaymentModal({ isOpen, onClose, pack }: Props) {
                   <div className="flex-1 h-px bg-gray-200" />
                 </div>
 
-                {/* Manual methods */}
-                <div className="grid grid-cols-2 gap-3">
-                  {(['orange_money', 'mtn_momo'] as PayMethod[]).map((method) => {
-                    const cfg = methodConfig[method]
-                    const isSelected = selectedMethod === method
-                    return (
-                      <button
-                        key={method}
-                        onClick={() => {
-                          setSelectedMethod(method)
-                          setStep('manual_form')
-                        }}
-                        className={`rounded-xl border-2 p-3 text-center transition-all ${
-                          isSelected ? cfg.borderColor + ' bg-gray-50' : 'border-gray-200 hover:border-gray-400'
-                        }`}
-                      >
-                        <p className="font-bold text-sm text-gray-900">{cfg.label}</p>
-                        <p className="text-xs text-gray-500 mt-1 leading-tight">{cfg.sub}</p>
-                      </button>
-                    )
-                  })}
+                {/* Orange Money */}
+                <div className="rounded-xl border-2 border-orange-400 overflow-hidden mb-3">
+                  <div className="bg-orange-50 px-4 py-3 flex items-start gap-3">
+                    <span className="text-2xl flex-shrink-0">🟠</span>
+                    <div className="flex-1">
+                      <p className="font-bold text-gray-900 text-sm">Orange Money</p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        Envoi direct sur notre numéro Orange
+                      </p>
+                      <span className="inline-flex items-center mt-1 gap-1 text-xs font-semibold text-orange-600">
+                        ⏱ Activation en 5-10 min
+                      </span>
+                    </div>
+                  </div>
+                  <div className="px-4 pb-4 pt-2">
+                    <button
+                      onClick={() => { setSelectedMethod('orange_money'); setStep('manual_form') }}
+                      disabled={paying}
+                      className="w-full py-3 bg-orange-500 text-white font-bold rounded-xl text-sm hover:bg-orange-600 disabled:opacity-50 transition-colors"
+                    >
+                      Payer {finalPrice.toLocaleString('fr-FR')} FCFA — Orange Money
+                    </button>
+                  </div>
+                </div>
+
+                {/* MTN MoMo */}
+                <div className="rounded-xl border-2 border-yellow-400 overflow-hidden mb-3">
+                  <div className="bg-yellow-50 px-4 py-3 flex items-start gap-3">
+                    <span className="text-2xl flex-shrink-0">🟡</span>
+                    <div className="flex-1">
+                      <p className="font-bold text-gray-900 text-sm">MTN MoMo</p>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        Envoi direct sur notre numéro MTN
+                      </p>
+                      <span className="inline-flex items-center mt-1 gap-1 text-xs font-semibold text-yellow-600">
+                        ⏱ Activation en 5-10 min
+                      </span>
+                    </div>
+                  </div>
+                  <div className="px-4 pb-4 pt-2">
+                    <button
+                      onClick={() => { setSelectedMethod('mtn_momo'); setStep('manual_form') }}
+                      disabled={paying}
+                      className="w-full py-3 bg-yellow-400 text-gray-900 font-bold rounded-xl text-sm hover:bg-yellow-500 disabled:opacity-50 transition-colors"
+                    >
+                      Payer {finalPrice.toLocaleString('fr-FR')} FCFA — MTN MoMo
+                    </button>
+                  </div>
                 </div>
               </div>
             </>
