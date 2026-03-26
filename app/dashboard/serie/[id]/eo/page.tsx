@@ -518,7 +518,7 @@ function DialogueSection({
     if (remoteAudioRef.current) {
       remoteAudioRef.current.pause()
       remoteAudioRef.current.srcObject = null
-      remoteAudioRef.current = null
+      // Don't null the ref — it's a DOM element managed by React
     }
     sessionConfiguredRef.current = false
     setRtcState('error')
@@ -626,14 +626,13 @@ RÈGLES :
 
       micStream.getAudioTracks().forEach((t) => pc.addTrack(t, micStream))
 
-      // Incoming audio from Inworld → play via Audio element
+      // Incoming audio from Inworld → play via DOM <audio> element (autoplay-safe)
       pc.ontrack = (e) => {
-        if (e.track.kind === 'audio') {
-          const audio = new Audio()
-          audio.srcObject = e.streams[0]
-          audio.autoplay = true
-          remoteAudioRef.current = audio
-          audio.play().catch(() => {})
+        if (e.track.kind === 'audio' && remoteAudioRef.current) {
+          remoteAudioRef.current.srcObject = e.streams[0]
+          remoteAudioRef.current.play().catch((err) =>
+            console.warn('[EO_REALTIME] audio.play() blocked:', err)
+          )
         }
       }
 
@@ -750,6 +749,10 @@ RÈGLES :
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
+      {/* Hidden audio element — must be in DOM for autoplay to work */}
+      {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+      <audio ref={remoteAudioRef} autoPlay playsInline style={{ display: 'none' }} />
+
       {/* Header — pleine largeur */}
       <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between flex-shrink-0 gap-2">
         <div className="flex items-center gap-2 flex-wrap">
