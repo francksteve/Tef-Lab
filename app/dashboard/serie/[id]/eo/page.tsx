@@ -605,7 +605,7 @@ RÈGLES :
       let micStream: MediaStream
       try {
         micStream = await navigator.mediaDevices.getUserMedia({
-          audio: { sampleRate: 24000, channelCount: 1, echoCancellation: true, noiseSuppression: true },
+          audio: { echoCancellation: true, noiseSuppression: true },
         })
       } catch {
         handleWebRTCFailure(); return
@@ -662,7 +662,7 @@ RÈGLES :
       // Wait for ICE gathering (5s timeout)
       await new Promise<void>((resolve, reject) => {
         if (pc.iceGatheringState === 'complete') { resolve(); return }
-        const timeout = setTimeout(() => reject(new Error('ICE timeout')), 5000)
+        const timeout = setTimeout(() => reject(new Error('ICE timeout')), 10000)
         iceTimeoutRef.current = timeout
         pc.addEventListener('icegatheringstatechange', () => {
           if (pc.iceGatheringState === 'complete') {
