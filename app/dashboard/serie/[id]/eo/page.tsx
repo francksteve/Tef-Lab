@@ -301,6 +301,7 @@ function DialogueSection({
   const urgencyTriggeredRef = useRef(false)
   const hasStartedRef = useRef(false)
   const sessionConfiguredRef = useRef(false)
+  const openingInstructionRef = useRef('')
   const pcRef = useRef<RTCPeerConnection | null>(null)
   const dcRef = useRef<RTCDataChannel | null>(null)
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null)
@@ -412,6 +413,23 @@ function DialogueSection({
       try { event = JSON.parse(raw) } catch { return }
 
       switch (event.type as string) {
+        // Session confirmed ready — NOW safe to trigger the opening message
+        case 'session.updated':
+        case 'session.created': {
+          const dc = dcRef.current
+          if (dc?.readyState === 'open' && openingInstructionRef.current) {
+            dc.send(JSON.stringify({
+              type: 'response.create',
+              response: {
+                modalities: ['audio', 'text'],
+                instructions: openingInstructionRef.current,
+              },
+            }))
+            openingInstructionRef.current = '' // send only once
+          }
+          break
+        }
+
         case 'input_audio_buffer.speech_started':
           setRtcState('user_speaking')
           setLiveTranscript('…')
@@ -512,14 +530,21 @@ Tes règles ABSOLUES :
 4. Ne montre de l'enthousiasme qu'après plusieurs arguments solides.
 5. LANGUE : français exclusivement.${documentContext}`
 
+      // Store opening instruction — sent only after session.updated confirms AI has the prompt
+      openingInstructionRef.current =
+        section === 'A'
+          ? 'Dis exactement : "Bonjour, comment puis-je vous aider ?"'
+          : `Dis exactement : "Salut ${userName || 'toi'} ! Comment vas-tu aujourd'hui mon ami(e) ?"`
+
       dc.send(JSON.stringify({
         type: 'session.update',
         session: {
           model: 'google-ai-studio/gemini-2.5-flash',
           modalities: ['audio', 'text'],
           instructions,
-          voice: { voice_id: voice },
-          tts_model: 'inworld-tts-1.5-mini',
+          voice: voice,                              // plain string, e.g. "Hélène"
+          output_audio_format: 'pcm16',
+          input_audio_format: 'pcm16',
           input_audio_transcription: { model: 'inworld-stt' },
           turn_detection: {
             type: 'semantic_vad',
@@ -527,17 +552,6 @@ Tes règles ABSOLUES :
             interrupt_response: true,
           },
         },
-      }))
-
-      // Trigger AI opening line
-      const openingInstruction =
-        section === 'A'
-          ? 'Dis exactement : "Bonjour, comment puis-je vous aider ?"'
-          : `Dis exactement : "Salut ${userName || 'toi'} ! Comment vas-tu aujourd'hui mon ami(e) ?"`
-
-      dc.send(JSON.stringify({
-        type: 'response.create',
-        response: { modalities: ['audio', 'text'], instructions: openingInstruction },
       }))
     },
     [section, sectionData.longText, voice, userName]
