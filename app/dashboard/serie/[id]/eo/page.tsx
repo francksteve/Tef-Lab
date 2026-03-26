@@ -59,43 +59,6 @@ interface DialogueTurn {
   timestamp: number
 }
 
-/* ─────────────── Web Speech API local types ────────── */
-
-interface SpeechRecAlt {
-  transcript: string
-  confidence: number
-}
-interface SpeechRecResult {
-  readonly length: number
-  [index: number]: SpeechRecAlt
-  readonly isFinal: boolean
-}
-interface SpeechRecResultList {
-  readonly length: number
-  [index: number]: SpeechRecResult
-}
-interface SpeechRecEvent extends Event {
-  readonly resultIndex: number
-  readonly results: SpeechRecResultList
-}
-interface SpeechRecInstance {
-  lang: string
-  continuous: boolean
-  interimResults: boolean
-  onresult: ((e: SpeechRecEvent) => void) | null
-  onerror: ((e: Event) => void) | null
-  onend: (() => void) | null
-  start(): void
-  stop(): void
-  abort(): void
-}
-declare global {
-  interface Window {
-    SpeechRecognition?: new () => SpeechRecInstance
-    webkitSpeechRecognition?: new () => SpeechRecInstance
-  }
-}
-
 /* ─────────────────────── Countdown ─────────────────── */
 
 function Countdown({
@@ -305,6 +268,8 @@ function EOSectionCard({
 
 /* ─────────────────── DialogueSection ───────────────── */
 
+type RtcState = 'idle' | 'connecting' | 'connected' | 'user_speaking' | 'ai_speaking' | 'error'
+
 function DialogueSection({
   section,
   sectionData,
@@ -322,28 +287,25 @@ function DialogueSection({
 }) {
   const [history, setHistory] = useState<DialogueTurn[]>([])
   const [liveTranscript, setLiveTranscript] = useState('')
-  const [micState, setMicState] = useState<'idle' | 'listening' | 'thinking' | 'speaking'>('idle')
+  const [rtcState, setRtcState] = useState<RtcState>('idle')
   const [timeLeft, setTimeLeft] = useState(durationSeconds)
   const [aiTyping, setAiTyping] = useState(false)
   const [ended, setEnded] = useState(false)
-  const [browserSupport, setBrowserSupport] = useState(true)
   const [textInputValue, setTextInputValue] = useState('')
-  const [lastAiText, setLastAiText] = useState('')
-  const [yourTurn, setYourTurn] = useState(false)
   const [inputMode, setInputMode] = useState<'voice' | 'text'>('voice')
 
-  const liveTranscriptRef = useRef('')
-  const recognitionRef = useRef<SpeechRecInstance | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const historyRef = useRef<DialogueTurn[]>([])
   const endedRef = useRef(false)
   const urgencyTriggeredRef = useRef(false)
-  const retryCountRef = useRef(0)
-  const shouldAutoRetryRef = useRef(false)
   const hasStartedRef = useRef(false)
-  const audioRef = useRef<HTMLAudioElement | null>(null)
-  const audioUrlRef = useRef<string | null>(null)
+  const sessionConfiguredRef = useRef(false)
+  const pcRef = useRef<RTCPeerConnection | null>(null)
+  const dcRef = useRef<RTCDataChannel | null>(null)
+  const remoteAudioRef = useRef<HTMLAudioElement | null>(null)
+  const iceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const rtcStateRef = useRef<RtcState>('idle')
 
   // Pick one voice per section and keep it stable for the whole session
   const voice = useRef<string>(
@@ -358,10 +320,8 @@ function DialogueSection({
   ).length
   const argCount = history.filter((t) => t.role === 'user').length
 
-  // Keep historyRef in sync with history state
-  useEffect(() => {
-    historyRef.current = history
-  }, [history])
+  // Keep rtcStateRef in sync for callbacks
+  useEffect(() => { rtcStateRef.current = rtcState }, [rtcState])
 
   // Timer countdown
   useEffect(() => {
@@ -386,46 +346,41 @@ function DialogueSection({
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [history, aiTyping, liveTranscript])
 
-  // Check browser support & trigger AI opening line
-  useEffect(() => {
-    const SpeechRec =
-      typeof window !== 'undefined'
-        ? window.SpeechRecognition || window.webkitSpeechRecognition
-        : undefined
-    if (!SpeechRec) {
-      setBrowserSupport(false)
-    }
-    // Guard against React Strict Mode double-invocation
-    if (hasStartedRef.current) return
-    hasStartedRef.current = true
-    // AI opens the conversation
-    sendToAI('[DÉBUT DE LA CONVERSATION]', [])
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      recognitionRef.current?.abort()
-      if (audioRef.current) { audioRef.current.pause(); audioRef.current = null }
-      if (audioUrlRef.current) { URL.revokeObjectURL(audioUrlRef.current); audioUrlRef.current = null }
+      if (iceTimeoutRef.current) clearTimeout(iceTimeoutRef.current)
+      if (dcRef.current) { try { dcRef.current.close() } catch {} dcRef.current = null }
+      if (pcRef.current) { try { pcRef.current.close() } catch {} pcRef.current = null }
+      if (remoteAudioRef.current) {
+        remoteAudioRef.current.pause()
+        remoteAudioRef.current.srcObject = null
+      }
       if (timerRef.current) clearInterval(timerRef.current)
     }
   }, [])
 
   const appendTurn = useCallback((turn: DialogueTurn) => {
     setHistory((prev) => {
+      // Deduplicate: prevent same content arriving from two event paths
+      const isDupe = prev.some(
+        (t) =>
+          t.role === turn.role &&
+          t.content === turn.content &&
+          Math.abs(t.timestamp - turn.timestamp) < 2000
+      )
+      if (isDupe) return prev
       const updated = [...prev, turn]
       historyRef.current = updated
       return updated
     })
   }, [])
 
+  // ── Text fallback: Claude via /api/eo/ai-reply ───────────
   const sendToAI = useCallback(
     async (userMessage: string, currentHistory: DialogueTurn[]) => {
       if (endedRef.current) return
       setAiTyping(true)
-      setMicState('thinking')
       try {
         const res = await fetch('/api/eo/ai-reply', {
           method: 'POST',
@@ -433,215 +388,308 @@ function DialogueSection({
           body: JSON.stringify({
             section,
             document: sectionData.longText ?? '',
-            history: currentHistory.map((t) => ({
-              role: t.role,
-              content: t.content,
-            })),
+            history: currentHistory.map((t) => ({ role: t.role, content: t.content })),
             userMessage,
             userName,
           }),
         })
         if (!res.ok) throw new Error('API error')
         const data = (await res.json()) as { reply: string }
-        const aiTurn: DialogueTurn = {
-          role: 'assistant',
-          content: data.reply,
-          timestamp: Date.now(),
-        }
-        appendTurn(aiTurn)
-        setAiTyping(false)
-        setLastAiText(data.reply)
-        // Speak the reply
-        speakText(data.reply)
+        appendTurn({ role: 'assistant', content: data.reply, timestamp: Date.now() })
       } catch {
+        // silently ignore
+      } finally {
         setAiTyping(false)
-        setMicState('idle')
       }
     },
     [section, sectionData.longText, appendTurn, userName]
   )
 
-  const cancelAudio = useCallback(() => {
-    if (audioRef.current) {
-      audioRef.current.pause()
-      audioRef.current.onended = null
-      audioRef.current.onerror = null
-      audioRef.current = null
+  // ── WebRTC: DataChannel event handler ────────────────────
+  const handleDataChannelMessage = useCallback(
+    (raw: string) => {
+      let event: Record<string, unknown>
+      try { event = JSON.parse(raw) } catch { return }
+
+      switch (event.type as string) {
+        case 'input_audio_buffer.speech_started':
+          setRtcState('user_speaking')
+          setLiveTranscript('…')
+          break
+
+        case 'input_audio_buffer.speech_stopped':
+          setRtcState('connected')
+          setLiveTranscript('')
+          break
+
+        case 'response.output_audio.started':
+        case 'response.audio.started':
+          setRtcState('ai_speaking')
+          setAiTyping(true)
+          break
+
+        case 'response.done':
+        case 'response.audio.done':
+          setRtcState('connected')
+          setAiTyping(false)
+          break
+
+        // User transcript from Inworld STT
+        case 'input_audio_transcription.completed':
+        case 'conversation.item.input_audio_transcription.completed': {
+          const transcript = (event.transcript as string) ?? ''
+          if (transcript.trim() && !endedRef.current) {
+            setLiveTranscript('')
+            appendTurn({ role: 'user', content: transcript.trim(), timestamp: Date.now() })
+          }
+          break
+        }
+
+        // Assistant turn text
+        case 'conversation.item.added':
+        case 'conversation.item.created': {
+          const item = event.item as Record<string, unknown> | undefined
+          if (!item || (item.role as string) !== 'assistant') break
+          const content = item.content as Array<Record<string, unknown>> | undefined
+          if (!content) break
+          const textPart = content.find((c) => c.type === 'text' || c.type === 'audio')
+          const text = (textPart?.text as string) || (textPart?.transcript as string) || ''
+          if (text.trim()) {
+            appendTurn({ role: 'assistant', content: text.trim(), timestamp: Date.now() })
+          }
+          break
+        }
+
+        case 'error':
+          console.error('[EO_REALTIME] event error:', event.message)
+          break
+      }
+    },
+    [appendTurn]
+  )
+
+  // ── WebRTC: Tear down + fall back to text mode ───────────
+  const handleWebRTCFailure = useCallback(() => {
+    if (iceTimeoutRef.current) clearTimeout(iceTimeoutRef.current)
+    if (dcRef.current) { try { dcRef.current.close() } catch {} dcRef.current = null }
+    if (pcRef.current) { try { pcRef.current.close() } catch {} pcRef.current = null }
+    if (remoteAudioRef.current) {
+      remoteAudioRef.current.pause()
+      remoteAudioRef.current.srcObject = null
+      remoteAudioRef.current = null
     }
-    if (audioUrlRef.current) {
-      URL.revokeObjectURL(audioUrlRef.current)
-      audioUrlRef.current = null
+    sessionConfiguredRef.current = false
+    setRtcState('error')
+    setInputMode('text')
+    setAiTyping(false)
+    sendToAI('[DÉBUT DE LA CONVERSATION]', [])
+  }, [sendToAI])
+
+  // ── WebRTC: Session.update + opening message ─────────────
+  const sendSessionUpdate = useCallback(
+    (dc: RTCDataChannel) => {
+      const documentContext = sectionData.longText
+        ? `\n\nANNONCE :\n${sectionData.longText}`
+        : ''
+
+      const instructions =
+        section === 'A'
+          ? `Tu es l'interlocuteur(trice) d'un candidat au TEF Canada pour la Section A (Obtenir des informations).
+Le candidat te téléphone au sujet de l'annonce fournie et va te poser des questions.
+Tes règles ABSOLUES :
+1. Réponds en MAXIMUM 15 mots. Jamais plus de 15 mots.
+2. Utilise le vouvoiement (registre formel).
+3. Réponds uniquement à ce qui concerne l'annonce.
+4. Tes réponses doivent être naturelles, courtes et directes.
+5. LANGUE : français exclusivement.${documentContext}`
+          : `Tu es l'ami(e) SCEPTIQUE et DUBITATIF(VE) d'un candidat au TEF Canada pour la Section B.
+Le candidat va te présenter une annonce et tenter de te convaincre d'y participer.
+Tu es RÉSISTANT(E) : tu doutes, tu questionnes, tu exprimes des réserves.
+Tes règles ABSOLUES :
+1. Réponds en MAXIMUM 15 mots. Jamais plus de 15 mots.
+2. Utilise le tutoiement (registre informel).
+3. Sois dubitatif : "Bof, je ne sais pas…" / "C'est cher non ?" / "Tu es sûr(e) ?"
+4. Ne montre de l'enthousiasme qu'après plusieurs arguments solides.
+5. LANGUE : français exclusivement.${documentContext}`
+
+      dc.send(JSON.stringify({
+        type: 'session.update',
+        session: {
+          model: 'google-ai-studio/gemini-2.5-flash',
+          modalities: ['audio', 'text'],
+          instructions,
+          voice: { voice_id: voice },
+          tts_model: 'inworld-tts-1.5-mini',
+          input_audio_transcription: { model: 'inworld-stt' },
+          turn_detection: {
+            type: 'semantic_vad',
+            eagerness: 'medium',
+            interrupt_response: true,
+          },
+        },
+      }))
+
+      // Trigger AI opening line
+      const openingInstruction =
+        section === 'A'
+          ? 'Dis exactement : "Bonjour, comment puis-je vous aider ?"'
+          : `Dis exactement : "Salut ${userName || 'toi'} ! Comment vas-tu aujourd'hui mon ami(e) ?"`
+
+      dc.send(JSON.stringify({
+        type: 'response.create',
+        response: { modalities: ['audio', 'text'], instructions: openingInstruction },
+      }))
+    },
+    [section, sectionData.longText, voice, userName]
+  )
+
+  // ── WebRTC: Main connection setup ────────────────────────
+  const startWebRTCSession = useCallback(async () => {
+    if (endedRef.current) return
+    setRtcState('connecting')
+
+    const hasWebRTC =
+      typeof window !== 'undefined' &&
+      typeof RTCPeerConnection !== 'undefined' &&
+      typeof navigator.mediaDevices?.getUserMedia === 'function'
+
+    if (!hasWebRTC) { handleWebRTCFailure(); return }
+
+    try {
+      let micStream: MediaStream
+      try {
+        micStream = await navigator.mediaDevices.getUserMedia({
+          audio: { sampleRate: 24000, channelCount: 1, echoCancellation: true, noiseSuppression: true },
+        })
+      } catch {
+        handleWebRTCFailure(); return
+      }
+
+      const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] })
+      pcRef.current = pc
+
+      micStream.getAudioTracks().forEach((t) => pc.addTrack(t, micStream))
+
+      // Incoming audio from Inworld → play via Audio element
+      pc.ontrack = (e) => {
+        if (e.track.kind === 'audio') {
+          const audio = new Audio()
+          audio.srcObject = e.streams[0]
+          audio.autoplay = true
+          remoteAudioRef.current = audio
+          audio.play().catch(() => {})
+        }
+      }
+
+      // DataChannel for session config + transcript events
+      const dc = pc.createDataChannel('oai-events', { ordered: true })
+      dcRef.current = dc
+
+      dc.onopen = () => {
+        if (sessionConfiguredRef.current) return
+        sessionConfiguredRef.current = true
+        setRtcState('connected')
+        sendSessionUpdate(dc)
+      }
+      dc.onmessage = (e) => handleDataChannelMessage(e.data)
+
+      pc.onconnectionstatechange = () => {
+        if (
+          (pc.connectionState === 'failed' || pc.connectionState === 'disconnected') &&
+          !endedRef.current
+        ) { handleWebRTCFailure() }
+      }
+
+      // Create SDP offer
+      const offer = await pc.createOffer()
+      await pc.setLocalDescription(offer)
+
+      // Wait for ICE gathering (5s timeout)
+      await new Promise<void>((resolve, reject) => {
+        if (pc.iceGatheringState === 'complete') { resolve(); return }
+        const timeout = setTimeout(() => reject(new Error('ICE timeout')), 5000)
+        iceTimeoutRef.current = timeout
+        pc.addEventListener('icegatheringstatechange', () => {
+          if (pc.iceGatheringState === 'complete') {
+            clearTimeout(timeout)
+            iceTimeoutRef.current = null
+            resolve()
+          }
+        })
+      })
+
+      if (!pc.localDescription?.sdp) throw new Error('No local SDP')
+
+      // Exchange SDP via our server proxy (keeps API key server-side)
+      const res = await fetch('/api/eo-realtime/connect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/sdp' },
+        body: pc.localDescription.sdp,
+      })
+      if (!res.ok) throw new Error(`SDP proxy error: ${res.status}`)
+
+      const sdpAnswer = await res.text()
+      await pc.setRemoteDescription({ type: 'answer', sdp: sdpAnswer })
+
+    } catch (err) {
+      console.error('[EO_REALTIME] WebRTC setup failed', err)
+      if (!endedRef.current) handleWebRTCFailure()
     }
+  }, [sendSessionUpdate, handleDataChannelMessage, handleWebRTCFailure])
+
+  // Mount: start WebRTC session
+  useEffect(() => {
+    if (hasStartedRef.current) return
+    hasStartedRef.current = true
+    startWebRTCSession()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const speakText = useCallback(async (text: string) => {
-    cancelAudio()
-    setMicState('speaking')
-    try {
-      const res = await fetch('/api/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text, voice }),
-      })
-      if (!res.ok) throw new Error(`TTS ${res.status}`)
-      const blob = await res.blob()
-      const url = URL.createObjectURL(blob)
-      audioUrlRef.current = url
-      const audio = new Audio(url)
-      audioRef.current = audio
-      audio.onended = () => {
-        URL.revokeObjectURL(url)
-        audioUrlRef.current = null
-        audioRef.current = null
-        if (!endedRef.current) { setMicState('idle'); setYourTurn(true) }
-      }
-      audio.onerror = () => {
-        URL.revokeObjectURL(url)
-        audioUrlRef.current = null
-        audioRef.current = null
-        if (!endedRef.current) { setMicState('idle'); setYourTurn(true) }
-      }
-      await audio.play()
-    } catch {
-      if (!endedRef.current) { setMicState('idle'); setYourTurn(true) }
-    }
-  }, [voice, cancelAudio])
-
-  // Urgency message at 20 s remaining — AI simulates an interruption
+  // Urgency message at 20s remaining
   useEffect(() => {
     if (timeLeft <= 20 && timeLeft > 0 && !urgencyTriggeredRef.current && !endedRef.current) {
       urgencyTriggeredRef.current = true
-      recognitionRef.current?.abort()
-      cancelAudio()
-      const urgencyMsg =
+      const urgencyText =
         section === 'A'
           ? "Excusez-moi, j'ai un appel entrant urgent. Je dois vous laisser. Au revoir !"
           : "Désolé(e), j'ai une urgence, je dois te laisser ! On se reparle bientôt !"
-      const turn: DialogueTurn = { role: 'assistant', content: urgencyMsg, timestamp: Date.now() }
-      appendTurn(turn)
-      setAiTyping(false)
-      setMicState('speaking')
-      speakText(urgencyMsg)
-    }
-  }, [timeLeft, section, appendTurn, speakText, cancelAudio])
-
-  const startListening = useCallback(() => {
-    if (endedRef.current || micState !== 'idle') return
-    const SpeechRec =
-      typeof window !== 'undefined'
-        ? window.SpeechRecognition || window.webkitSpeechRecognition
-        : undefined
-    if (!SpeechRec) return
-
-    cancelAudio()
-    liveTranscriptRef.current = ''
-    setLiveTranscript('')
-    setYourTurn(false)
-    shouldAutoRetryRef.current = false
-
-    const rec = new SpeechRec()
-    recognitionRef.current = rec
-    rec.lang = 'fr-FR'
-    rec.continuous = true
-    rec.interimResults = true
-
-    rec.onresult = (e: SpeechRecEvent) => {
-      let interim = ''
-      let final = ''
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const t = e.results[i][0].transcript
-        if (e.results[i].isFinal) {
-          final += t
-        } else {
-          interim += t
-        }
-      }
-      if (final) liveTranscriptRef.current += final
-      setLiveTranscript(liveTranscriptRef.current + interim)
-    }
-
-    rec.onerror = (e: Event) => {
-      const errEvent = e as Event & { error?: string }
-      const errType = errEvent.error ?? ''
-      setMicState('idle')
-      setLiveTranscript('')
-      liveTranscriptRef.current = ''
-      // Skip auto-retry for permanent errors
-      if (errType === 'not-allowed' || errType === 'no-speech') return
-      if (retryCountRef.current < 2) {
-        retryCountRef.current += 1
-        shouldAutoRetryRef.current = true
+      appendTurn({ role: 'assistant', content: urgencyText, timestamp: Date.now() })
+      if (dcRef.current?.readyState === 'open') {
+        dcRef.current.send(JSON.stringify({ type: 'response.cancel' }))
+        dcRef.current.send(JSON.stringify({
+          type: 'response.create',
+          response: {
+            modalities: ['audio', 'text'],
+            instructions: `Dis exactement ceci : "${urgencyText}"`,
+          },
+        }))
       }
     }
-
-    rec.onend = () => {
-      const spoken = liveTranscriptRef.current.trim()
-      setLiveTranscript('')
-      liveTranscriptRef.current = ''
-      if (!spoken || endedRef.current) {
-        setMicState('idle')
-        return
-      }
-      retryCountRef.current = 0
-      const userTurn: DialogueTurn = {
-        role: 'user',
-        content: spoken,
-        timestamp: Date.now(),
-      }
-      appendTurn(userTurn)
-      const updatedHistory = [...historyRef.current, userTurn]
-      historyRef.current = updatedHistory
-      sendToAI(spoken, updatedHistory)
-    }
-
-    setMicState('listening')
-    rec.start()
-  }, [micState, appendTurn, sendToAI, cancelAudio])
-
-  const stopListening = useCallback(() => {
-    recognitionRef.current?.stop()
-  }, [])
-
-  // Auto-start mic when it's the user's turn (after AI finishes speaking).
-  // `startListening` is intentionally omitted from deps: it recreates on every
-  // micState change (because it closes over micState), which would cause an
-  // infinite cascade. The closure captured when yourTurn/micState last changed
-  // already holds the correct micState value.
-  useEffect(() => {
-    if (yourTurn && micState === 'idle' && !endedRef.current && browserSupport && inputMode === 'voice') {
-      const t = setTimeout(() => startListening(), 300)
-      return () => clearTimeout(t)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [yourTurn, micState, browserSupport, inputMode])
-
-  // Auto-retry mic after transient error
-  useEffect(() => {
-    if (micState === 'idle' && shouldAutoRetryRef.current && !endedRef.current) {
-      shouldAutoRetryRef.current = false
-      const t = setTimeout(() => startListening(), 300)
-      return () => clearTimeout(t)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [micState])
+  }, [timeLeft, section, appendTurn])
 
   const handleEndSection = useCallback(() => {
     if (endedRef.current) return
     endedRef.current = true
     setEnded(true)
-    recognitionRef.current?.abort()
-    cancelAudio()
+    if (dcRef.current?.readyState === 'open') {
+      dcRef.current.send(JSON.stringify({ type: 'response.cancel' }))
+    }
+    if (iceTimeoutRef.current) clearTimeout(iceTimeoutRef.current)
+    if (dcRef.current) { try { dcRef.current.close() } catch {} dcRef.current = null }
+    if (pcRef.current) { try { pcRef.current.close() } catch {} pcRef.current = null }
+    if (remoteAudioRef.current) {
+      remoteAudioRef.current.pause()
+      remoteAudioRef.current.srcObject = null
+    }
     if (timerRef.current) clearInterval(timerRef.current)
     onComplete(historyRef.current)
-  }, [onComplete, cancelAudio])
+  }, [onComplete])
 
   const mm = String(Math.floor(timeLeft / 60)).padStart(2, '0')
   const ss = String(timeLeft % 60).padStart(2, '0')
   const isLow = timeLeft <= 60
-
   const sectionLabel =
     section === 'A' ? 'Section A — Obtenir des informations' : 'Section B — Présenter et convaincre'
-  const _accent = section === 'A' ? 'tef-blue' : 'orange-500'
   const accentBg = section === 'A' ? 'bg-tef-blue' : 'bg-orange-500'
 
   return (
@@ -758,23 +806,10 @@ function DialogueSection({
             </div>
           )}
 
-          {/* Avertissement navigateur (sur mobile uniquement, côté gauche) */}
-          {!browserSupport && (
-            <div className="w-full max-w-xl bg-orange-50 border border-orange-200 text-orange-700 p-3 rounded-lg text-sm lg:hidden">
-              ⚠️ Votre navigateur ne supporte pas la reconnaissance vocale. Utilisez Chrome ou Edge.
-            </div>
-          )}
         </div>
 
         {/* ── Colonne droite : Chat + Contrôles (30%) ── */}
         <div className="flex-1 lg:flex-none lg:w-[30%] flex flex-col bg-gray-50 min-h-0">
-
-          {/* Avertissement navigateur (desktop) */}
-          {!browserSupport && (
-            <div className="bg-orange-50 border-b border-orange-200 text-orange-700 px-3 py-2 text-xs hidden lg:block">
-              ⚠️ Utilisez Chrome ou Edge pour la reconnaissance vocale.
-            </div>
-          )}
 
           {/* Bulles de chat */}
           <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3 min-h-0">
@@ -820,7 +855,7 @@ function DialogueSection({
             )}
 
             {/* Bulle transcript en direct */}
-            {micState === 'listening' && liveTranscript && (
+            {rtcState === 'user_speaking' && liveTranscript && (
               <div className="flex justify-end">
                 <div
                   className={`max-w-[90%] px-3 py-2 rounded-2xl text-xs ${accentBg} text-white opacity-70 rounded-br-sm italic`}
@@ -833,82 +868,64 @@ function DialogueSection({
             <div ref={chatEndRef} />
           </div>
 
-          {/* Contrôles micro / saisie texte */}
+          {/* Contrôles voix / texte */}
           <div className="flex-shrink-0 border-t border-gray-200 bg-white p-3">
             {!ended ? (
-              /* ── Mode vocal ── */
-              browserSupport && inputMode === 'voice' ? (
-                <div className="flex flex-col items-center gap-2">
-                  {/* "Votre tour !" pulsing indicator */}
-                  {yourTurn && micState === 'idle' && (
-                    <div className="flex items-center gap-1.5 px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-semibold animate-pulse">
-                      <span className="w-2 h-2 bg-green-500 rounded-full inline-block" />
-                      Votre tour !
+              rtcState !== 'error' && inputMode === 'voice' ? (
+                /* ── WebRTC voice mode — VAD handles turn-taking automatically ── */
+                <div className="flex flex-col items-center gap-2 py-1">
+                  {rtcState === 'connecting' && (
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full text-xs text-gray-500 animate-pulse">
+                      <span className="w-2 h-2 bg-gray-400 rounded-full inline-block" />
+                      Connexion à l&apos;interlocuteur…
                     </div>
                   )}
-
-                  {micState === 'listening' ? (
-                    <button
-                      onClick={stopListening}
-                      className="w-14 h-14 rounded-full bg-red-600 text-white flex flex-col items-center justify-center shadow-lg hover:bg-red-700 transition-colors animate-pulse"
-                    >
-                      <span className="text-xl">🛑</span>
-                      <span className="text-[10px] mt-0.5 font-medium">Envoyer</span>
-                    </button>
-                  ) : (
-                    <button
-                      onClick={startListening}
-                      disabled={micState !== 'idle'}
-                      className={`w-14 h-14 rounded-full flex flex-col items-center justify-center shadow-lg transition-colors
-                        ${
-                          micState === 'idle'
-                            ? `${accentBg} text-white hover:opacity-90`
-                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                        }`}
-                    >
-                      <span className="text-xl">🎤</span>
-                      <span className="text-[10px] mt-0.5 font-medium">
-                        {micState === 'thinking'
-                          ? 'Traitement…'
-                          : micState === 'speaking'
-                          ? 'Écoute…'
-                          : 'Parler'}
-                      </span>
-                    </button>
+                  {(rtcState === 'connected' || rtcState === 'idle') && (
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 rounded-full text-xs text-green-700">
+                      <span className="w-2 h-2 bg-green-500 rounded-full inline-block" />
+                      En écoute — parlez naturellement
+                    </div>
                   )}
-
+                  {rtcState === 'user_speaking' && (
+                    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs animate-pulse ${
+                      section === 'A'
+                        ? 'bg-blue-50 border border-blue-200 text-tef-blue'
+                        : 'bg-orange-50 border border-orange-200 text-orange-700'
+                    }`}>
+                      <span className="flex gap-0.5 items-end h-3">
+                        <span className="w-0.5 rounded bg-current" style={{ height: '50%' }} />
+                        <span className="w-0.5 rounded bg-current" style={{ height: '100%' }} />
+                        <span className="w-0.5 rounded bg-current" style={{ height: '70%' }} />
+                        <span className="w-0.5 rounded bg-current" style={{ height: '40%' }} />
+                      </span>
+                      Vous parlez…
+                    </div>
+                  )}
+                  {rtcState === 'ai_speaking' && (
+                    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs ${
+                      section === 'A'
+                        ? 'bg-blue-50 border border-blue-200 text-tef-blue'
+                        : 'bg-orange-50 border border-orange-200 text-orange-700'
+                    }`}>
+                      <span className="w-2 h-2 rounded-full bg-current inline-block animate-bounce" />
+                      Interlocuteur répond…
+                    </div>
+                  )}
                   <p className="text-[10px] text-gray-400 text-center leading-tight">
-                    {micState === 'idle'
-                      ? 'Appuyez pour parler'
-                      : micState === 'listening'
-                      ? 'Parlez puis 🛑 pour envoyer'
-                      : micState === 'thinking'
-                      ? 'Réponse en cours…'
-                      : 'Interlocuteur parle…'}
+                    Détection automatique de la parole active
                   </p>
-
-                  {/* Action row: Réécouter + switch to text */}
-                  <div className="flex items-center gap-2">
-                    {lastAiText && micState === 'idle' && (
-                      <button
-                        onClick={() => speakText(lastAiText)}
-                        className="flex items-center gap-1 px-2.5 py-1 text-xs text-gray-500 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
-                      >
-                        🔊 Réécouter
-                      </button>
-                    )}
-                    <button
-                      onClick={() => {
-                        recognitionRef.current?.abort()
-                        setInputMode('text')
-                      }}
-                      disabled={micState === 'thinking' || micState === 'speaking'}
-                      className="flex items-center gap-1 px-2.5 py-1 text-xs text-gray-500 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-40"
-                    >
-                      ✏️ Écrire
-                    </button>
-                  </div>
-
+                  <button
+                    onClick={() => {
+                      if (dcRef.current?.readyState === 'open') {
+                        dcRef.current.send(JSON.stringify({ type: 'response.cancel' }))
+                      }
+                      setRtcState('error')
+                      setInputMode('text')
+                    }}
+                    className="flex items-center gap-1 px-2.5 py-1 text-xs text-gray-400 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    ✏️ Passer en mode texte
+                  </button>
                   <button
                     onClick={handleEndSection}
                     className="w-full px-3 py-1.5 border border-gray-300 text-gray-600 text-xs rounded-lg hover:bg-gray-100 transition-colors"
@@ -917,27 +934,21 @@ function DialogueSection({
                   </button>
                 </div>
               ) : (
-                /* ── Mode texte (manuel ou fallback sans SpeechRecognition) ── */
+                /* ── Mode texte (fallback WebRTC échoué ou préférence) ── */
                 <div className="flex flex-col gap-2">
-                  {/* Header row: mode indicator + switch back to voice */}
                   <div className="flex items-center justify-between">
-                    {!browserSupport ? (
-                      <p className="text-[10px] text-orange-600">
-                        ⚠️ Micro non disponible
-                      </p>
-                    ) : (
-                      <p className="text-[10px] text-gray-500">✏️ Mode texte</p>
-                    )}
-                    {browserSupport && (
+                    <p className="text-[10px] text-gray-500">
+                      {rtcState === 'error' ? '⚠️ Mode texte (vocal indisponible)' : '✏️ Mode texte'}
+                    </p>
+                    {rtcState !== 'error' && (
                       <button
                         onClick={() => setInputMode('voice')}
                         className="flex items-center gap-1 px-2 py-0.5 text-[10px] text-gray-500 border border-gray-300 rounded hover:bg-gray-100 transition-colors"
                       >
-                        🎤 Micro
+                        🎤 Vocal
                       </button>
                     )}
                   </div>
-
                   <div className="flex gap-2 items-end">
                     <textarea
                       value={textInputValue}
@@ -946,20 +957,16 @@ function DialogueSection({
                         if (e.key === 'Enter' && !e.shiftKey) {
                           e.preventDefault()
                           const text = textInputValue.trim()
-                          if (!text || micState !== 'idle') return
+                          if (!text || aiTyping) return
                           setTextInputValue('')
-                          const userTurn: DialogueTurn = {
-                            role: 'user',
-                            content: text,
-                            timestamp: Date.now(),
-                          }
+                          const userTurn: DialogueTurn = { role: 'user', content: text, timestamp: Date.now() }
                           appendTurn(userTurn)
                           const updatedHistory = [...historyRef.current, userTurn]
                           historyRef.current = updatedHistory
                           sendToAI(text, updatedHistory)
                         }
                       }}
-                      disabled={micState !== 'idle'}
+                      disabled={aiTyping}
                       rows={2}
                       placeholder="Écrivez votre réponse… (Entrée pour envoyer)"
                       className="flex-1 resize-none border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
@@ -967,21 +974,17 @@ function DialogueSection({
                     <button
                       onClick={() => {
                         const text = textInputValue.trim()
-                        if (!text || micState !== 'idle') return
+                        if (!text || aiTyping) return
                         setTextInputValue('')
-                        const userTurn: DialogueTurn = {
-                          role: 'user',
-                          content: text,
-                          timestamp: Date.now(),
-                        }
+                        const userTurn: DialogueTurn = { role: 'user', content: text, timestamp: Date.now() }
                         appendTurn(userTurn)
                         const updatedHistory = [...historyRef.current, userTurn]
                         historyRef.current = updatedHistory
                         sendToAI(text, updatedHistory)
                       }}
-                      disabled={!textInputValue.trim() || micState !== 'idle'}
+                      disabled={!textInputValue.trim() || aiTyping}
                       className={`px-3 py-2 rounded-lg text-white text-xs font-medium transition-colors ${
-                        textInputValue.trim() && micState === 'idle'
+                        textInputValue.trim() && !aiTyping
                           ? `${accentBg} hover:opacity-90`
                           : 'bg-gray-300 cursor-not-allowed'
                       }`}
@@ -999,9 +1002,7 @@ function DialogueSection({
               )
             ) : (
               <div className="text-center py-2">
-                <p className="text-green-700 font-semibold text-xs">
-                  ✅ Section terminée…
-                </p>
+                <p className="text-green-700 font-semibold text-xs">✅ Section terminée…</p>
               </div>
             )}
           </div>
