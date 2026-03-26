@@ -5,15 +5,8 @@ import { authOptions } from '@/lib/auth'
 import { config } from '@/lib/config'
 
 // French voices available on Inworld TTS 1.5 Mini
-export const INWORLD_VOICES = ['Alain', 'Hélène', 'Mathieu', 'Étienne'] as const
-export type InworldVoice = (typeof INWORLD_VOICES)[number]
-
 // Section A (formal / vouvoiement) → Hélène or Alain
 // Section B (informal / tutoiement) → Mathieu or Étienne
-export const VOICE_FOR_SECTION: Record<'A' | 'B', InworldVoice[]> = {
-  A: ['Hélène', 'Alain'],
-  B: ['Mathieu', 'Étienne'],
-}
 
 const ttsSchema = z.object({
   text: z.string().min(1).max(500),
