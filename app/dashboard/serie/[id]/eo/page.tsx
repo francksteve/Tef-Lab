@@ -413,19 +413,23 @@ function DialogueSection({
       try { event = JSON.parse(raw) } catch { return }
 
       switch (event.type as string) {
-        // Session confirmed ready — NOW safe to trigger the opening message
+        // Session confirmed ready — inject opening cue then trigger first response
         case 'session.updated':
         case 'session.created': {
           const dc = dcRef.current
           if (dc?.readyState === 'open' && openingInstructionRef.current) {
+            // Inject opening cue as user message so AI knows to start
             dc.send(JSON.stringify({
-              type: 'response.create',
-              response: {
-                modalities: ['audio', 'text'],
-                instructions: openingInstructionRef.current,
+              type: 'conversation.item.create',
+              item: {
+                type: 'message',
+                role: 'user',
+                content: [{ type: 'input_text', text: openingInstructionRef.current }],
               },
             }))
-            openingInstructionRef.current = '' // send only once
+            // Request AI response (no extra instructions — system prompt already loaded)
+            dc.send(JSON.stringify({ type: 'response.create' }))
+            openingInstructionRef.current = ''
           }
           break
         }
@@ -478,9 +482,29 @@ function DialogueSection({
           break
         }
 
-        case 'error':
-          console.error('[EO_REALTIME] event error:', event.message)
+        // Streaming text delta from assistant (per Inworld WebRTC docs)
+        case 'response.output_text.delta':
+        case 'response.text.delta':
+          setAiTyping(true)
           break
+
+        case 'response.output_text.done':
+        case 'response.text.done': {
+          const text = (event.text as string) ?? ''
+          if (text.trim()) {
+            appendTurn({ role: 'assistant', content: text.trim(), timestamp: Date.now() })
+          }
+          setAiTyping(false)
+          break
+        }
+
+        case 'error':
+          console.error('[EO_REALTIME] event error:', event.message, JSON.stringify(event))
+          break
+
+        default:
+          // Log unknown events during development
+          console.debug('[EO_REALTIME] event:', event.type, event)
       }
     },
     [appendTurn]
@@ -503,7 +527,7 @@ function DialogueSection({
     sendToAI('[DÉBUT DE LA CONVERSATION]', [])
   }, [sendToAI])
 
-  // ── WebRTC: Session.update + opening message ─────────────
+  // ── WebRTC: Session.update with exact Inworld format ────────
   const sendSessionUpdate = useCallback(
     (dc: RTCDataChannel) => {
       const documentContext = sectionData.longText
@@ -512,44 +536,52 @@ function DialogueSection({
 
       const instructions =
         section === 'A'
-          ? `Tu es l'interlocuteur(trice) d'un candidat au TEF Canada pour la Section A (Obtenir des informations).
-Le candidat te téléphone au sujet de l'annonce fournie et va te poser des questions.
-Tes règles ABSOLUES :
-1. Réponds en MAXIMUM 15 mots. Jamais plus de 15 mots.
-2. Utilise le vouvoiement (registre formel).
-3. Réponds uniquement à ce qui concerne l'annonce.
-4. Tes réponses doivent être naturelles, courtes et directes.
-5. LANGUE : français exclusivement.${documentContext}`
-          : `Tu es l'ami(e) SCEPTIQUE et DUBITATIF(VE) d'un candidat au TEF Canada pour la Section B.
-Le candidat va te présenter une annonce et tenter de te convaincre d'y participer.
-Tu es RÉSISTANT(E) : tu doutes, tu questionnes, tu exprimes des réserves.
-Tes règles ABSOLUES :
-1. Réponds en MAXIMUM 15 mots. Jamais plus de 15 mots.
-2. Utilise le tutoiement (registre informel).
-3. Sois dubitatif : "Bof, je ne sais pas…" / "C'est cher non ?" / "Tu es sûr(e) ?"
-4. Ne montre de l'enthousiasme qu'après plusieurs arguments solides.
-5. LANGUE : français exclusivement.${documentContext}`
+          ? `RÈGLE ABSOLUE N°1 : Tu parles UNIQUEMENT et EXCLUSIVEMENT en français. Jamais un seul mot en anglais.
+Tu es l'interlocuteur(trice) d'un candidat au TEF Canada pour la Section A (Obtenir des informations).
+Le candidat te téléphone pour avoir des informations sur l'annonce ci-dessous.
+RÈGLES :
+- Maximum 15 mots par réponse. Toujours.
+- Vouvoiement obligatoire (registre formel).
+- Réponds uniquement aux questions sur l'annonce.
+- Réponses naturelles, courtes, directes.
+- FRANÇAIS UNIQUEMENT.${documentContext}`
+          : `RÈGLE ABSOLUE N°1 : Tu parles UNIQUEMENT et EXCLUSIVEMENT en français. Jamais un seul mot en anglais.
+Tu es l'ami(e) SCEPTIQUE d'un candidat au TEF Canada pour la Section B.
+Le candidat va te présenter une annonce et essayer de te convaincre d'y participer.
+RÈGLES :
+- Maximum 15 mots par réponse. Toujours.
+- Tutoiement obligatoire (registre informel).
+- Sois dubitatif(ve) : "Bof…" / "C'est cher ?" / "Tu es sûr(e) ?"
+- Ne cède qu'après plusieurs arguments solides.
+- FRANÇAIS UNIQUEMENT.${documentContext}`
 
-      // Store opening instruction — sent only after session.updated confirms AI has the prompt
+      // Stored and sent as user cue AFTER session.updated fires
       openingInstructionRef.current =
         section === 'A'
-          ? 'Dis exactement : "Bonjour, comment puis-je vous aider ?"'
-          : `Dis exactement : "Salut ${userName || 'toi'} ! Comment vas-tu aujourd'hui mon ami(e) ?"`
+          ? 'Commence maintenant. Dis : "Bonjour, comment puis-je vous aider ?"'
+          : `Commence maintenant. Dis : "Salut ${userName || 'toi'} ! Comment vas-tu aujourd'hui mon ami(e) ?"`
 
+      // Exact format per Inworld WebRTC docs
       dc.send(JSON.stringify({
         type: 'session.update',
         session: {
+          type: 'realtime',
           model: 'google-ai-studio/gemini-2.5-flash',
-          modalities: ['audio', 'text'],
           instructions,
-          voice: voice,                              // plain string, e.g. "Hélène"
-          output_audio_format: 'pcm16',
-          input_audio_format: 'pcm16',
-          input_audio_transcription: { model: 'inworld-stt' },
-          turn_detection: {
-            type: 'semantic_vad',
-            eagerness: 'medium',
-            interrupt_response: true,
+          output_modalities: ['audio', 'text'],
+          audio: {
+            input: {
+              turn_detection: {
+                type: 'semantic_vad',
+                eagerness: 'medium',
+                create_response: true,
+                interrupt_response: true,
+              },
+            },
+            output: {
+              model: 'inworld-tts-1.5-max',
+              voice: voice,
+            },
           },
         },
       }))
@@ -579,7 +611,17 @@ Tes règles ABSOLUES :
         handleWebRTCFailure(); return
       }
 
-      const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] })
+      // Fetch Inworld ICE servers (STUN/TURN) from our proxy
+      let iceServers: RTCIceServer[] = [{ urls: 'stun:stun.l.google.com:19302' }]
+      try {
+        const iceRes = await fetch('/api/eo-realtime/ice-servers')
+        if (iceRes.ok) {
+          const iceData = await iceRes.json() as { iceServers?: RTCIceServer[] }
+          if (iceData.iceServers?.length) iceServers = iceData.iceServers
+        }
+      } catch { /* use fallback */ }
+
+      const pc = new RTCPeerConnection({ iceServers })
       pcRef.current = pc
 
       micStream.getAudioTracks().forEach((t) => pc.addTrack(t, micStream))
