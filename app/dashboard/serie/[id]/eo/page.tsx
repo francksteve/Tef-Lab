@@ -342,6 +342,15 @@ function DialogueSection({
   const retryCountRef = useRef(0)
   const shouldAutoRetryRef = useRef(false)
   const hasStartedRef = useRef(false)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const audioUrlRef = useRef<string | null>(null)
+
+  // Pick one voice per section and keep it stable for the whole session
+  const voice = useRef<string>(
+    section === 'A'
+      ? (Math.random() > 0.5 ? 'Hélène' : 'Alain')
+      : (Math.random() > 0.5 ? 'Mathieu' : 'Étienne')
+  ).current
 
   // Derived counters — count user turns only
   const questionCount = history.filter(
@@ -398,7 +407,8 @@ function DialogueSection({
   useEffect(() => {
     return () => {
       recognitionRef.current?.abort()
-      if (typeof window !== 'undefined') window.speechSynthesis?.cancel()
+      if (audioRef.current) { audioRef.current.pause(); audioRef.current = null }
+      if (audioUrlRef.current) { URL.revokeObjectURL(audioUrlRef.current); audioUrlRef.current = null }
       if (timerRef.current) clearInterval(timerRef.current)
     }
   }, [])
@@ -451,46 +461,58 @@ function DialogueSection({
     [section, sectionData.longText, appendTurn, userName]
   )
 
-  const speakText = useCallback((text: string) => {
-    if (typeof window === 'undefined' || !window.speechSynthesis) {
-      setMicState('idle')
-      return
+  const cancelAudio = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current.onended = null
+      audioRef.current.onerror = null
+      audioRef.current = null
     }
-    window.speechSynthesis.cancel()
-    const utt = new SpeechSynthesisUtterance(text)
-    utt.lang = 'fr-FR'
-    utt.rate = 0.95
-    utt.pitch = 1.0
-
-    // Try to find a French voice
-    const voices = window.speechSynthesis.getVoices()
-    const frVoice = voices.find(
-      (v) => v.lang.startsWith('fr') && !v.name.includes('Google')
-    ) || voices.find((v) => v.lang.startsWith('fr'))
-    if (frVoice) utt.voice = frVoice
-
-    utt.onstart = () => setMicState('speaking')
-    utt.onend = () => {
-      if (!endedRef.current) {
-        setMicState('idle')
-        setYourTurn(true)
-      }
+    if (audioUrlRef.current) {
+      URL.revokeObjectURL(audioUrlRef.current)
+      audioUrlRef.current = null
     }
-    utt.onerror = () => {
-      if (!endedRef.current) {
-        setMicState('idle')
-        setYourTurn(true)
-      }
-    }
-    window.speechSynthesis.speak(utt)
   }, [])
+
+  const speakText = useCallback(async (text: string) => {
+    cancelAudio()
+    setMicState('speaking')
+    try {
+      const res = await fetch('/api/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, voice }),
+      })
+      if (!res.ok) throw new Error(`TTS ${res.status}`)
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      audioUrlRef.current = url
+      const audio = new Audio(url)
+      audioRef.current = audio
+      audio.onended = () => {
+        URL.revokeObjectURL(url)
+        audioUrlRef.current = null
+        audioRef.current = null
+        if (!endedRef.current) { setMicState('idle'); setYourTurn(true) }
+      }
+      audio.onerror = () => {
+        URL.revokeObjectURL(url)
+        audioUrlRef.current = null
+        audioRef.current = null
+        if (!endedRef.current) { setMicState('idle'); setYourTurn(true) }
+      }
+      await audio.play()
+    } catch {
+      if (!endedRef.current) { setMicState('idle'); setYourTurn(true) }
+    }
+  }, [voice, cancelAudio])
 
   // Urgency message at 20 s remaining — AI simulates an interruption
   useEffect(() => {
     if (timeLeft <= 20 && timeLeft > 0 && !urgencyTriggeredRef.current && !endedRef.current) {
       urgencyTriggeredRef.current = true
       recognitionRef.current?.abort()
-      if (typeof window !== 'undefined') window.speechSynthesis?.cancel()
+      cancelAudio()
       const urgencyMsg =
         section === 'A'
           ? "Excusez-moi, j'ai un appel entrant urgent. Je dois vous laisser. Au revoir !"
@@ -501,7 +523,7 @@ function DialogueSection({
       setMicState('speaking')
       speakText(urgencyMsg)
     }
-  }, [timeLeft, section, appendTurn, speakText])
+  }, [timeLeft, section, appendTurn, speakText, cancelAudio])
 
   const startListening = useCallback(() => {
     if (endedRef.current || micState !== 'idle') return
@@ -511,7 +533,7 @@ function DialogueSection({
         : undefined
     if (!SpeechRec) return
 
-    window.speechSynthesis?.cancel()
+    cancelAudio()
     liveTranscriptRef.current = ''
     setLiveTranscript('')
     setYourTurn(false)
@@ -574,7 +596,7 @@ function DialogueSection({
 
     setMicState('listening')
     rec.start()
-  }, [micState, appendTurn, sendToAI])
+  }, [micState, appendTurn, sendToAI, cancelAudio])
 
   const stopListening = useCallback(() => {
     recognitionRef.current?.stop()
@@ -608,10 +630,10 @@ function DialogueSection({
     endedRef.current = true
     setEnded(true)
     recognitionRef.current?.abort()
-    window.speechSynthesis?.cancel()
+    cancelAudio()
     if (timerRef.current) clearInterval(timerRef.current)
     onComplete(historyRef.current)
-  }, [onComplete])
+  }, [onComplete, cancelAudio])
 
   const mm = String(Math.floor(timeLeft / 60)).padStart(2, '0')
   const ss = String(timeLeft % 60).padStart(2, '0')
