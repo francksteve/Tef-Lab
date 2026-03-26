@@ -301,7 +301,7 @@ function DialogueSection({
   const urgencyTriggeredRef = useRef(false)
   const hasStartedRef = useRef(false)
   const sessionConfiguredRef = useRef(false)
-  const openingInstructionRef = useRef('')
+  // openingInstructionRef removed — opening messages sent directly in dc.onopen
   const pcRef = useRef<RTCPeerConnection | null>(null)
   const dcRef = useRef<RTCDataChannel | null>(null)
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null)
@@ -356,6 +356,8 @@ function DialogueSection({
       if (remoteAudioRef.current) {
         remoteAudioRef.current.pause()
         remoteAudioRef.current.srcObject = null
+        remoteAudioRef.current.remove()
+        remoteAudioRef.current = null
       }
       if (timerRef.current) clearInterval(timerRef.current)
     }
@@ -413,26 +415,11 @@ function DialogueSection({
       try { event = JSON.parse(raw) } catch { return }
 
       switch (event.type as string) {
-        // Session confirmed ready — inject opening cue then trigger first response
+        // Session confirmed — just log it (opening messages already sent in dc.onopen)
         case 'session.updated':
-        case 'session.created': {
-          const dc = dcRef.current
-          if (dc?.readyState === 'open' && openingInstructionRef.current) {
-            // Inject opening cue as user message so AI knows to start
-            dc.send(JSON.stringify({
-              type: 'conversation.item.create',
-              item: {
-                type: 'message',
-                role: 'user',
-                content: [{ type: 'input_text', text: openingInstructionRef.current }],
-              },
-            }))
-            // Request AI response (no extra instructions — system prompt already loaded)
-            dc.send(JSON.stringify({ type: 'response.create' }))
-            openingInstructionRef.current = ''
-          }
+        case 'session.created':
+          console.debug('[EO_REALTIME] session configured')
           break
-        }
 
         case 'input_audio_buffer.speech_started':
           setRtcState('user_speaking')
@@ -518,7 +505,8 @@ function DialogueSection({
     if (remoteAudioRef.current) {
       remoteAudioRef.current.pause()
       remoteAudioRef.current.srcObject = null
-      // Don't null the ref — it's a DOM element managed by React
+      remoteAudioRef.current.remove()
+      remoteAudioRef.current = null
     }
     sessionConfiguredRef.current = false
     setRtcState('error')
@@ -555,13 +543,12 @@ RÈGLES :
 - Ne cède qu'après plusieurs arguments solides.
 - FRANÇAIS UNIQUEMENT.${documentContext}`
 
-      // Stored and sent as user cue AFTER session.updated fires
-      openingInstructionRef.current =
+      const openingCue =
         section === 'A'
           ? 'Commence maintenant. Dis : "Bonjour, comment puis-je vous aider ?"'
           : `Commence maintenant. Dis : "Salut ${userName || 'toi'} ! Comment vas-tu aujourd'hui mon ami(e) ?"`
 
-      // Exact format per Inworld WebRTC docs
+      // Send all three messages immediately in dc.onopen (official quickstart pattern)
       dc.send(JSON.stringify({
         type: 'session.update',
         session: {
@@ -573,7 +560,7 @@ RÈGLES :
             input: {
               turn_detection: {
                 type: 'semantic_vad',
-                eagerness: 'medium',
+                eagerness: 'high',
                 create_response: true,
                 interrupt_response: true,
               },
@@ -585,6 +572,15 @@ RÈGLES :
           },
         },
       }))
+      dc.send(JSON.stringify({
+        type: 'conversation.item.create',
+        item: {
+          type: 'message',
+          role: 'user',
+          content: [{ type: 'input_text', text: openingCue }],
+        },
+      }))
+      dc.send(JSON.stringify({ type: 'response.create' }))
     },
     [section, sectionData.longText, voice, userName]
   )
@@ -626,13 +622,14 @@ RÈGLES :
 
       micStream.getAudioTracks().forEach((t) => pc.addTrack(t, micStream))
 
-      // Incoming audio from Inworld → play via DOM <audio> element (autoplay-safe)
+      // Incoming audio from Inworld → create MediaStream from track (official pattern)
       pc.ontrack = (e) => {
-        if (e.track.kind === 'audio' && remoteAudioRef.current) {
-          remoteAudioRef.current.srcObject = e.streams[0]
-          remoteAudioRef.current.play().catch((err) =>
-            console.warn('[EO_REALTIME] audio.play() blocked:', err)
-          )
+        if (e.track.kind === 'audio') {
+          const audio = document.createElement('audio')
+          audio.autoplay = true
+          audio.srcObject = new MediaStream([e.track])
+          document.body.appendChild(audio)
+          remoteAudioRef.current = audio
         }
       }
 
@@ -659,18 +656,18 @@ RÈGLES :
       const offer = await pc.createOffer()
       await pc.setLocalDescription(offer)
 
-      // Wait for ICE gathering (5s timeout)
-      await new Promise<void>((resolve, reject) => {
+      // Wait for ICE gathering — official debounce pattern:
+      // resolve 500ms after the last candidate, or on 'complete', or after 3s hard timeout
+      await new Promise<void>((resolve) => {
         if (pc.iceGatheringState === 'complete') { resolve(); return }
-        const timeout = setTimeout(() => reject(new Error('ICE timeout')), 10000)
-        iceTimeoutRef.current = timeout
-        pc.addEventListener('icegatheringstatechange', () => {
-          if (pc.iceGatheringState === 'complete') {
-            clearTimeout(timeout)
-            iceTimeoutRef.current = null
-            resolve()
-          }
-        })
+        let debounce: ReturnType<typeof setTimeout> | null = null
+        const done = () => { clearTimeout(debounce!); clearTimeout(hard); resolve() }
+        const hard = setTimeout(done, 3000)
+        iceTimeoutRef.current = hard
+        pc.onicecandidate = (e) => {
+          if (e.candidate) { if (debounce) clearTimeout(debounce); debounce = setTimeout(done, 500) }
+        }
+        pc.onicegatheringstatechange = () => { if (pc.iceGatheringState === 'complete') done() }
       })
 
       if (!pc.localDescription?.sdp) throw new Error('No local SDP')
@@ -735,6 +732,8 @@ RÈGLES :
     if (remoteAudioRef.current) {
       remoteAudioRef.current.pause()
       remoteAudioRef.current.srcObject = null
+      remoteAudioRef.current.remove()
+      remoteAudioRef.current = null
     }
     if (timerRef.current) clearInterval(timerRef.current)
     onComplete(historyRef.current)
@@ -749,10 +748,6 @@ RÈGLES :
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
-      {/* Hidden audio element — must be in DOM for autoplay to work */}
-      {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-      <audio ref={remoteAudioRef} autoPlay playsInline style={{ display: 'none' }} />
-
       {/* Header — pleine largeur */}
       <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between flex-shrink-0 gap-2">
         <div className="flex items-center gap-2 flex-wrap">
