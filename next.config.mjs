@@ -6,7 +6,7 @@ const nextConfig = {
   },
   experimental: {
     // Prisma driver adapters doivent rester côté serveur Node.js (Next.js 14)
-    serverComponentsExternalPackages: ['@prisma/adapter-pg', 'pg'],
+    serverComponentsExternalPackages: ['@prisma/adapter-pg', 'pg', 'sharp'],
   },
 };
 

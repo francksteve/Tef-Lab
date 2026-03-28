@@ -174,6 +174,8 @@ export default function QuestionsAdminPage() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [moduleFilter, setModuleFilter] = useState<string>('')
+  const [generatingAudio, setGeneratingAudio] = useState(false)
+  const [audioGenResult, setAudioGenResult] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/series')
@@ -736,6 +738,36 @@ export default function QuestionsAdminPage() {
     )
   }
 
+  // ─── CO audio generation ─────────────────────────────────────────────────────
+  const handleGenerateAudio = async (overwrite = false) => {
+    if (!selectedSeriesId || moduleCode !== 'CO') return
+    const msg = overwrite
+      ? 'Régénérer TOUS les audios (même ceux existants) ?'
+      : 'Générer les audios manquants à partir des transcriptions ?'
+    if (!window.confirm(msg)) return
+
+    setGeneratingAudio(true)
+    setAudioGenResult(null)
+    try {
+      const res = await fetch('/api/co-generate-audio', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ seriesId: selectedSeriesId, overwrite }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setAudioGenResult(`✅ ${data.generated} audio(s) généré(s)${data.errors?.length ? ` — ${data.errors.length} erreur(s)` : ''}`)
+        loadQuestions(selectedSeriesId) // refresh to show new audioUrls
+      } else {
+        setAudioGenResult(`❌ ${data.error || 'Erreur inconnue'}`)
+      }
+    } catch {
+      setAudioGenResult('❌ Erreur réseau')
+    } finally {
+      setGeneratingAudio(false)
+    }
+  }
+
   // ─── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className="p-6 space-y-6 max-w-5xl mx-auto">
@@ -804,13 +836,29 @@ export default function QuestionsAdminPage() {
                   : `${questions.length} question${questions.length !== 1 ? 's' : ''}`}
               </p>
             </div>
-            {(!isTask || questions.length < 2) && (
-              <button onClick={openNew}
-                className="px-4 py-2 bg-tef-blue text-white text-sm font-semibold rounded-lg hover:bg-tef-blue-hover transition-colors">
-                {isTask ? '+ Ajouter une section' : '+ Nouvelle question'}
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              {moduleCode === 'CO' && questions.length > 0 && (
+                <button
+                  onClick={() => handleGenerateAudio(false)}
+                  disabled={generatingAudio}
+                  className="px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                >
+                  {generatingAudio ? '⏳ Génération…' : '🎙️ Générer audios CO'}
+                </button>
+              )}
+              {(!isTask || questions.length < 2) && (
+                <button onClick={openNew}
+                  className="px-4 py-2 bg-tef-blue text-white text-sm font-semibold rounded-lg hover:bg-tef-blue-hover transition-colors">
+                  {isTask ? '+ Ajouter une section' : '+ Nouvelle question'}
+                </button>
+              )}
+            </div>
           </div>
+          {audioGenResult && (
+            <p className={`text-sm font-medium ${audioGenResult.startsWith('✅') ? 'text-green-600' : 'text-red-600'}`}>
+              {audioGenResult}
+            </p>
+          )}
 
           {/* Form */}
           {showForm && (

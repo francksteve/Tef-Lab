@@ -1,5 +1,6 @@
 'use client'
 import { useRef, useState } from 'react'
+import { compressAudio, formatFileSize } from '@/lib/audio-compressor'
 
 interface FileUploadProps {
   type: 'image' | 'audio'
@@ -12,15 +13,36 @@ interface FileUploadProps {
 export default function FileUpload({ type, value, onChange, label, required }: FileUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
+  const [compressing, setCompressing] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [sizeInfo, setSizeInfo] = useState<string | null>(null)
 
   const accept = type === 'image' ? 'image/*' : 'audio/*'
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
+    let file = e.target.files?.[0]
     if (!file) return
     setUploading(true)
     setUploadError(null)
+    setSizeInfo(null)
+
+    // ── Client-side audio compression ────────────────────────
+    if (type === 'audio') {
+      try {
+        setCompressing(true)
+        const originalSize = file.size
+        file = await compressAudio(file)
+        const saved = originalSize - file.size
+        const pct = Math.round((saved / originalSize) * 100)
+        setSizeInfo(
+          `${formatFileSize(originalSize)} → ${formatFileSize(file.size)} (-${pct}%)`
+        )
+      } catch (err) {
+        console.warn('[FileUpload] Audio compression failed, uploading original:', err)
+      } finally {
+        setCompressing(false)
+      }
+    }
 
     const formData = new FormData()
     formData.append('file', file)
@@ -39,7 +61,6 @@ export default function FileUpload({ type, value, onChange, label, required }: F
       setUploadError('Erreur réseau lors du téléchargement')
     } finally {
       setUploading(false)
-      // Reset input so same file can be re-selected if needed
       if (inputRef.current) inputRef.current.value = ''
     }
   }
@@ -76,10 +97,16 @@ export default function FileUpload({ type, value, onChange, label, required }: F
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
-          disabled={uploading}
+          disabled={uploading || compressing}
           className="px-3 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 whitespace-nowrap flex-shrink-0"
         >
-          {uploading ? '⏳ Upload…' : type === 'image' ? '🖼 Importer' : '🎵 Importer'}
+          {compressing
+            ? '🔄 Compression…'
+            : uploading
+              ? '⏳ Upload…'
+              : type === 'image'
+                ? '🖼 Importer'
+                : '🎵 Importer'}
         </button>
         <input
           ref={inputRef}
@@ -91,6 +118,7 @@ export default function FileUpload({ type, value, onChange, label, required }: F
       </div>
 
       {uploadError && <p className="text-red-600 text-xs mt-1">{uploadError}</p>}
+      {sizeInfo && <p className="text-green-600 text-xs mt-1">✅ Compressé : {sizeInfo}</p>}
     </div>
   )
 }
