@@ -31,7 +31,10 @@ const VOICE_MAP: Record<string, string[]> = {
 }
 
 // Speaker markers that indicate dialogue
-const SPEAKER_PATTERN = /^((?:Homme|Femme|Présentateur|Présentatrice|Journaliste|Invité|Intervieweur|Client|Vendeur|Médecin|Patient|Professeur|Étudiant|Animateur|Animatrice|Locuteur|Locutrice)\s*\d?\s*:)/im
+const SPEAKER_PATTERN = /^((?:Homme|Femme|Présentateur|Présentatrice|Journaliste|Invité|Invitée|Intervieweur|Client|Vendeur|Médecin|Patient|Professeur|Étudiant|Animateur|Animatrice|Locuteur|Locutrice|Personne\s*\d?)\s*:)/im
+
+// Dash-based dialogue pattern (e.g. "– Bonjour..." or "- Bonjour...")
+const DASH_DIALOGUE_PATTERN = /^[–—-]\s+/
 
 function getCOCategory(questionOrder: number): string {
   if (questionOrder <= 4) return 'Q1-4'
@@ -51,6 +54,7 @@ interface SpeechSegment {
 
 /**
  * Split a transcript into segments by speaker, assigning alternating voices.
+ * Supports both named speakers ("Journaliste :") and dash-based dialogues ("– Bonjour...").
  */
 function splitBySpeaker(text: string, voices: string[]): SpeechSegment[] {
   const lines = text.split('\n').filter((l) => l.trim())
@@ -58,28 +62,50 @@ function splitBySpeaker(text: string, voices: string[]): SpeechSegment[] {
   let currentVoiceIdx = 0
   const speakerVoiceMap = new Map<string, string>()
 
+  // Detect if this is a dash-based dialogue
+  const dashLines = lines.filter((l) => DASH_DIALOGUE_PATTERN.test(l.trim()))
+  const isDashDialogue = dashLines.length >= 2
+
   for (const line of lines) {
-    const match = line.match(SPEAKER_PATTERN)
+    const trimmed = line.trim()
+
+    // Named speaker pattern (e.g. "Journaliste :")
+    const match = trimmed.match(SPEAKER_PATTERN)
     if (match) {
       const speaker = match[1].replace(/\s*:\s*$/, '').trim()
       if (!speakerVoiceMap.has(speaker)) {
         speakerVoiceMap.set(speaker, voices[currentVoiceIdx % voices.length])
         currentVoiceIdx++
       }
-      const content = line.slice(match[0].length).trim()
+      const content = trimmed.slice(match[0].length).trim()
       if (content) {
         segments.push({ text: content, voice: speakerVoiceMap.get(speaker)! })
       }
-    } else {
-      // No speaker marker — use default voice
-      const voice = voices[0]
-      segments.push({ text: line.trim(), voice })
+    } else if (isDashDialogue && DASH_DIALOGUE_PATTERN.test(trimmed)) {
+      // Dash-based dialogue — alternate voices for each dash line
+      const content = trimmed.replace(DASH_DIALOGUE_PATTERN, '').trim()
+      if (content) {
+        const voice = voices[currentVoiceIdx % voices.length]
+        segments.push({ text: content, voice })
+        currentVoiceIdx++
+      }
+    } else if (trimmed) {
+      // Narrative / no marker — use default voice
+      // Skip metadata lines like "[Question du micro-trottoir : ...]"
+      if (trimmed.startsWith('[') && trimmed.endsWith(']')) continue
+      // Skip "Personne N :" lines that are just labels
+      if (/^Personne\s+\d+\s*:?\s*$/i.test(trimmed)) continue
+      segments.push({ text: trimmed, voice: voices[0] })
     }
   }
 
   // If no segments were created from speaker parsing, treat as single block
   if (segments.length === 0 && text.trim()) {
-    segments.push({ text: text.trim(), voice: voices[0] })
+    // Clean metadata from single-block text too
+    const cleaned = text.replace(/\[.*?\]/g, '').trim()
+    if (cleaned) {
+      segments.push({ text: cleaned, voice: voices[0] })
+    }
   }
 
   return segments
@@ -195,8 +221,9 @@ export async function POST(req: NextRequest) {
     const { seriesId, questionId, overwrite } = parsed.data
     const apiKey = config.inworldApiKey
     if (!apiKey) {
-      return NextResponse.json({ error: 'INWORLD_API_KEY non configuré' }, { status: 503 })
+      return NextResponse.json({ error: 'INWORLD_API_KEY non configuré. Ajoutez cette variable dans Vercel > Settings > Environment Variables.' }, { status: 503 })
     }
+    console.log(`[CO_AUDIO] API key present (length: ${apiKey.length}), processing series ${seriesId}${questionId ? ` question ${questionId}` : ''}`)
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -295,10 +322,12 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({
-      message: `${results.length} audio(s) généré(s), ${errors.length} erreur(s)`,
+      message: `${results.length} audio(s) généré(s)${errors.length ? `, ${errors.length} erreur(s)` : ''}`,
       generated: results.length,
       results,
       errors,
+      // Include first error detail for easier debugging
+      ...(errors.length > 0 && { firstError: errors[0].error }),
     })
   } catch (error) {
     console.error('[API_ERROR] POST /api/co-generate-audio', error)

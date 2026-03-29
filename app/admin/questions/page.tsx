@@ -600,12 +600,57 @@ export default function QuestionsAdminPage() {
             value={form.longText}
             onChange={(e) => set('longText', e.target.value)}
             rows={5}
-            placeholder="Saisissez ici la transcription complète du document audio (dialogue, annonce, répondeur…). Utilisée pour générer l'audio TTS via le bouton «🎙️ Générer audios CO»."
+            placeholder="Saisissez ici la transcription complète du document audio (dialogue, annonce, répondeur…). Utilisée pour générer l'audio TTS via le bouton ci-dessous."
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue"
           />
           <p className="text-xs text-gray-400 mt-1">
             ⚠️ Cette transcription est <strong>réservée à l&apos;admin</strong> pour générer l&apos;audio TTS. Elle n&apos;est <strong>pas affichée</strong> au candidat pendant l&apos;examen.
           </p>
+          {/* Generate audio from transcription — in-form button */}
+          {editingId && form.longText.trim() && (
+            <button
+              type="button"
+              onClick={async () => {
+                if (!selectedSeriesId || !editingId) return
+                setGeneratingAudioId(editingId)
+                setAudioGenResult(null)
+                try {
+                  const res = await fetch('/api/co-generate-audio', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ seriesId: selectedSeriesId, questionId: editingId, overwrite: true }),
+                  })
+                  const data = await res.json()
+                  if (res.ok && data.results?.length > 0) {
+                    const result = data.results[0]
+                    set('audioUrl', result.audioUrl)
+                    setAudioGenResult(`✅ Audio généré (${result.sizeKo} Ko) — URL mise à jour dans le formulaire`)
+                  } else if (res.ok) {
+                    setAudioGenResult(`⚠️ ${data.message || 'Aucun audio généré'}`)
+                  } else {
+                    setAudioGenResult(`❌ ${data.error || 'Erreur lors de la génération'}`)
+                  }
+                } catch {
+                  setAudioGenResult('❌ Erreur réseau lors de la génération')
+                } finally {
+                  setGeneratingAudioId(null)
+                }
+              }}
+              disabled={generatingAudioId === editingId || generatingAudio}
+              className="mt-2 w-full px-4 py-2.5 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {generatingAudioId === editingId ? (
+                <><span className="animate-spin">⏳</span> Génération de l&apos;audio en cours…</>
+              ) : (
+                <><span>🎙️</span> Générer l&apos;audio à partir de la transcription</>
+              )}
+            </button>
+          )}
+          {!editingId && form.longText.trim() && (
+            <p className="text-xs text-blue-600 mt-2">
+              💡 Enregistrez d&apos;abord la question, puis cliquez sur « Modifier » pour générer l&apos;audio TTS.
+            </p>
+          )}
         </div>
 
         {/* Question posée — Micro-trottoirs uniquement (Q15-20) */}
@@ -759,7 +804,7 @@ export default function QuestionsAdminPage() {
       })
       const data = await res.json()
       if (res.ok) {
-        setAudioGenResult(`✅ ${data.generated} audio(s) généré(s)${data.errors?.length ? ` — ${data.errors.length} erreur(s)` : ''}`)
+        setAudioGenResult(`✅ ${data.generated} audio(s) généré(s)${data.errors?.length ? ` — ${data.errors.length} erreur(s)${data.firstError ? ` (ex: ${data.firstError})` : ''}` : ''}`)
         loadQuestions(selectedSeriesId) // refresh to show new audioUrls
       } else {
         setAudioGenResult(`❌ ${data.error || 'Erreur inconnue'}`)
