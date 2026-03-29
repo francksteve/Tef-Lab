@@ -1000,10 +1000,12 @@ export default function QuestionsAdminPage() {
                           <button
                             onClick={() => handleGenerateSingleAudio(q)}
                             disabled={generatingAudioId === q.id || generatingAudio}
-                            title="Générer l'audio TTS pour cette question"
-                            className="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-lg hover:bg-green-200 transition-colors disabled:opacity-50"
+                            title={q.audioUrl ? "Regénérer l'audio TTS (écrasera l'existant)" : "Générer l'audio TTS pour cette question"}
+                            className={`px-3 py-1.5 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1 ${
+                              q.audioUrl ? 'bg-orange-500 hover:bg-orange-600' : 'bg-green-600 hover:bg-green-700'
+                            }`}
                           >
-                            {generatingAudioId === q.id ? '⏳' : '🎙️'}
+                            {generatingAudioId === q.id ? '⏳ Génération…' : q.audioUrl ? '🔄 Regénérer' : '🎙️ Audio'}
                           </button>
                         )}
                         <button onClick={() => openEdit(q)} className="px-3 py-1 bg-blue-100 text-tef-blue text-xs font-semibold rounded-lg hover:bg-blue-200 transition-colors">Modifier</button>
