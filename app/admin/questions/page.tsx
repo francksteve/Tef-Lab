@@ -597,11 +597,11 @@ export default function QuestionsAdminPage() {
             value={form.longText}
             onChange={(e) => set('longText', e.target.value)}
             rows={5}
-            placeholder="Saisissez ici la transcription complète ou partielle du document audio. Ce texte sera affiché dans la colonne gauche pendant l'écoute."
+            placeholder="Saisissez ici la transcription complète du document audio (dialogue, annonce, répondeur…). Utilisée pour générer l'audio TTS via le bouton «🎙️ Générer audios CO»."
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue"
           />
           <p className="text-xs text-gray-400 mt-1">
-            La transcription est affichée dans la zone de contexte à gauche de la question pendant l&apos;examen.
+            ⚠️ Cette transcription est <strong>réservée à l&apos;admin</strong> pour générer l&apos;audio TTS. Elle n&apos;est <strong>pas affichée</strong> au candidat pendant l&apos;examen.
           </p>
         </div>
 

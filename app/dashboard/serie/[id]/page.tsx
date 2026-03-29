@@ -994,11 +994,7 @@ export default function QuizPage() {
                   <>
                     {/* Paired page (Q21-22 / Q23-28 / Q29-30): left col has firstQ, right col has secondQ */}
                     <div className="px-4 pt-0 pb-4 overflow-y-auto max-h-[35vh] md:max-h-[65vh] border-b md:border-b-0 border-gray-100 space-y-3">
-                      {firstQ.longText && (
-                        <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-700 leading-relaxed border-l-4 border-tef-blue">
-                          {firstQ.longText}
-                        </div>
-                      )}
+                      {/* longText = transcription audio only (admin/TTS use) — never shown to candidate */}
                       <div className="space-y-3">
                         {firstQ.description && (
                           <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-700 leading-relaxed">
@@ -1026,11 +1022,7 @@ export default function QuizPage() {
                   <>
                     {/* Single question page */}
                     <div className="px-4 pt-0 pb-4 overflow-y-auto max-h-[35vh] md:max-h-[65vh] border-b md:border-b-0 border-gray-100 space-y-3">
-                      {firstQ.longText && (
-                        <div className="bg-gray-50 rounded-lg p-3 text-sm text-gray-700 leading-relaxed border-l-4 border-tef-blue">
-                          {firstQ.longText}
-                        </div>
-                      )}
+                      {/* longText = transcription audio only (admin/TTS use) — never shown to candidate */}
                       {firstQ.imageUrl && (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={firstQ.imageUrl} alt="Document visuel" className="max-w-full rounded-lg border border-gray-200" />
