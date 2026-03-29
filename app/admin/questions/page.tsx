@@ -175,6 +175,7 @@ export default function QuestionsAdminPage() {
   const [error, setError] = useState<string | null>(null)
   const [moduleFilter, setModuleFilter] = useState<string>('')
   const [generatingAudio, setGeneratingAudio] = useState(false)
+  const [generatingAudioId, setGeneratingAudioId] = useState<string | null>(null)
   const [audioGenResult, setAudioGenResult] = useState<string | null>(null)
 
   useEffect(() => {
@@ -770,6 +771,31 @@ export default function QuestionsAdminPage() {
     }
   }
 
+  // ─── CO audio generation — single question ───────────────────────────────────
+  const handleGenerateSingleAudio = async (q: Question) => {
+    if (!selectedSeriesId || moduleCode !== 'CO' || !q.longText) return
+    setGeneratingAudioId(q.id)
+    setAudioGenResult(null)
+    try {
+      const res = await fetch('/api/co-generate-audio', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ seriesId: selectedSeriesId, questionId: q.id, overwrite: true }),
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setAudioGenResult(`✅ Q${q.questionOrder} : audio généré (${data.results?.[0]?.sizeKo ?? '?'} Ko)`)
+        loadQuestions(selectedSeriesId)
+      } else {
+        setAudioGenResult(`❌ Q${q.questionOrder} : ${data.error || 'Erreur inconnue'}`)
+      }
+    } catch {
+      setAudioGenResult(`❌ Q${q.questionOrder} : erreur réseau`)
+    } finally {
+      setGeneratingAudioId(null)
+    }
+  }
+
   // ─── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className="p-6 space-y-6 max-w-5xl mx-auto">
@@ -969,7 +995,17 @@ export default function QuestionsAdminPage() {
                         </div>
                         {q.correctAnswer && <p className="text-xs font-semibold text-green-600">✓ Réponse : Option {q.correctAnswer}</p>}
                       </div>
-                      <div className="flex gap-2 flex-shrink-0">
+                      <div className="flex gap-2 flex-shrink-0 flex-wrap justify-end">
+                        {moduleCode === 'CO' && q.longText && (
+                          <button
+                            onClick={() => handleGenerateSingleAudio(q)}
+                            disabled={generatingAudioId === q.id || generatingAudio}
+                            title="Générer l'audio TTS pour cette question"
+                            className="px-3 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-lg hover:bg-green-200 transition-colors disabled:opacity-50"
+                          >
+                            {generatingAudioId === q.id ? '⏳' : '🎙️'}
+                          </button>
+                        )}
                         <button onClick={() => openEdit(q)} className="px-3 py-1 bg-blue-100 text-tef-blue text-xs font-semibold rounded-lg hover:bg-blue-200 transition-colors">Modifier</button>
                         <button onClick={() => handleDelete(q)} className="px-3 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-lg hover:bg-red-200 transition-colors">Supprimer</button>
                       </div>

@@ -175,7 +175,8 @@ function silentMp3Pause(): Buffer {
 // ── Request schema ───────────────────────────────────────────
 const requestSchema = z.object({
   seriesId: z.string().min(1),
-  overwrite: z.boolean().optional().default(false), // regenerate even if audioUrl exists
+  questionId: z.string().optional(), // if provided, generate for this single question only
+  overwrite: z.boolean().optional().default(false),
 })
 
 export async function POST(req: NextRequest) {
@@ -191,7 +192,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Données invalides', details: parsed.error.issues }, { status: 400 })
     }
 
-    const { seriesId, overwrite } = parsed.data
+    const { seriesId, questionId, overwrite } = parsed.data
     const apiKey = config.inworldApiKey
     if (!apiKey) {
       return NextResponse.json({ error: 'INWORLD_API_KEY non configuré' }, { status: 503 })
@@ -215,11 +216,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Cette série n\'est pas une série CO' }, { status: 400 })
     }
 
-    // Get questions with transcripts
+    // Get questions with transcripts — optionally filtered to a single question
     const questions = await prisma.question.findMany({
       where: {
         seriesId,
-        ...(overwrite ? {} : { OR: [{ audioUrl: null }, { audioUrl: '' }] }),
+        ...(questionId ? { id: questionId } : {}),
+        ...(overwrite || questionId ? {} : { OR: [{ audioUrl: null }, { audioUrl: '' }] }),
         NOT: [{ longText: null }, { longText: '' }],
       },
       orderBy: { questionOrder: 'asc' },
