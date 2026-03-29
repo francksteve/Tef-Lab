@@ -310,11 +310,12 @@ export default function QuestionsAdminPage() {
       explanation: form.explanation || undefined,
     }
     if (isQCM) {
-      payload.optionA = form.optionA
-      payload.optionB = form.optionB
-      payload.optionC = form.optionC
-      payload.optionD = form.optionD
-      payload.correctAnswer = form.correctAnswer
+      // Only send non-empty strings — empty strings fail z.string().min(1)
+      if (form.optionA) payload.optionA = form.optionA
+      if (form.optionB) payload.optionB = form.optionB
+      if (form.optionC) payload.optionC = form.optionC
+      if (form.optionD) payload.optionD = form.optionD
+      if (form.correctAnswer) payload.correctAnswer = form.correctAnswer
     }
 
     try {
@@ -367,10 +368,11 @@ export default function QuestionsAdminPage() {
     </div>
   )
 
+  // For CO: options are not HTML-required (some questions may have partial data)
   const answerFields = (
     <>
       <div className="grid sm:grid-cols-2 gap-4">
-        {(['A', 'B', 'C', 'D'] as const).map((opt) => inputField(`Option ${opt}`, `option${opt}` as keyof QuestionFormData, true))}
+        {(['A', 'B', 'C', 'D'] as const).map((opt) => inputField(`Option ${opt}`, `option${opt}` as keyof QuestionFormData, moduleCode === 'CE'))}
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">Bonne réponse</label>
