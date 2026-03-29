@@ -16,7 +16,8 @@ import { prisma } from '@/lib/prisma'
  * (e.g. "Homme :" / "Femme :") and alternating voices are used.
  */
 
-const INWORLD_TTS_URL = 'https://api.inworld.ai/tts/v1/text:synthesize'
+const INWORLD_TTS_URL = 'https://api.inworld.ai/tts/v1/voice'
+const INWORLD_TTS_MODEL = 'inworld-tts-1.5-max'
 
 // Voice assignment per CO category
 const VOICE_MAP: Record<string, string[]> = {
@@ -112,7 +113,10 @@ function splitBySpeaker(text: string, voices: string[]): SpeechSegment[] {
 }
 
 /**
- * Call Inworld TTS and return raw MP3 buffer.
+ * Call Inworld TTS API and return raw MP3 buffer.
+ * Endpoint: POST https://api.inworld.ai/tts/v1/voice
+ * Body: { text, voiceId, modelId }
+ * Response: { audioContent: "<base64 MP3>" }
  */
 async function synthesize(text: string, voice: string, apiKey: string): Promise<Buffer> {
   const res = await fetch(INWORLD_TTS_URL, {
@@ -122,9 +126,9 @@ async function synthesize(text: string, voice: string, apiKey: string): Promise<
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      input: { text },
-      voice: { voice_id: voice },
-      output: { encoding: 'MP3' },
+      text,
+      voiceId: voice,
+      modelId: INWORLD_TTS_MODEL,
     }),
   })
 
@@ -133,17 +137,9 @@ async function synthesize(text: string, voice: string, apiKey: string): Promise<
     throw new Error(`Inworld TTS error ${res.status}: ${errText}`)
   }
 
-  const contentType = res.headers.get('content-type') ?? ''
-
-  // Binary audio response
-  if (contentType.includes('audio/') || contentType.includes('octet-stream')) {
-    return Buffer.from(await res.arrayBuffer())
-  }
-
-  // JSON response with base64
   const data = await res.json()
-  const b64: string = data?.audio_content ?? data?.audioContent ?? ''
-  if (!b64) throw new Error('No audio_content in TTS response')
+  const b64: string = data?.audioContent ?? ''
+  if (!b64) throw new Error('No audioContent in TTS response')
   return Buffer.from(b64, 'base64')
 }
 
