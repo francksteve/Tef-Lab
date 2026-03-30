@@ -283,49 +283,52 @@ function DashboardContent() {
       )}
 
       {/* ─── Header ─── */}
-      <div className="bg-tef-blue text-white px-6 py-8">
-        <div className="max-w-5xl mx-auto flex flex-wrap items-start justify-between gap-3">
+      <div className="bg-tef-blue text-white px-4 sm:px-6 py-6 sm:py-8">
+        <div className="max-w-5xl mx-auto space-y-4">
+          {/* Greeting */}
           <div>
-            <h1 className="text-2xl font-extrabold">Bonjour {firstName} 👋</h1>
+            <h1 className="text-xl sm:text-2xl font-extrabold">Bonjour {firstName} 👋</h1>
             <p className="text-blue-200 text-sm mt-1">
               Prépare le TEF Canada avec tes séries d&apos;entraînement personnalisées.
             </p>
           </div>
-          <div className="flex flex-col items-end gap-2">
-            {session?.user?.role !== 'ADMIN' && daysLeft !== null && (
-              <span
-                className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 ${
-                  daysLeft > 6
-                    ? 'bg-green-500/20 text-green-100 ring-1 ring-green-400/40'
-                    : 'bg-red-500/20 text-red-100 ring-1 ring-red-400/40'
-                }`}
-              >
-                <span>{daysLeft > 6 ? '🟢' : '🔴'}</span>
-                {daysLeft}j restants
-              </span>
-            )}
-            {session?.user?.role !== 'ADMIN' && (
+
+          {/* Status badges + CTA — uniform row on mobile */}
+          {session?.user?.role !== 'ADMIN' && (
+            <div className="flex flex-wrap items-center gap-2">
               <span className={`px-3 py-1.5 rounded-full text-xs font-bold ${badge.color}`}>
                 {badge.label}
               </span>
-            )}
-            {session?.user?.role !== 'ADMIN' && accessLevel !== 'ALL' && (
-              <button
-                onClick={() => openUpgrade('Accédez à plus de séries et de corrections IA.')}
-                className="px-4 py-2 bg-white text-tef-blue font-bold rounded-lg text-xs hover:bg-blue-50 transition-colors"
-              >
-                Mettre à niveau →
-              </button>
-            )}
-          </div>
+              {daysLeft !== null && (
+                <span
+                  className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 ${
+                    daysLeft > 6
+                      ? 'bg-green-500/20 text-green-100 ring-1 ring-green-400/40'
+                      : 'bg-red-500/20 text-red-100 ring-1 ring-red-400/40'
+                  }`}
+                >
+                  <span>{daysLeft > 6 ? '🟢' : '🔴'}</span>
+                  {daysLeft}j restants
+                </span>
+              )}
+              {accessLevel !== 'ALL' && (
+                <button
+                  onClick={() => openUpgrade('Accédez à plus de séries et de corrections IA.')}
+                  className="px-4 py-1.5 bg-white text-tef-blue font-bold rounded-full text-xs hover:bg-blue-50 transition-colors"
+                >
+                  Mettre à niveau →
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-10">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8">
 
         {/* ─── Subscription status card ─── */}
         {session?.user?.role !== 'ADMIN' && daysLeft !== null && packName && expiresAt && (
-          <div className={`rounded-xl px-5 py-4 border flex flex-wrap items-center justify-between gap-3 ${
+          <div className={`rounded-xl px-4 py-3 border flex flex-wrap items-center justify-between gap-3 ${
             daysLeft > 6
               ? 'bg-green-50 border-green-200'
               : 'bg-red-50 border-red-200'
@@ -352,7 +355,7 @@ function DashboardContent() {
         {/* Modules */}
         <section>
           <h2 className="text-lg font-bold text-gray-900 mb-4">Les 4 modules TEF Canada</h2>
-          <div className="grid grid-cols-1 gap-5">
+          <div className="grid grid-cols-1 gap-4">
             {moduleOrder.map((code) => {
               const moduleSeries = sortSeriesByOrder(seriesByModule[code] ?? [])
               const sampleModule = moduleSeries[0]?.module
@@ -368,18 +371,18 @@ function DashboardContent() {
                   className={`bg-white rounded-xl border-2 ${moduleColors[code] ?? 'border-gray-200'} flex flex-col transition-all overflow-hidden`}
                 >
                   {/* ── Module header ── */}
-                  <div className={`${moduleHeaderColors[code] ?? 'bg-gray-50'} px-5 pt-4 pb-4 flex items-start gap-3`}>
-                    <span className="text-3xl leading-none mt-0.5">{moduleIcons[code]}</span>
+                  <div className={`${moduleHeaderColors[code] ?? 'bg-gray-50'} px-4 sm:px-5 pt-3 pb-3 flex items-center gap-3`}>
+                    <span className="text-2xl sm:text-3xl leading-none">{moduleIcons[code]}</span>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-gray-900 text-base leading-snug">
+                      <h3 className="font-bold text-gray-900 text-sm sm:text-base leading-snug">
                         {sampleModule?.name ?? code}
                       </h3>
-                      <div className="flex flex-wrap items-center gap-2 mt-1.5">
-                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white border border-gray-200 text-xs font-semibold text-gray-700">
-                          {unlockedCount} série{unlockedCount !== 1 ? 's' : ''} accessible{unlockedCount !== 1 ? 's' : ''}
+                      <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white border border-gray-200 text-[11px] font-semibold text-gray-700">
+                          {unlockedCount} accessible{unlockedCount !== 1 ? 's' : ''}
                         </span>
                         {lockedCount > 0 && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-white border border-gray-200 text-xs font-medium text-gray-400">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white border border-gray-200 text-[11px] font-medium text-gray-400">
                             🔒 {lockedCount} verrouillée{lockedCount !== 1 ? 's' : ''}
                           </span>
                         )}
@@ -387,14 +390,16 @@ function DashboardContent() {
                     </div>
                   </div>
 
-                  {/* ── Series list — horizontal chips ── */}
-                  <div className="px-5 py-3 flex-1">
+                  {/* ── Series list — compact chips ── */}
+                  <div className="px-4 sm:px-5 py-3 flex-1">
                     {moduleSeries.length === 0 ? (
                       <p className="text-xs text-gray-400 italic py-2">Aucune série disponible</p>
                     ) : (
-                      <div className="flex flex-row flex-wrap gap-2">
+                      <div className="flex flex-row flex-wrap gap-1.5 sm:gap-2">
                         {visibleSeries.map((s, i) => {
                           const locked = isSeriesLocked(s, accessLevel)
+                          // Extract short label: "CE 1", "CO 12", etc.
+                          const shortLabel = `${code} ${i + 1}`
                           if (locked) {
                             return (
                               <button
@@ -404,13 +409,10 @@ function DashboardContent() {
                                     `La série "${s.title}" nécessite un abonnement pour y accéder.`
                                   )
                                 }
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-400 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs text-gray-400 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"
                               >
-                                <span className="w-4 h-4 flex items-center justify-center rounded-full bg-gray-200 text-[10px] font-bold flex-shrink-0">
-                                  {i + 1}
-                                </span>
-                                <span className="max-w-[160px] truncate">{s.title}</span>
-                                <span className="text-xs flex-shrink-0">🔒</span>
+                                <span className="font-semibold">{shortLabel}</span>
+                                <span className="text-[10px] flex-shrink-0">🔒</span>
                               </button>
                             )
                           }
@@ -419,18 +421,18 @@ function DashboardContent() {
                             <Link
                               key={s.id}
                               href={getSeriesLink(s)}
-                              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg transition-colors group ${
+                              className={`inline-flex items-center gap-1 px-2.5 py-1.5 text-xs rounded-lg transition-colors group ${
                                 attempted
-                                  ? 'text-green-800 bg-green-50 border border-green-300 hover:border-green-500 hover:bg-green-100'
-                                  : 'text-gray-800 bg-white border border-gray-200 hover:border-tef-blue hover:text-tef-blue'
+                                  ? 'text-green-800 bg-green-50 border border-green-300 hover:border-green-500 hover:bg-green-100 font-semibold'
+                                  : 'text-gray-800 bg-white border border-gray-200 hover:border-tef-blue hover:text-tef-blue font-medium'
                               }`}
                             >
-                              <span className={`w-4 h-4 flex items-center justify-center rounded-full text-[10px] font-bold flex-shrink-0 ${
-                                attempted ? 'bg-green-500 text-white' : 'bg-tef-blue/10 text-tef-blue'
+                              <span className={`w-5 h-5 flex items-center justify-center rounded-full text-[10px] font-bold flex-shrink-0 ${
+                                attempted ? 'bg-green-500 text-white' : 'bg-tef-blue text-white'
                               }`}>
                                 {i + 1}
                               </span>
-                              <span className="max-w-[160px] truncate">{s.title}</span>
+                              <span>{shortLabel}</span>
                               {attempted && (
                                 <span className="text-green-600 flex-shrink-0 text-[10px] font-bold">✓</span>
                               )}
@@ -448,7 +450,7 @@ function DashboardContent() {
 
                   {/* ── Voir plus / Voir moins ── */}
                   {hiddenCount > 0 && (
-                    <div className="px-5 pb-3 pt-1 border-t border-gray-100">
+                    <div className="px-4 sm:px-5 pb-2 pt-1 border-t border-gray-100">
                       <button
                         onClick={() =>
                           setExpandedModules((prev) => ({ ...prev, [code]: !isExpanded }))
@@ -464,7 +466,7 @@ function DashboardContent() {
 
                   {/* ── Unlock CTA ── */}
                   {lockedCount > 0 && (
-                    <div className="px-5 pb-4 pt-2">
+                    <div className="px-4 sm:px-5 pb-3 pt-1">
                       <button
                         onClick={() =>
                           openUpgrade(
