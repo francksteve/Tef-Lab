@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
     // ── 4. Call Anthropic
     const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-5',
-      max_tokens: 2048,
+      max_tokens: 4096,
       system: EE_SCORING_PROMPT,
       messages: [
         {
@@ -69,7 +69,16 @@ export async function POST(req: NextRequest) {
     })
 
     const rawText = (message.content[0] as { type: string; text: string }).text
-    const jsonText = rawText.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim()
+    // Strip markdown fencing and extract JSON object
+    let jsonText = rawText.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim()
+    // Fallback: extract first { ... } block if still not valid JSON
+    if (!jsonText.startsWith('{')) {
+      const start = jsonText.indexOf('{')
+      const end = jsonText.lastIndexOf('}')
+      if (start !== -1 && end > start) {
+        jsonText = jsonText.slice(start, end + 1)
+      }
+    }
 
     // ── 5. Safe JSON parse
     let result: unknown
