@@ -13,5 +13,6 @@ export const config = {
   adminWhatsapp: process.env.ADMIN_WHATSAPP!,
   anthropicApiKey: process.env.ANTHROPIC_API_KEY!,
   inworldApiKey: process.env.INWORLD_API_KEY ?? '',
+  inworldRouterId: process.env.INWORLD_ROUTER_ID ?? '',
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000',
 }

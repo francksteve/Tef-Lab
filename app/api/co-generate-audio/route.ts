@@ -12,12 +12,20 @@ import { prisma } from '@/lib/prisma'
  * (transcript) but no audioUrl, generates TTS audio via Inworld, uploads
  * to Supabase Storage, and saves the audioUrl on each question.
  *
- * For dialogue transcripts, the text is split by speaker markers
- * (e.g. "Homme :" / "Femme :") and alternating voices are used.
+ * For dialogue questions (Q1-4 conversations, Q23-28 interviews):
+ *   → Uses Inworld Router (OpenAI-compatible LLM) with audio=true + stream=true
+ *     to generate natural multi-speaker dialogue audio in one call.
+ *
+ * For all other question types:
+ *   → Uses Inworld TTS API (split by speaker, concatenate MP3 buffers).
  */
 
 const INWORLD_TTS_URL = 'https://api.inworld.ai/tts/v1/voice'
 const INWORLD_TTS_MODEL = 'inworld-tts-1.5-max'
+const INWORLD_ROUTER_URL = 'https://api.inworld.ai/v1/chat/completions'
+
+/** Question orders that contain dialogue (conversations & interviews) */
+const DIALOGUE_QUESTION_ORDERS = new Set([1, 2, 3, 4, 23, 24, 25, 26, 27, 28])
 
 // Voice assignment per CO category
 const VOICE_MAP: Record<string, string[]> = {
@@ -110,6 +118,81 @@ function splitBySpeaker(text: string, voices: string[]): SpeechSegment[] {
   }
 
   return segments
+}
+
+/**
+ * Generate dialogue audio using Inworld Router (OpenAI-compatible LLM).
+ * Sends the full dialogue transcript as a user message with audio=true + stream=true.
+ * The Router handles speaker turns and produces a natural-sounding conversation.
+ *
+ * Endpoint: POST https://api.inworld.ai/v1/chat/completions
+ * Body: { model, messages, audio: true, stream: true }
+ * Response: SSE stream — events contain { choices[0].delta.audio.data: "<base64 chunk>" }
+ *
+ * Falls back to null if Router is not configured or returns no audio.
+ */
+async function generateDialogueAudio(
+  transcript: string,
+  routerId: string,
+  apiKey: string
+): Promise<Buffer | null> {
+  if (!routerId) return null
+
+  const res = await fetch(INWORLD_ROUTER_URL, {
+    method: 'POST',
+    headers: {
+      Authorization: `Basic ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: `inworld/${routerId}`,
+      messages: [{ role: 'user', content: transcript }],
+      audio: true,
+      stream: true,
+    }),
+  })
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '')
+    throw new Error(`Inworld Router error ${res.status}: ${errText}`)
+  }
+
+  if (!res.body) throw new Error('No response body from Inworld Router')
+
+  // Read SSE stream and collect base64 audio chunks
+  const reader = res.body.getReader()
+  const decoder = new TextDecoder()
+  const audioChunks: Buffer[] = []
+  let buf = ''
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buf += decoder.decode(value, { stream: true })
+
+    // Process complete SSE lines
+    const lines = buf.split('\n')
+    buf = lines.pop() ?? ''
+
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue
+      const data = line.slice(6).trim()
+      if (data === '[DONE]') break
+      try {
+        const json = JSON.parse(data)
+        const audioDelta: string | undefined =
+          json?.choices?.[0]?.delta?.audio?.data
+        if (audioDelta) {
+          audioChunks.push(Buffer.from(audioDelta, 'base64'))
+        }
+      } catch {
+        // ignore malformed SSE lines
+      }
+    }
+  }
+
+  if (audioChunks.length === 0) return null
+  return Buffer.concat(audioChunks)
 }
 
 /**
@@ -219,7 +302,8 @@ export async function POST(req: NextRequest) {
     if (!apiKey) {
       return NextResponse.json({ error: 'INWORLD_API_KEY non configuré. Ajoutez cette variable dans Vercel > Settings > Environment Variables.' }, { status: 503 })
     }
-    console.log(`[CO_AUDIO] API key present (length: ${apiKey.length}), processing series ${seriesId}${questionId ? ` question ${questionId}` : ''}`)
+    const routerId = config.inworldRouterId
+    console.log(`[CO_AUDIO] API key present (length: ${apiKey.length}), routerId: ${routerId || 'non configuré'}, processing series ${seriesId}${questionId ? ` question ${questionId}` : ''}`)
 
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
@@ -266,30 +350,41 @@ export async function POST(req: NextRequest) {
         const catKey = getCOCategory(q.questionOrder)
         const voices = VOICE_MAP[catKey] ?? ['Alain']
 
-        // Check if transcript has speaker markers (dialogue)
-        const hasDialogue = SPEAKER_PATTERN.test(transcript)
+        // Dialogue questions (Q1-4 conversations, Q23-28 interviews):
+        // Try Inworld Router with audio streaming for natural multi-speaker output.
+        // Fall back to split TTS if Router is not configured or returns no audio.
+        const isDialogue = DIALOGUE_QUESTION_ORDERS.has(q.questionOrder)
 
-        let audioBuffer: Buffer
+        let audioBuffer: Buffer | null = null
 
-        if (hasDialogue && voices.length > 1) {
-          // Multi-speaker: split by speaker, synthesize each, concatenate
-          const segments = splitBySpeaker(transcript, voices)
-          const audioChunks: Buffer[] = []
-
-          for (let i = 0; i < segments.length; i++) {
-            const seg = segments[i]
-            const chunk = await synthesize(seg.text, seg.voice, apiKey)
-            audioChunks.push(chunk)
-            // Add pause between segments (not after last)
-            if (i < segments.length - 1) {
-              audioChunks.push(silentMp3Pause())
-            }
+        if (isDialogue && routerId) {
+          console.log(`[CO_AUDIO] Q${q.questionOrder}: using Router for dialogue audio`)
+          audioBuffer = await generateDialogueAudio(transcript, routerId, apiKey)
+          if (!audioBuffer) {
+            console.warn(`[CO_AUDIO] Q${q.questionOrder}: Router returned no audio, falling back to TTS`)
           }
+        }
 
-          audioBuffer = concatMp3Buffers(audioChunks)
-        } else {
-          // Single speaker
-          audioBuffer = await synthesize(transcript, voices[0], apiKey)
+        if (!audioBuffer) {
+          // TTS path: split by speaker for dialogues, single voice otherwise
+          const hasDialogue = SPEAKER_PATTERN.test(transcript) ||
+            transcript.split('\n').filter(l => DASH_DIALOGUE_PATTERN.test(l.trim())).length >= 2
+
+          if (hasDialogue && voices.length > 1) {
+            const segments = splitBySpeaker(transcript, voices)
+            const audioChunks: Buffer[] = []
+
+            for (let i = 0; i < segments.length; i++) {
+              const seg = segments[i]
+              const chunk = await synthesize(seg.text, seg.voice, apiKey)
+              audioChunks.push(chunk)
+              if (i < segments.length - 1) audioChunks.push(silentMp3Pause())
+            }
+
+            audioBuffer = concatMp3Buffers(audioChunks)
+          } else {
+            audioBuffer = await synthesize(transcript, voices[0], apiKey)
+          }
         }
 
         // Upload to Supabase
