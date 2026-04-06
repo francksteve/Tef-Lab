@@ -24,8 +24,10 @@ const INWORLD_TTS_URL = 'https://api.inworld.ai/tts/v1/voice'
 const INWORLD_TTS_MODEL = 'inworld-tts-1.5-max'
 const INWORLD_ROUTER_URL = 'https://api.inworld.ai/v1/chat/completions'
 
-/** Question orders that use the Router for multi-speaker audio (conversations, interviews, reportage RFI) */
-const DIALOGUE_QUESTION_ORDERS = new Set([1, 2, 3, 4, 23, 24, 25, 26, 27, 28, 29, 30])
+// Router generates NEW dialogue — it cannot read a pre-written script.
+// All question types use TTS split-by-speaker instead.
+// INWORLD_ROUTER_ID is reserved for future use (e.g. dynamic dialogue generation).
+const DIALOGUE_QUESTION_ORDERS = new Set<number>([])
 
 // Voice assignment per CO category
 const VOICE_MAP: Record<string, string[]> = {
