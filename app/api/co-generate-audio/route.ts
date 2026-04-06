@@ -369,11 +369,18 @@ export async function POST(req: NextRequest) {
 
         if (!audioBuffer) {
           // TTS path: split by speaker for dialogues, single voice otherwise
-          const hasDialogue = SPEAKER_PATTERN.test(transcript) ||
-            transcript.split('\n').filter(l => DASH_DIALOGUE_PATTERN.test(l.trim())).length >= 2
+          const transcriptLines = transcript.split('\n').filter(l => l.trim())
+          const dashLineCount = transcriptLines.filter(l => DASH_DIALOGUE_PATTERN.test(l.trim())).length
+          const hasNamedSpeaker = SPEAKER_PATTERN.test(transcript)
+          const hasDialogue = hasNamedSpeaker || dashLineCount >= 2
+
+          // Debug: log first 3 chars (hex) of transcript to detect encoding issues
+          const firstCharHex = transcript.charCodeAt(0).toString(16)
+          console.log(`[CO_AUDIO] Q${q.questionOrder}: lines=${transcriptLines.length} dashLines=${dashLineCount} namedSpeaker=${hasNamedSpeaker} hasDialogue=${hasDialogue} firstChar=U+${firstCharHex}`)
 
           if (hasDialogue && voices.length > 1) {
             const segments = splitBySpeaker(transcript, voices)
+            console.log(`[CO_AUDIO] Q${q.questionOrder}: ${segments.length} segment(s) — ${segments.map(s => `${s.voice}:"${s.text.slice(0, 30)}..."`).join(' | ')}`)
             const audioChunks: Buffer[] = []
 
             for (let i = 0; i < segments.length; i++) {
@@ -385,6 +392,7 @@ export async function POST(req: NextRequest) {
 
             audioBuffer = concatMp3Buffers(audioChunks)
           } else {
+            console.log(`[CO_AUDIO] Q${q.questionOrder}: single voice synthesis`)
             audioBuffer = await synthesize(transcript, voices[0], apiKey)
           }
         }
