@@ -259,25 +259,36 @@ async function uploadToSupabase(
 }
 
 /**
- * Concatenate MP3 buffers by simply appending (works for CBR MP3).
+ * Strip ID3v2 header from an MP3 buffer if present.
+ * ID3v2: "ID3" + 2 version bytes + 1 flag byte + 4 syncsafe size bytes = 10-byte header.
+ * When concatenating TTS chunks, inner ID3 headers confuse decoders and stop playback.
  */
-function concatMp3Buffers(buffers: Buffer[]): Buffer {
-  return Buffer.concat(buffers)
+function stripId3Header(buf: Buffer): Buffer {
+  if (buf.length > 10 && buf[0] === 0x49 && buf[1] === 0x44 && buf[2] === 0x33) {
+    // Syncsafe integer: only 7 bits per byte
+    const size =
+      ((buf[6] & 0x7f) << 21) |
+      ((buf[7] & 0x7f) << 14) |
+      ((buf[8] & 0x7f) << 7) |
+      (buf[9] & 0x7f)
+    const headerEnd = 10 + size
+    if (headerEnd < buf.length) {
+      return buf.slice(headerEnd)
+    }
+  }
+  return buf
 }
 
 /**
- * Add ~500ms of silence between dialogue segments (a minimal silent MP3 frame).
+ * Concatenate MP3 buffers: keep the first ID3 header, strip the rest.
+ * Raw MP3 frames concat cleanly for CBR MP3.
  */
-function silentMp3Pause(): Buffer {
-  // Minimal valid MP3 frame for ~26ms silence at 128kbps, repeated 20x ≈ 520ms
-  const frame = Buffer.from(
-    'fffbe0000000000000000000000000000000000000000000000000000000000000000000',
-    'hex'
-  )
-  const frames: Buffer[] = []
-  for (let i = 0; i < 20; i++) frames.push(frame)
-  return Buffer.concat(frames)
+function concatMp3Buffers(buffers: Buffer[]): Buffer {
+  if (buffers.length === 0) return Buffer.alloc(0)
+  const processed = buffers.map((buf, i) => (i === 0 ? buf : stripId3Header(buf)))
+  return Buffer.concat(processed)
 }
+
 
 // ── Request schema ───────────────────────────────────────────
 const requestSchema = z.object({
@@ -383,11 +394,9 @@ export async function POST(req: NextRequest) {
             console.log(`[CO_AUDIO] Q${q.questionOrder}: ${segments.length} segment(s) — ${segments.map(s => `${s.voice}:"${s.text.slice(0, 30)}..."`).join(' | ')}`)
             const audioChunks: Buffer[] = []
 
-            for (let i = 0; i < segments.length; i++) {
-              const seg = segments[i]
+            for (const seg of segments) {
               const chunk = await synthesize(seg.text, seg.voice, apiKey)
               audioChunks.push(chunk)
-              if (i < segments.length - 1) audioChunks.push(silentMp3Pause())
             }
 
             audioBuffer = concatMp3Buffers(audioChunks)
