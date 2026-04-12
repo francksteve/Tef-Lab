@@ -26,26 +26,29 @@ const INWORLD_ROUTER_URL = 'https://api.inworld.ai/v1/chat/completions'
 
 // Router generates NEW dialogue — it cannot read a pre-written script.
 // All question types use TTS split-by-speaker instead.
-// INWORLD_ROUTER_ID is reserved for future use (e.g. dynamic dialogue generation).
 const DIALOGUE_QUESTION_ORDERS = new Set<number>([])
+
+// Categories that always require multi-voice TTS regardless of transcript markers.
+// These are dialogue-heavy by nature: conversations, interviews, RFI reportages.
+const MULTI_VOICE_CATEGORIES = new Set(['Q1-4', 'Q23-28', 'Q29-30'])
 
 // Voice assignment per CO category
 const VOICE_MAP: Record<string, string[]> = {
-  'Q1-4':   ['Alain', 'Hélène'],     // Conversations: alternating M/F
-  'Q5-8':   ['Alain'],                // Annonces publiques: formal male
-  'Q9-14':  ['Hélène'],               // Répondeur téléphonique: female
+  'Q1-4':   ['Alain', 'Hélène'],               // Conversations: alternating M/F
+  'Q5-8':   ['Alain'],                          // Annonces publiques: formal male
+  'Q9-14':  ['Hélène'],                         // Répondeur téléphonique: female
   'Q15-20': ['Alain', 'Hélène', 'Mathieu', 'Étienne'], // Micro-trottoirs: multiple
-  'Q21-22': ['Mathieu'],              // Chroniques audio: male reporter
-  'Q23-28': ['Alain', 'Hélène'],      // Interviews: interviewer + guest
-  'Q29-30': ['Étienne'],              // Reportages RFI: male reporter
-  'Q31-40': ['Alain', 'Hélène'],      // Documents divers: alternating
+  'Q21-22': ['Mathieu'],                        // Chroniques audio: male reporter
+  'Q23-28': ['Alain', 'Hélène'],                // Interviews: interviewer + guest
+  'Q29-30': ['Étienne', 'Alain'],               // Reportages RFI: reporter + witness/interviewé
+  'Q31-40': ['Alain', 'Hélène'],                // Documents divers: alternating
 }
 
-// Speaker markers that indicate dialogue
-const SPEAKER_PATTERN = /^((?:Homme|Femme|Présentateur|Présentatrice|Journaliste|Invité|Invitée|Intervieweur|Client|Vendeur|Médecin|Patient|Professeur|Étudiant|Animateur|Animatrice|Locuteur|Locutrice|Personne\s*\d?)\s*:)/im
+// Named speaker markers in transcripts (extended for reportage/interview contexts)
+const SPEAKER_PATTERN = /^((?:Homme|Femme|Présentateur|Présentatrice|Journaliste|Correspondant|Correspondante|Invité|Invitée|Intervieweur|Intervieweuse|Témoin|Habitant|Habitante|Passant|Passante|Expert|Experte|Chercheur|Chercheuse|Responsable|Directeur|Directrice|Représentant|Représentante|Client|Vendeur|Vendeure|Médecin|Patient|Patiente|Professeur|Étudiant|Étudiante|Animateur|Animatrice|Locuteur|Locutrice|Personne\s*\d?)\s*:)/im
 
-// Dash-based dialogue pattern (e.g. "– Bonjour..." or "- Bonjour...")
-const DASH_DIALOGUE_PATTERN = /^[–—-]\s+/
+// Dash-based dialogue pattern (e.g. "– Bonjour..." or "–Bonjour..." or "- Bonjour...")
+const DASH_DIALOGUE_PATTERN = /^[–—-]\s*/
 
 function getCOCategory(questionOrder: number): string {
   if (questionOrder <= 4) return 'Q1-4'
@@ -260,12 +263,10 @@ async function uploadToSupabase(
 
 /**
  * Strip ID3v2 header from an MP3 buffer if present.
- * ID3v2: "ID3" + 2 version bytes + 1 flag byte + 4 syncsafe size bytes = 10-byte header.
- * When concatenating TTS chunks, inner ID3 headers confuse decoders and stop playback.
+ * ID3v2 starts with "ID3" (0x49 0x44 0x33).
  */
 function stripId3Header(buf: Buffer): Buffer {
   if (buf.length > 10 && buf[0] === 0x49 && buf[1] === 0x44 && buf[2] === 0x33) {
-    // Syncsafe integer: only 7 bits per byte
     const size =
       ((buf[6] & 0x7f) << 21) |
       ((buf[7] & 0x7f) << 14) |
@@ -280,12 +281,79 @@ function stripId3Header(buf: Buffer): Buffer {
 }
 
 /**
- * Concatenate MP3 buffers: keep the first ID3 header, strip the rest.
- * Raw MP3 frames concat cleanly for CBR MP3.
+ * Compute the byte size of an MP3 frame starting at buf[offset].
+ * Returns 0 if the frame header is invalid.
+ */
+function getMp3FrameSize(buf: Buffer, offset = 0): number {
+  if (buf.length < offset + 4) return 0
+  if (buf[offset] !== 0xFF || (buf[offset + 1] & 0xE0) !== 0xE0) return 0
+
+  const byte1 = buf[offset + 1]
+  const byte2 = buf[offset + 2]
+  const mpegVersion = (byte1 >> 3) & 0x3   // 3=MPEG1, 2=MPEG2, 0=MPEG2.5
+  const layerDesc   = (byte1 >> 1) & 0x3   // 1=Layer3
+  const bitrateIdx  = (byte2 >> 4) & 0xF
+  const srIdx       = (byte2 >> 2) & 0x3
+  const padding     = (byte2 >> 1) & 0x1
+
+  if (layerDesc !== 1) return 0  // Layer3 only
+
+  const bitratesMPEG1 = [0,32,40,48,56,64,80,96,112,128,160,192,224,256,320,0]
+  const bitratesMPEG2 = [0,8,16,24,32,40,48,56,64,80,96,112,128,144,160,0]
+  const srMPEG1 = [44100,48000,32000,0]
+  const srMPEG2 = [22050,24000,16000,0]
+  const srMPEG25= [11025,12000,8000,0]
+
+  const bitrate = (mpegVersion === 3 ? bitratesMPEG1 : bitratesMPEG2)[bitrateIdx] * 1000
+  const sr      = (mpegVersion === 3 ? srMPEG1 : mpegVersion === 2 ? srMPEG2 : srMPEG25)[srIdx]
+
+  if (!bitrate || !sr) return 0
+  return Math.floor(144 * bitrate / sr) + padding
+}
+
+/**
+ * Strip Xing/Info VBR header frame from an MP3 buffer if present.
+ * This frame encodes "total frames = N" — if left in a concatenated stream,
+ * decoders stop after N frames and ignore the rest of the audio.
+ */
+function stripXingFrame(buf: Buffer): Buffer {
+  if (buf.length < 40) return buf
+  if (buf[0] !== 0xFF || (buf[1] & 0xE0) !== 0xE0) return buf
+
+  const mpegVersion = (buf[1] >> 3) & 0x3
+  const channelMode = (buf[3] >> 6) & 0x3  // 3=mono
+  const isMono = channelMode === 3
+  // Side info size: MPEG1 stereo=32, MPEG1 mono=17, MPEG2 stereo=17, MPEG2 mono=9
+  const sideInfoSize = mpegVersion === 3 ? (isMono ? 17 : 32) : (isMono ? 9 : 17)
+  const xingOffset = 4 + sideInfoSize
+
+  if (buf.length >= xingOffset + 4) {
+    const tag = buf.toString('ascii', xingOffset, xingOffset + 4)
+    if (tag === 'Xing' || tag === 'Info') {
+      const frameSize = getMp3FrameSize(buf, 0)
+      if (frameSize > 0 && frameSize < buf.length) {
+        console.log(`[CO_AUDIO] stripped Xing/Info frame (${frameSize} bytes, tag=${tag})`)
+        return buf.slice(frameSize)
+      }
+    }
+  }
+  return buf
+}
+
+/**
+ * Strip all MP3 metadata headers (ID3v2 + Xing/Info frame) from a buffer.
+ * Applied to chunks 2+ before concatenation so decoders don't stop early.
+ */
+function stripMp3Metadata(buf: Buffer): Buffer {
+  return stripXingFrame(stripId3Header(buf))
+}
+
+/**
+ * Concatenate MP3 buffers: keep the first chunk intact, strip ID3+Xing from the rest.
  */
 function concatMp3Buffers(buffers: Buffer[]): Buffer {
   if (buffers.length === 0) return Buffer.alloc(0)
-  const processed = buffers.map((buf, i) => (i === 0 ? buf : stripId3Header(buf)))
+  const processed = buffers.map((buf, i) => (i === 0 ? buf : stripMp3Metadata(buf)))
   return Buffer.concat(processed)
 }
 
@@ -379,19 +447,22 @@ export async function POST(req: NextRequest) {
         }
 
         if (!audioBuffer) {
-          // TTS path: split by speaker for dialogues, single voice otherwise
+          // TTS path: split by speaker for dialogues, single voice otherwise.
+          // Categories Q1-4, Q23-28, Q29-30 always use multi-voice even if transcript
+          // markers are absent or ambiguous.
           const transcriptLines = transcript.split('\n').filter(l => l.trim())
           const dashLineCount = transcriptLines.filter(l => DASH_DIALOGUE_PATTERN.test(l.trim())).length
           const hasNamedSpeaker = SPEAKER_PATTERN.test(transcript)
-          const hasDialogue = hasNamedSpeaker || dashLineCount >= 2
+          const detectedDialogue = hasNamedSpeaker || dashLineCount >= 2
+          const forceMultiVoice = MULTI_VOICE_CATEGORIES.has(catKey)
+          const useMultiVoice = (detectedDialogue || forceMultiVoice) && voices.length > 1
 
-          // Debug: log first 3 chars (hex) of transcript to detect encoding issues
           const firstCharHex = transcript.charCodeAt(0).toString(16)
-          console.log(`[CO_AUDIO] Q${q.questionOrder}: lines=${transcriptLines.length} dashLines=${dashLineCount} namedSpeaker=${hasNamedSpeaker} hasDialogue=${hasDialogue} firstChar=U+${firstCharHex}`)
+          console.log(`[CO_AUDIO] Q${q.questionOrder} [${catKey}]: lines=${transcriptLines.length} dashLines=${dashLineCount} namedSpeaker=${hasNamedSpeaker} detected=${detectedDialogue} forced=${forceMultiVoice} multiVoice=${useMultiVoice} firstChar=U+${firstCharHex}`)
 
-          if (hasDialogue && voices.length > 1) {
+          if (useMultiVoice) {
             const segments = splitBySpeaker(transcript, voices)
-            console.log(`[CO_AUDIO] Q${q.questionOrder}: ${segments.length} segment(s) — ${segments.map(s => `${s.voice}:"${s.text.slice(0, 30)}..."`).join(' | ')}`)
+            console.log(`[CO_AUDIO] Q${q.questionOrder}: ${segments.length} segment(s) — ${segments.map(s => `${s.voice}:"${s.text.slice(0, 30)}"`).join(' | ')}`)
             const audioChunks: Buffer[] = []
 
             for (const seg of segments) {
