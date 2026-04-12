@@ -33,8 +33,8 @@ const INWORLD_ROUTER_URL = 'https://api.inworld.ai/v1/chat/completions'
 const DIALOGUE_QUESTION_ORDERS = new Set<number>([])
 
 // Categories that always require multi-voice TTS regardless of transcript markers.
-// These are dialogue-heavy by nature: conversations, interviews, RFI reportages.
-const MULTI_VOICE_CATEGORIES = new Set(['Q1-4', 'Q23-28', 'Q29-30'])
+// These are dialogue-heavy by nature: conversations, interviews, RFI reportages, micro-trottoirs.
+const MULTI_VOICE_CATEGORIES = new Set(['Q1-4', 'Q15-20', 'Q23-28', 'Q29-30'])
 
 // Voice assignment per CO category
 const VOICE_MAP: Record<string, string[]> = {
@@ -51,6 +51,13 @@ const VOICE_MAP: Record<string, string[]> = {
 // Gender-classified voice pools — used for gender-aware assignment
 const MALE_VOICES = ['Alain', 'Mathieu', 'Étienne']
 const FEMALE_VOICES = ['Hélène', 'Ashley']
+
+// Micro-trottoir dedicated voices
+// Mathieu reads the TEF instruction ("Vous allez entendre…") for Q15 and Q18
+const MICROTROTTOIR_CONSIGNE_VOICE = 'Mathieu'
+// Person voices — exclude Mathieu (reserved for consigne). Cycle by position offset.
+const MICROTROTTOIR_PERSON_MALE   = ['Alain', 'Étienne']  // Q15→Alain Q17→Étienne Q19→Alain …
+const MICROTROTTOIR_PERSON_FEMALE = ['Hélène', 'Ashley']  // Q16→Hélène Q18→Ashley Q20→Hélène …
 
 /**
  * Extract [H] or [F] gender tag from a speaker label string.
@@ -167,6 +174,67 @@ function splitBySpeaker(text: string, voices: string[]): SpeechSegment[] {
   }
 
   return segments
+}
+
+/**
+ * Split a micro-trottoir transcript (Q15-20) into TTS segments.
+ *
+ * New TEF format:
+ *   Q15 / Q18  (intro)  → consigne block (Mathieu) + Personne 1 response (gendered voice)
+ *   Q16 / Q19           → Personne 2 response only (gendered voice)
+ *   Q17 / Q20           → Personne 3 response only (gendered voice)
+ *
+ * Voice variety: person offset = questionOrder − 15 (0-5)
+ *   Male pool   [Alain, Étienne]  — cycles: 0→Alain 1→Étienne 2→Alain …
+ *   Female pool [Hélène, Ashley]  — cycles: 0→Hélène 1→Ashley 2→Hélène …
+ * Combined across both micro-trottoirs in a series this gives all 5 voices.
+ *
+ * The consigne text (options list + intro sentence) is read as one TTS block
+ * by the neutral narrator (Mathieu). The synthesize() function handles splitting
+ * if the block exceeds 500 chars.
+ */
+function splitMicrotrottoir(transcript: string, questionOrder: number): SpeechSegment[] {
+  const personOffset = questionOrder - 15  // 0 for Q15, 1 for Q16, …, 5 for Q20
+
+  // Resolve person voice from [H]/[F] tag in transcript
+  const genderMatch = transcript.match(/Personne\s+\d+\s*\[([HF])\]/i)
+  const gender = genderMatch ? genderMatch[1].toUpperCase() as 'H' | 'F' : null
+
+  let personVoice: string
+  if (gender === 'F') {
+    personVoice = MICROTROTTOIR_PERSON_FEMALE[personOffset % MICROTROTTOIR_PERSON_FEMALE.length]
+  } else {
+    // 'H' or unknown → male pool
+    personVoice = MICROTROTTOIR_PERSON_MALE[personOffset % MICROTROTTOIR_PERSON_MALE.length]
+  }
+
+  console.log(`[CO_AUDIO] micro-trottoir Q${questionOrder}: personOffset=${personOffset} gender=${gender ?? '?'} → personVoice=${personVoice}`)
+
+  // ── Intro question (Q15 / Q18): "Vous allez entendre…" present ──────────
+  if (transcript.includes('Vous allez entendre')) {
+    // Locate the "Personne N [H/F] :" speaker label line
+    const speakerMatch = transcript.match(/\nPersonne\s+\d+\s*\[[HF]\]\s*:\n/i)
+    if (speakerMatch && speakerMatch.index !== undefined) {
+      const consigneText = transcript.slice(0, speakerMatch.index).trim()
+      const responseText = transcript.slice(speakerMatch.index + speakerMatch[0].length).trim()
+      const segments: SpeechSegment[] = []
+      if (consigneText) segments.push({ text: consigneText, voice: MICROTROTTOIR_CONSIGNE_VOICE })
+      if (responseText) segments.push({ text: responseText, voice: personVoice })
+      return segments
+    }
+    // Fallback: no speaker label found — consigne reads everything
+    return [{ text: transcript, voice: MICROTROTTOIR_CONSIGNE_VOICE }]
+  }
+
+  // ── Continuation question (Q16/Q17/Q19/Q20): single person response ─────
+  // Format: "Personne N [H/F] :\n[response text]"
+  const contMatch = transcript.match(/^Personne\s+\d+\s*\[[HF]\]\s*:\n([\s\S]+)$/i)
+  if (contMatch) {
+    return [{ text: contMatch[1].trim(), voice: personVoice }]
+  }
+
+  // Ultimate fallback — read as-is with person voice
+  return [{ text: transcript.trim(), voice: personVoice }]
 }
 
 /**
@@ -682,8 +750,13 @@ export async function POST(req: NextRequest) {
           console.log(`[CO_AUDIO] Q${q.questionOrder} [${catKey}]: lines=${transcriptLines.length} dashLines=${dashLineCount} namedSpeaker=${hasNamedSpeaker} detected=${detectedDialogue} forced=${forceMultiVoice} multiVoice=${useMultiVoice} firstChar=U+${firstCharHex}`)
 
           if (useMultiVoice) {
-            // Q29-30 use dedicated RFI reportage parser (reporter narration + « guillemet » quotes)
-            const segments = catKey === 'Q29-30'
+            // Route to the appropriate multi-voice parser for this category:
+            //   Q15-20 → splitMicrotrottoir (consigne voice + gendered person voice)
+            //   Q29-30 → splitRFIReportage  (reporter narration + guillemet quotes)
+            //   others → splitBySpeaker     (dash or named-speaker dialogue)
+            const segments = catKey === 'Q15-20'
+              ? splitMicrotrottoir(transcript, q.questionOrder)
+              : catKey === 'Q29-30'
               ? splitRFIReportage(transcript, voices)
               : splitBySpeaker(transcript, voices)
             console.log(`[CO_AUDIO] Q${q.questionOrder}: ${segments.length} segment(s) — ${segments.map(s => `${s.voice}:"${s.text.slice(0, 30)}"`).join(' | ')}`)
