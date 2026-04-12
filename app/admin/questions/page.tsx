@@ -610,37 +610,25 @@ export default function QuestionsAdminPage() {
           {editingId && form.longText.trim() && (
             <button
               type="button"
-              onClick={async () => {
-                if (!selectedSeriesId || !editingId) return
-                setGeneratingAudioId(editingId)
-                setAudioGenResult(null)
-                try {
-                  const res = await fetch('/api/co-generate-audio', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ seriesId: selectedSeriesId, questionId: editingId, overwrite: true }),
-                  })
-                  const data = await res.json()
-                  if (res.ok && data.results?.length > 0) {
-                    const result = data.results[0]
-                    set('audioUrl', result.audioUrl)
-                    setAudioGenResult(`✅ Audio généré (${result.sizeKo} Ko) — URL mise à jour dans le formulaire`)
-                  } else if (res.ok) {
-                    setAudioGenResult(`⚠️ ${data.message || 'Aucun audio généré'}`)
-                  } else {
-                    setAudioGenResult(`❌ ${data.error || 'Erreur lors de la génération'}`)
-                  }
-                } catch {
-                  setAudioGenResult('❌ Erreur réseau lors de la génération')
-                } finally {
-                  setGeneratingAudioId(null)
+              onClick={() => {
+                const order = parseInt(form.questionOrder, 10) || 0
+                const qObj: Question = {
+                  id: editingId,
+                  moduleId: '',
+                  seriesId: selectedSeriesId,
+                  questionOrder: order,
+                  longText: form.longText,
+                  question: form.questionOrder,
                 }
+                handleGenerateSingleAudio(qObj, (audioUrl) => set('audioUrl', audioUrl))
               }}
               disabled={generatingAudioId === editingId || generatingAudio}
               className="mt-2 w-full px-4 py-2.5 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {generatingAudioId === editingId ? (
                 <><span className="animate-spin">⏳</span> Génération de l&apos;audio en cours…</>
+              ) : isMultiVoiceOrder(parseInt(form.questionOrder, 10) || 0) ? (
+                <><span>🎙️</span> Générer l&apos;audio — 2 voix (dialogue)</>
               ) : (
                 <><span>🎙️</span> Générer l&apos;audio à partir de la transcription</>
               )}
@@ -817,7 +805,11 @@ export default function QuestionsAdminPage() {
   }
 
   // ─── CO audio generation — single question ───────────────────────────────────
-  const handleGenerateSingleAudio = async (q: Question) => {
+  // Q1-4 (conversations), Q23-28 (interviews), Q29-30 (reportages RFI) → multi-voix
+  const isMultiVoiceOrder = (order: number) =>
+    (order >= 1 && order <= 4) || (order >= 23 && order <= 28) || order === 29 || order === 30
+
+  const handleGenerateSingleAudio = async (q: Question, onSuccess?: (audioUrl: string, sizeKo: number) => void) => {
     if (!selectedSeriesId || moduleCode !== 'CO' || !q.longText) return
     setGeneratingAudioId(q.id)
     setAudioGenResult(null)
@@ -828,9 +820,14 @@ export default function QuestionsAdminPage() {
         body: JSON.stringify({ seriesId: selectedSeriesId, questionId: q.id, overwrite: true }),
       })
       const data = await res.json()
-      if (res.ok) {
-        setAudioGenResult(`✅ Q${q.questionOrder} : audio généré (${data.results?.[0]?.sizeKo ?? '?'} Ko)`)
+      if (res.ok && data.results?.length > 0) {
+        const result = data.results[0]
+        const voiceTag = isMultiVoiceOrder(q.questionOrder) ? ' — 2 voix' : ''
+        setAudioGenResult(`✅ Q${q.questionOrder} : audio généré (${result.sizeKo} Ko${voiceTag})`)
+        onSuccess?.(result.audioUrl, result.sizeKo)
         loadQuestions(selectedSeriesId)
+      } else if (res.ok) {
+        setAudioGenResult(`⚠️ Q${q.questionOrder} : ${data.message || 'Aucun audio généré'}`)
       } else {
         setAudioGenResult(`❌ Q${q.questionOrder} : ${data.error || 'Erreur inconnue'}`)
       }
@@ -1045,12 +1042,20 @@ export default function QuestionsAdminPage() {
                           <button
                             onClick={() => handleGenerateSingleAudio(q)}
                             disabled={generatingAudioId === q.id || generatingAudio}
-                            title={q.audioUrl ? "Regénérer l'audio TTS (écrasera l'existant)" : "Générer l'audio TTS pour cette question"}
+                            title={
+                              q.audioUrl
+                                ? `Regénérer l'audio TTS (écrasera l'existant)${isMultiVoiceOrder(q.questionOrder) ? ' — 2 voix' : ''}`
+                                : `Générer l'audio TTS${isMultiVoiceOrder(q.questionOrder) ? ' — 2 voix (dialogue)' : ''}`
+                            }
                             className={`px-3 py-1.5 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1 ${
                               q.audioUrl ? 'bg-orange-500 hover:bg-orange-600' : 'bg-green-600 hover:bg-green-700'
                             }`}
                           >
-                            {generatingAudioId === q.id ? '⏳ Génération…' : q.audioUrl ? '🔄 Regénérer' : '🎙️ Audio'}
+                            {generatingAudioId === q.id
+                              ? '⏳ Génération…'
+                              : q.audioUrl
+                                ? (isMultiVoiceOrder(q.questionOrder) ? '🔄 2 voix' : '🔄 Regénérer')
+                                : (isMultiVoiceOrder(q.questionOrder) ? '🎙️ 2 voix' : '🎙️ Audio')}
                           </button>
                         )}
                         <button onClick={() => openEdit(q)} className="px-3 py-1 bg-blue-100 text-tef-blue text-xs font-semibold rounded-lg hover:bg-blue-200 transition-colors">Modifier</button>
