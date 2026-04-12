@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
 import { createPayPalOrder } from '@/lib/paypal'
+import { sendNewOrderEmail } from '@/lib/email'
 
 const schema = z.object({
   packId: z.string().min(1),
@@ -57,6 +58,17 @@ export async function POST(req: NextRequest) {
         paymentMethod: 'PAYPAL',
       },
     })
+
+    // Notify admin of new automated order (fire-and-forget)
+    sendNewOrderEmail({
+      reference,
+      packName: pack.name,
+      price: finalPriceFcfa,
+      visitorName: customerName,
+      visitorEmail: customerEmail,
+      visitorPhone: '—',
+      createdAt: order.createdAt,
+    }).catch(console.error)
 
     let approvalUrl: string
     try {

@@ -239,6 +239,7 @@ export default function UtilisateursPage() {
                   <SortHeader label="Statut"         col="status"    sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
                   <SortHeader label="Pack en cours"  col="pack"      sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="hidden md:table-cell" />
                   <SortHeader label="Créé le"        col="createdAt" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="hidden sm:table-cell" />
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider hidden sm:table-cell">Mailing</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -299,6 +300,34 @@ export default function UtilisateursPage() {
                         {new Date(user.createdAt).toLocaleDateString('fr-FR')}
                       </td>
 
+                      {/* Mailing */}
+                      <td className="px-4 py-3 hidden sm:table-cell">
+                        {user.role === 'SUBSCRIBER' ? (
+                          <button
+                            onClick={() => sendReminder(user)}
+                            disabled={mailStatus[user.id] === 'sending' || actionLoading === user.id + '_delete'}
+                            title={`Envoyer un email de rappel à ${user.name}`}
+                            className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 inline-flex items-center gap-1 ${
+                              mailStatus[user.id] === 'sent'
+                                ? 'bg-green-100 text-green-700'
+                                : mailStatus[user.id] === 'error'
+                                ? 'bg-red-100 text-red-700'
+                                : 'bg-blue-50 text-tef-blue hover:bg-blue-100'
+                            }`}
+                          >
+                            {mailStatus[user.id] === 'sending'
+                              ? <><span className="animate-spin">⏳</span> Envoi…</>
+                              : mailStatus[user.id] === 'sent'
+                              ? <>✅ Envoyé</>
+                              : mailStatus[user.id] === 'error'
+                              ? <>❌ Erreur</>
+                              : <>📧 Rappel</>}
+                          </button>
+                        ) : (
+                          <span className="text-gray-300 text-xs">—</span>
+                        )}
+                      </td>
+
                       {/* Actions */}
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2 flex-wrap">
@@ -317,30 +346,6 @@ export default function UtilisateursPage() {
                               ? 'Suspendre'
                               : 'Réactiver'}
                           </button>
-
-                          {/* Bouton rappel email — uniquement pour les abonnés */}
-                          {user.role === 'SUBSCRIBER' && (
-                            <button
-                              onClick={() => sendReminder(user)}
-                              disabled={mailStatus[user.id] === 'sending' || actionLoading === user.id + '_delete'}
-                              title={`Envoyer un email de rappel à ${user.name}`}
-                              className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 inline-flex items-center gap-1 ${
-                                mailStatus[user.id] === 'sent'
-                                  ? 'bg-green-100 text-green-700'
-                                  : mailStatus[user.id] === 'error'
-                                  ? 'bg-red-100 text-red-700'
-                                  : 'bg-blue-50 text-tef-blue hover:bg-blue-100'
-                              }`}
-                            >
-                              {mailStatus[user.id] === 'sending'
-                                ? <><span className="animate-spin">⏳</span> Envoi…</>
-                                : mailStatus[user.id] === 'sent'
-                                ? <>✅ Envoyé</>
-                                : mailStatus[user.id] === 'error'
-                                ? <>❌ Erreur</>
-                                : <>📧 Rappel</>}
-                            </button>
-                          )}
 
                           {user.role !== 'ADMIN' && (
                             <button

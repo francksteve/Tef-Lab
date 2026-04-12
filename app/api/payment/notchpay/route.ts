@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
+import { sendNewOrderEmail } from '@/lib/email'
 
 const schema = z.object({
   packId: z.string().min(1),
@@ -52,6 +53,17 @@ export async function POST(req: NextRequest) {
         paymentMethod: 'NOTCHPAY',
       },
     })
+
+    // Notify admin of new automated order (fire-and-forget)
+    sendNewOrderEmail({
+      reference,
+      packName: pack.name,
+      price: finalPrice,
+      visitorName: customerName,
+      visitorEmail: customerEmail,
+      visitorPhone: customerPhone,
+      createdAt: order.createdAt,
+    }).catch(console.error)
 
     // Normalize phone: NotchPay expects 9-digit local format (e.g. 675000000)
     // Strip leading + and Cameroon country code 237 if present
