@@ -309,10 +309,11 @@ function DialogueSection({
   const rtcStateRef = useRef<RtcState>('idle')
 
   // Pick one voice per section and keep it stable for the whole session
+  // Female voices: Hélène, Ashley — Male voices: Alain, Mathieu, Étienne
   const voice = useRef<string>(
     section === 'A'
-      ? (Math.random() > 0.5 ? 'Hélène' : 'Alain')
-      : (Math.random() > 0.5 ? 'Mathieu' : 'Étienne')
+      ? (['Hélène', 'Ashley', 'Alain'][Math.floor(Math.random() * 3)])
+      : (['Mathieu', 'Étienne', 'Ashley'][Math.floor(Math.random() * 3)])
   ).current
 
   // Derived counters — count user turns only
@@ -540,7 +541,7 @@ COMPORTEMENT :
 ${documentContext}`
           : `LANGUE : Tu parles UNIQUEMENT en français. Jamais un mot en anglais.
 
-TON RÔLE : Tu es l'AMI(E) PROCHE de l'utilisateur. Tu t'appelles ${voice === 'Mathieu' || voice === 'Étienne' ? 'Marc' : 'Sophie'}. Vous vous connaissez depuis longtemps.
+TON RÔLE : Tu es l'AMI(E) PROCHE de l'utilisateur. Tu t'appelles ${['Mathieu', 'Étienne', 'Alain'].includes(voice) ? 'Marc' : 'Sophie'}. Vous vous connaissez depuis longtemps.
 
 SITUATION : Ton ami(e) (l'utilisateur) vient te voir pour te parler d'une activité ou d'un événement décrit dans une annonce. Il/elle veut te CONVAINCRE d'y participer avec lui/elle. Toi, tu n'es PAS du tout enthousiaste au départ.
 
@@ -570,7 +571,7 @@ ${documentContext}`
             input: {
               turn_detection: {
                 type: 'semantic_vad',
-                eagerness: 'high',
+                eagerness: 'low',
                 create_response: true,
                 interrupt_response: true,
               },

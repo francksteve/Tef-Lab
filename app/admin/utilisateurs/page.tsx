@@ -63,6 +63,7 @@ export default function UtilisateursPage() {
   const [sortDir, setSortDir] = useState<SortDir>('desc')
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [mailStatus, setMailStatus] = useState<Record<string, 'sending' | 'sent' | 'error'>>({})
 
   const loadUsers = () => {
     setLoading(true)
@@ -93,6 +94,26 @@ export default function UtilisateursPage() {
     } else {
       setSortKey(col)
       setSortDir('asc')
+    }
+  }
+
+  const sendReminder = async (user: User) => {
+    setMailStatus((prev) => ({ ...prev, [user.id]: 'sending' }))
+    try {
+      const res = await fetch(`/api/users/${user.id}/send-reminder`, { method: 'POST' })
+      const data = await res.json()
+      if (res.ok) {
+        setMailStatus((prev) => ({ ...prev, [user.id]: 'sent' }))
+        // Réinitialiser après 4s
+        setTimeout(() => setMailStatus((prev) => { const n = { ...prev }; delete n[user.id]; return n }), 4000)
+      } else {
+        setMailStatus((prev) => ({ ...prev, [user.id]: 'error' }))
+        setError(data?.error ?? 'Erreur lors de l\'envoi de l\'email.')
+        setTimeout(() => setMailStatus((prev) => { const n = { ...prev }; delete n[user.id]; return n }), 4000)
+      }
+    } catch {
+      setMailStatus((prev) => ({ ...prev, [user.id]: 'error' }))
+      setTimeout(() => setMailStatus((prev) => { const n = { ...prev }; delete n[user.id]; return n }), 4000)
     }
   }
 
@@ -218,7 +239,6 @@ export default function UtilisateursPage() {
                   <SortHeader label="Statut"         col="status"    sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
                   <SortHeader label="Pack en cours"  col="pack"      sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="hidden md:table-cell" />
                   <SortHeader label="Créé le"        col="createdAt" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="hidden sm:table-cell" />
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Mail</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -279,20 +299,9 @@ export default function UtilisateursPage() {
                         {new Date(user.createdAt).toLocaleDateString('fr-FR')}
                       </td>
 
-                      {/* Mail */}
-                      <td className="px-4 py-3">
-                        <a
-                          href={`mailto:${user.email}`}
-                          title={`Écrire à ${user.name}`}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-tef-blue hover:bg-blue-100 transition-colors text-xs font-medium"
-                        >
-                          ✉️ Mail
-                        </a>
-                      </td>
-
                       {/* Actions */}
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <button
                             onClick={() => toggleStatus(user)}
                             disabled={actionLoading === user.id || actionLoading === user.id + '_delete'}
@@ -308,6 +317,31 @@ export default function UtilisateursPage() {
                               ? 'Suspendre'
                               : 'Réactiver'}
                           </button>
+
+                          {/* Bouton rappel email — uniquement pour les abonnés */}
+                          {user.role === 'SUBSCRIBER' && (
+                            <button
+                              onClick={() => sendReminder(user)}
+                              disabled={mailStatus[user.id] === 'sending' || actionLoading === user.id + '_delete'}
+                              title={`Envoyer un email de rappel à ${user.name}`}
+                              className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 inline-flex items-center gap-1 ${
+                                mailStatus[user.id] === 'sent'
+                                  ? 'bg-green-100 text-green-700'
+                                  : mailStatus[user.id] === 'error'
+                                  ? 'bg-red-100 text-red-700'
+                                  : 'bg-blue-50 text-tef-blue hover:bg-blue-100'
+                              }`}
+                            >
+                              {mailStatus[user.id] === 'sending'
+                                ? <><span className="animate-spin">⏳</span> Envoi…</>
+                                : mailStatus[user.id] === 'sent'
+                                ? <>✅ Envoyé</>
+                                : mailStatus[user.id] === 'error'
+                                ? <>❌ Erreur</>
+                                : <>📧 Rappel</>}
+                            </button>
+                          )}
+
                           {user.role !== 'ADMIN' && (
                             <button
                               onClick={() => deleteUser(user)}

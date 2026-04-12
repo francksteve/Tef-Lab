@@ -5,6 +5,10 @@ import { authOptions } from '@/lib/auth'
 import { config } from '@/lib/config'
 import { prisma } from '@/lib/prisma'
 
+// Allow up to 5 minutes on Vercel (reportage with 12 segments takes ~30-40s sequentially,
+// ~4s with parallel synthesis but we keep a generous margin for full-series generation)
+export const maxDuration = 300
+
 /**
  * POST /api/co-generate-audio
  *
@@ -34,18 +38,56 @@ const MULTI_VOICE_CATEGORIES = new Set(['Q1-4', 'Q23-28', 'Q29-30'])
 
 // Voice assignment per CO category
 const VOICE_MAP: Record<string, string[]> = {
-  'Q1-4':   ['Alain', 'Hélène'],               // Conversations: alternating M/F
-  'Q5-8':   ['Alain'],                          // Annonces publiques: formal male
-  'Q9-14':  ['Hélène'],                         // Répondeur téléphonique: female
-  'Q15-20': ['Alain', 'Hélène', 'Mathieu', 'Étienne'], // Micro-trottoirs: multiple
-  'Q21-22': ['Mathieu'],                        // Chroniques audio: male reporter
-  'Q23-28': ['Alain', 'Hélène'],                // Interviews: interviewer + guest
-  'Q29-30': ['Étienne', 'Alain', 'Hélène', 'Mathieu'], // Reportages RFI: reporter + up to 3 interviewés
-  'Q31-40': ['Alain', 'Hélène'],                // Documents divers: alternating
+  'Q1-4':   ['Alain', 'Hélène'],                                  // Conversations: M/F alternating
+  'Q5-8':   ['Alain'],                                             // Annonces publiques: formal male
+  'Q9-14':  ['Hélène', 'Ashley'],                                  // Répondeur téléphonique: female (vary)
+  'Q15-20': ['Alain', 'Hélène', 'Mathieu', 'Étienne', 'Ashley'],  // Micro-trottoirs: all voices
+  'Q21-22': ['Mathieu'],                                           // Chroniques audio: male reporter
+  'Q23-28': ['Alain', 'Hélène', 'Mathieu', 'Ashley'],             // Interviews: up to 4 speakers
+  'Q29-30': ['Étienne', 'Alain', 'Hélène', 'Mathieu', 'Ashley'], // Reportages RFI: reporter + interviewés
+  'Q31-40': ['Alain', 'Hélène', 'Ashley'],                        // Documents divers: alternating
 }
 
-// Named speaker markers in transcripts (extended for reportage/interview contexts)
-const SPEAKER_PATTERN = /^((?:Homme|Femme|Présentateur|Présentatrice|Journaliste|Correspondant|Correspondante|Invité|Invitée|Intervieweur|Intervieweuse|Témoin|Habitant|Habitante|Passant|Passante|Expert|Experte|Chercheur|Chercheuse|Responsable|Directeur|Directrice|Représentant|Représentante|Client|Vendeur|Vendeure|Médecin|Patient|Patiente|Professeur|Étudiant|Étudiante|Animateur|Animatrice|Locuteur|Locutrice|Personne\s*\d?)\s*:)/im
+// Gender-classified voice pools — used for gender-aware assignment
+const MALE_VOICES = ['Alain', 'Mathieu', 'Étienne']
+const FEMALE_VOICES = ['Hélène', 'Ashley']
+
+/**
+ * Extract [H] or [F] gender tag from a speaker label string.
+ * e.g. "Journaliste [F]" → 'F', "Mahamadou Coulibaly [H]" → 'H', "Invité" → null
+ */
+function extractGender(text: string): 'H' | 'F' | null {
+  const m = text.match(/\[([HF])\]/i)
+  return m ? (m[1].toUpperCase() as 'H' | 'F') : null
+}
+
+/**
+ * Pick the most appropriate voice for a speaker based on gender and available voices.
+ * Falls back to positional assignment when no matching gendered voice is found.
+ *
+ * @param gender    'H' | 'F' | null — speaker gender from [H]/[F] tag
+ * @param voices    available voices for this CO category
+ * @param counters  mutable counters for each gender + fallback cycle
+ */
+function pickGenderedVoice(
+  gender: 'H' | 'F' | null,
+  voices: string[],
+  counters: { male: number; female: number; fallback: number }
+): string {
+  if (gender === 'H') {
+    const pool = voices.filter(v => MALE_VOICES.includes(v))
+    if (pool.length) return pool[counters.male++ % pool.length]
+  }
+  if (gender === 'F') {
+    const pool = voices.filter(v => FEMALE_VOICES.includes(v))
+    if (pool.length) return pool[counters.female++ % pool.length]
+  }
+  // No tag or no matching voice → positional fallback
+  return voices[counters.fallback++ % voices.length]
+}
+
+// Named speaker markers in transcripts (role labels + optional [H]/[F] gender tag before colon)
+const SPEAKER_PATTERN = /^((?:Homme|Femme|Présentateur|Présentatrice|Journaliste|Correspondant|Correspondante|Invité|Invitée|Intervieweur|Intervieweuse|Témoin|Habitant|Habitante|Passant|Passante|Expert|Experte|Chercheur|Chercheuse|Responsable|Directeur|Directrice|Représentant|Représentante|Client|Vendeur|Vendeure|Médecin|Patient|Patiente|Professeur|Étudiant|Étudiante|Animateur|Animatrice|Locuteur|Locutrice|Personne\s*\d?)\s*(?:\[[HF]\])?\s*:)/im
 
 // Dash-based dialogue pattern (e.g. "– Bonjour..." or "–Bonjour..." or "- Bonjour...")
 const DASH_DIALOGUE_PATTERN = /^[–—-]\s*/
@@ -73,23 +115,27 @@ interface SpeechSegment {
 function splitBySpeaker(text: string, voices: string[]): SpeechSegment[] {
   const lines = text.split('\n').filter((l) => l.trim())
   const segments: SpeechSegment[] = []
-  let currentVoiceIdx = 0
   const speakerVoiceMap = new Map<string, string>()
+  // Gender-aware counters: male/female cycle independently, fallback is positional
+  const counters = { male: 0, female: 0, fallback: 0 }
 
   // Detect if this is a dash-based dialogue
   const dashLines = lines.filter((l) => DASH_DIALOGUE_PATTERN.test(l.trim()))
   const isDashDialogue = dashLines.length >= 2
+  let dashVoiceIdx = 0
 
   for (const line of lines) {
     const trimmed = line.trim()
 
-    // Named speaker pattern (e.g. "Journaliste :")
+    // Named speaker / role label (e.g. "Journaliste [F] :" or "Invité [H] :")
     const match = trimmed.match(SPEAKER_PATTERN)
     if (match) {
-      const speaker = match[1].replace(/\s*:\s*$/, '').trim()
+      const speakerRaw = match[1].replace(/\s*:\s*$/, '').trim()
+      // Strip gender tag from map key so "Invité [H]" and "Invité" map to same speaker
+      const speaker = speakerRaw.replace(/\s*\[[HF]\]\s*/i, '').trim()
       if (!speakerVoiceMap.has(speaker)) {
-        speakerVoiceMap.set(speaker, voices[currentVoiceIdx % voices.length])
-        currentVoiceIdx++
+        const gender = extractGender(speakerRaw)
+        speakerVoiceMap.set(speaker, pickGenderedVoice(gender, voices, counters))
       }
       const content = trimmed.slice(match[0].length).trim()
       if (content) {
@@ -99,9 +145,7 @@ function splitBySpeaker(text: string, voices: string[]): SpeechSegment[] {
       // Dash-based dialogue — alternate voices for each dash line
       const content = trimmed.replace(DASH_DIALOGUE_PATTERN, '').trim()
       if (content) {
-        const voice = voices[currentVoiceIdx % voices.length]
-        segments.push({ text: content, voice })
-        currentVoiceIdx++
+        segments.push({ text: content, voice: voices[dashVoiceIdx++ % voices.length] })
       }
     } else if (trimmed) {
       // Narrative / no marker — use default voice
@@ -115,8 +159,8 @@ function splitBySpeaker(text: string, voices: string[]): SpeechSegment[] {
 
   // If no segments were created from speaker parsing, treat as single block
   if (segments.length === 0 && text.trim()) {
-    // Clean metadata from single-block text too
-    const cleaned = text.replace(/\[.*?\]/g, '').trim()
+    // Strip gender tags from single-block text (they're metadata, not speech)
+    const cleaned = text.replace(/\s*\[[HF]\]/gi, '').replace(/\[.*?\]/g, '').trim()
     if (cleaned) {
       segments.push({ text: cleaned, voice: voices[0] })
     }
@@ -144,7 +188,8 @@ function splitRFIReportage(text: string, voices: string[]): SpeechSegment[] {
 
   const segments: SpeechSegment[] = []
   const speakerVoiceMap = new Map<string, string>()
-  let intervieweeIdx = 0
+  // Gender-aware counters for interviewees — male/female cycle independently
+  const counters = { male: 0, female: 0, fallback: 0 }
   let pendingVoice: string | null = null
   const narrativeBuffer: string[] = []
 
@@ -154,9 +199,9 @@ function splitRFIReportage(text: string, voices: string[]): SpeechSegment[] {
     narrativeBuffer.length = 0
   }
 
-  // Intro line: starts with uppercase letter, contains ≥5 chars before ":" at end of line
-  // e.g. "Patrick Essomba est le président de la coopérative :"
-  // e.g. "Marie Atangana, responsable qualité :"
+  // Intro line: starts with uppercase letter, has ≥5 chars before terminal ":"
+  // Supports optional gender tag: "Marie Traoré [F], restauratrice :"
+  //                                "Mahamadou Coulibaly [H], maçon :"
   const INTRO_LINE = /^[A-ZÀÉÈÊËÎÏÔÙÛÜ].{5,}:\s*$/
 
   let inQuote = false
@@ -189,7 +234,7 @@ function splitRFIReportage(text: string, voices: string[]): SpeechSegment[] {
       flushNarrative()
       quoteVoice = pendingVoice !== null
         ? pendingVoice
-        : intervieweeVoices[0] // anonymous quote → first interviewee voice, no counter advance
+        : intervieweeVoices[0] // anonymous quote → first interviewee voice
       pendingVoice = null
 
       if (line.includes('»')) {
@@ -203,25 +248,54 @@ function splitRFIReportage(text: string, voices: string[]): SpeechSegment[] {
       continue
     }
 
+    // Single-line combined intro + quote: "Name [H], rôle : « text »"
+    // Fallback for transcripts where intro and quote are on the same line.
+    const inlineQuoteMatch = line.match(/^([A-ZÀÉÈÊËÎÏÔÙÛÜ].{5,}):\s*«(.+?)»\s*$/)
+    if (inlineQuoteMatch) {
+      const introText = inlineQuoteMatch[1].trim()
+      const quoteText = inlineQuoteMatch[2].trim()
+      // Reporter reads the intro (stripped of gender tag)
+      narrativeBuffer.push(introText.replace(/\s*\[[HF]\]\s*/i, ' ').replace(/\s+/g, ' ').trim() + '.')
+      flushNarrative()
+      // Assign voice to the speaker
+      const nameMatch = introText.match(/^([A-ZÀÉÈÊËÎÏÔÙÛÜ][a-zàáâãäåæçèéêëìíîïñòóôõöùúûü]+(?:\s+[A-ZÀÉÈÊËÎÏÔÙÛÜ][a-zàáâãäåæçèéêëìíîïñòóôõöùúûü]+)*)/)
+      const name = nameMatch?.[1] ?? `speaker_${counters.male + counters.female + counters.fallback}`
+      const gender = extractGender(introText)
+      if (!speakerVoiceMap.has(name)) {
+        const voice = pickGenderedVoice(gender, intervieweeVoices, counters)
+        speakerVoiceMap.set(name, voice)
+        console.log(`[CO_AUDIO] RFI inline-quote speaker "${name}" gender=${gender ?? 'unknown'} → voice=${voice}`)
+      }
+      if (quoteText) segments.push({ text: quoteText, voice: speakerVoiceMap.get(name)! })
+      continue
+    }
+
     // Interviewee introduction line ending with ":"
     if (INTRO_LINE.test(line)) {
-      // Reporter reads the intro (it's part of the narration)
-      narrativeBuffer.push(line.replace(/:\s*$/, '.'))
-      // Extract the speaker's first name(s) for voice assignment
+      // Reporter reads the intro — strip gender tag from spoken text
+      narrativeBuffer.push(line.replace(/\s*\[[HF]\]\s*/i, ' ').replace(/:\s*$/, '.').trim())
+
+      // Extract speaker name (up to first comma or gender tag)
       const nameMatch = line.match(/^([A-ZÀÉÈÊËÎÏÔÙÛÜ][a-zàáâãäåæçèéêëìíîïñòóôõöùúûü]+(?:\s+[A-ZÀÉÈÊËÎÏÔÙÛÜ][a-zàáâãäåæçèéêëìíîïñòóôõöùúûü]+)*)/)
-      const name = nameMatch?.[1] ?? `speaker_${intervieweeIdx}`
+      const name = nameMatch?.[1] ?? `speaker_${counters.male + counters.female + counters.fallback}`
+
       if (!speakerVoiceMap.has(name)) {
-        speakerVoiceMap.set(name, intervieweeVoices[intervieweeIdx % intervieweeVoices.length])
-        intervieweeIdx++
+        // Gender-aware voice assignment: [H] → male pool, [F] → female pool
+        const gender = extractGender(line)
+        const voice = pickGenderedVoice(gender, intervieweeVoices, counters)
+        speakerVoiceMap.set(name, voice)
+        console.log(`[CO_AUDIO] RFI speaker "${name}" gender=${gender ?? 'unknown'} → voice=${voice}`)
       }
       pendingVoice = speakerVoiceMap.get(name)!
       continue
     }
 
-    // End credit line: "FirstName LastName, City, RFI."
+    // End credit line: "FirstName [H], City, RFI." or "Étienne Martin, Bamako, RFI."
     if (/,\s*RFI\.?\s*$/.test(line)) {
       flushNarrative()
-      segments.push({ text: line, voice: reporterVoice })
+      // Strip gender tag from spoken end credit
+      const creditText = line.replace(/\s*\[[HF]\]\s*/i, ' ').replace(/\s+/g, ' ').trim()
+      segments.push({ text: creditText, voice: reporterVoice })
       continue
     }
 
@@ -315,29 +389,59 @@ async function generateDialogueAudio(
  * Body: { text, voiceId, modelId }
  * Response: { audioContent: "<base64 MP3>" }
  */
-async function synthesize(text: string, voice: string, apiKey: string): Promise<Buffer> {
-  const res = await fetch(INWORLD_TTS_URL, {
-    method: 'POST',
-    headers: {
-      Authorization: `Basic ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      text,
-      voiceId: voice,
-      modelId: INWORLD_TTS_MODEL,
-    }),
-  })
-
-  if (!res.ok) {
-    const errText = await res.text().catch(() => '')
-    throw new Error(`Inworld TTS error ${res.status}: ${errText}`)
+async function synthesize(text: string, voice: string, apiKey: string, retries = 2): Promise<Buffer> {
+  // Inworld TTS rejects very long texts — split at 500 chars on sentence boundary if needed
+  const MAX_CHARS = 500
+  if (text.length > MAX_CHARS) {
+    // Split on '. ' or '! ' or '? ' boundaries
+    const mid = text.lastIndexOf('. ', MAX_CHARS) ?? text.lastIndexOf('! ', MAX_CHARS) ?? text.lastIndexOf('? ', MAX_CHARS)
+    if (mid > 0) {
+      const part1 = text.slice(0, mid + 1).trim()
+      const part2 = text.slice(mid + 1).trim()
+      console.log(`[CO_AUDIO] synthesize: text too long (${text.length}), split into ${part1.length}+${part2.length}`)
+      const [buf1, buf2] = await Promise.all([
+        synthesize(part1, voice, apiKey, retries),
+        synthesize(part2, voice, apiKey, retries),
+      ])
+      return concatMp3Buffers([buf1, stripMp3Metadata(buf2)])
+    }
   }
 
-  const data = await res.json()
-  const b64: string = data?.audioContent ?? ''
-  if (!b64) throw new Error('No audioContent in TTS response')
-  return Buffer.from(b64, 'base64')
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      const res = await fetch(INWORLD_TTS_URL, {
+        method: 'POST',
+        headers: {
+          Authorization: `Basic ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          text,
+          voiceId: voice,
+          modelId: INWORLD_TTS_MODEL,
+        }),
+      })
+
+      if (!res.ok) {
+        const errText = await res.text().catch(() => '')
+        throw new Error(`Inworld TTS error ${res.status}: ${errText}`)
+      }
+
+      const data = await res.json()
+      const b64: string = data?.audioContent ?? ''
+      if (!b64) throw new Error('No audioContent in TTS response')
+      return Buffer.from(b64, 'base64')
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      if (attempt < retries) {
+        console.warn(`[CO_AUDIO] synthesize attempt ${attempt + 1} failed (${msg}), retrying…`)
+        await new Promise(r => setTimeout(r, 1000 * (attempt + 1)))
+      } else {
+        throw err
+      }
+    }
+  }
+  throw new Error('synthesize: unreachable')
 }
 
 /**
@@ -350,6 +454,13 @@ async function uploadToSupabase(
   serviceKey: string
 ): Promise<string> {
   const path = `audio/${filename}`
+  const sizeKb = Math.round(buffer.length / 1024)
+  console.log(`[CO_AUDIO] uploadToSupabase: ${filename} (${sizeKb} Ko, ${buffer.length} bytes)`)
+
+  // Use Blob instead of Uint8Array — Node.js undici fetch handles large Blobs correctly
+  // Copy to a plain ArrayBuffer to satisfy TS (Buffer.buffer may be SharedArrayBuffer)
+  const arrayBuf = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) as ArrayBuffer
+  const blob = new Blob([arrayBuf], { type: 'audio/mpeg' })
 
   const res = await fetch(`${supabaseUrl}/storage/v1/object/tef-lab-media/${path}`, {
     method: 'POST',
@@ -359,14 +470,15 @@ async function uploadToSupabase(
       'Content-Type': 'audio/mpeg',
       'x-upsert': 'true',
     },
-    body: new Uint8Array(buffer),
+    body: blob,
   })
 
   if (!res.ok) {
-    const errText = await res.text()
+    const errText = await res.text().catch(() => '(no response body)')
     throw new Error(`Supabase upload error ${res.status}: ${errText}`)
   }
 
+  console.log(`[CO_AUDIO] upload OK: ${filename}`)
   return `${supabaseUrl}/storage/v1/object/public/tef-lab-media/${path}`
 }
 
@@ -575,11 +687,17 @@ export async function POST(req: NextRequest) {
               ? splitRFIReportage(transcript, voices)
               : splitBySpeaker(transcript, voices)
             console.log(`[CO_AUDIO] Q${q.questionOrder}: ${segments.length} segment(s) — ${segments.map(s => `${s.voice}:"${s.text.slice(0, 30)}"`).join(' | ')}`)
-            const audioChunks: Buffer[] = []
 
-            for (const seg of segments) {
-              const chunk = await synthesize(seg.text, seg.voice, apiKey)
-              audioChunks.push(chunk)
+            // Synthesize segments with limited concurrency (max 4 at a time).
+            // Full parallel causes rate-limit errors on Inworld; sequential causes timeout.
+            const audioChunks: Buffer[] = []
+            const CONCURRENCY = 4
+            for (let i = 0; i < segments.length; i += CONCURRENCY) {
+              const batch = segments.slice(i, i + CONCURRENCY)
+              const batchResults = await Promise.all(
+                batch.map(seg => synthesize(seg.text, seg.voice, apiKey))
+              )
+              audioChunks.push(...batchResults)
             }
 
             audioBuffer = concatMp3Buffers(audioChunks)

@@ -784,3 +784,326 @@ export async function sendOrderRejectedEmail(data: OrderRejectedEmailData): Prom
     html,
   })
 }
+
+// ─── Template 9 : Rappel quotidien pratique → Abonnés actifs ────────────────
+
+export interface DailyPracticeReminderData {
+  clientName: string
+  clientEmail: string
+  packName: string
+  moduleAccess: 'FREE' | 'EE_EO' | 'ALL'
+  daysLeft?: number // jours restants avant expiration
+}
+
+export async function sendDailyPracticeReminder(data: DailyPracticeReminderData): Promise<void> {
+  const firstName = data.clientName.split(' ')[0]
+  const siteUrl = config.siteUrl
+
+  const modulesAvailable =
+    data.moduleAccess === 'ALL'
+      ? ['Compréhension Écrite (CE)', 'Compréhension Orale (CO)', 'Expression Écrite (EE)', 'Expression Orale (EO)']
+      : ['Expression Écrite (EE)', 'Expression Orale (EO)']
+
+  const moduleCardsArr = modulesAvailable.map((mod) => {
+    const [label, code] = mod.match(/^(.+?)\s+\((\w+)\)$/)?.slice(1) ?? [mod, '']
+    const colors: Record<string, string> = { CE: '#003087', CO: '#0055B3', EE: '#1a7f5e', EO: '#7c3aed' }
+    const icons: Record<string, string> = { CE: '📖', CO: '🎧', EE: '✍️', EO: '🎙️' }
+    const bg = colors[code] ?? '#003087'
+    const icon = icons[code] ?? '📚'
+    return `
+    <td style="width:50%; padding:8px; vertical-align:top;">
+      <div style="background:${bg}; border-radius:10px; padding:16px 12px; text-align:center;">
+        <div style="font-size:24px; margin-bottom:6px;">${icon}</div>
+        <div style="color:#fff; font-weight:bold; font-size:13px; line-height:1.4;">${label}</div>
+        <div style="color:rgba(255,255,255,0.7); font-size:11px; margin-top:4px;">${code}</div>
+      </div>
+    </td>`
+  })
+
+  const expiryWarning = data.daysLeft !== undefined && data.daysLeft <= 5
+    ? `<div style="background:#fff7ed; border-left:4px solid #f97316; border-radius:4px; padding:14px 18px; margin-bottom:24px;">
+        <p style="margin:0; color:#c2410c; font-size:14px;">
+          ⚠️ <strong>Votre pack ${data.packName} expire dans ${data.daysLeft} jour${data.daysLeft > 1 ? 's' : ''}</strong> — pensez à renouveler pour ne pas perdre votre accès.
+          <a href="${siteUrl}/packs" style="color:#c2410c; font-weight:bold; display:block; margin-top:6px;">→ Renouveler mon abonnement</a>
+        </p>
+      </div>`
+    : ''
+
+  const motivations = [
+    'Chaque session compte. Les candidats qui s\'entraînent quotidiennement progressent 3× plus vite.',
+    'La régularité est la clé du succès au TEF Canada. Une session par jour suffit !',
+    'Les meilleurs scores TEF Canada s\'obtiennent par la pratique régulière. À vous de jouer !',
+    'Votre cerveau consolide mieux les acquis quand vous pratiquez chaque jour à la même heure.',
+    'Chaque question résolue vous rapproche de votre objectif d\'immigration au Canada.',
+  ]
+  const motivation = motivations[new Date().getDay() % motivations.length]
+
+  const html = `
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Votre session TEF-LAB du jour</title>
+</head>
+<body style="font-family:'Segoe UI',Arial,sans-serif; background:#f0f4f8; margin:0; padding:20px;">
+  <div style="max-width:600px; margin:0 auto;">
+
+    <!-- Logo + En-tête -->
+    <div style="background:linear-gradient(135deg,#003087 0%,#0055B3 100%); border-radius:12px 12px 0 0; padding:28px 32px; text-align:center;">
+      <h1 style="color:#fff; margin:0; font-size:26px; font-weight:900; letter-spacing:-0.5px;">
+        TEF<span style="color:#E30613;">-</span>LAB
+      </h1>
+      <p style="color:#cce0ff; margin:6px 0 0; font-size:14px;">Votre préparation TEF Canada au quotidien</p>
+    </div>
+
+    <!-- Bandeau heure + date -->
+    <div style="background:#E30613; padding:10px 32px; text-align:center;">
+      <p style="color:#fff; margin:0; font-size:13px; font-weight:600; letter-spacing:0.5px;">
+        🌅 RAPPEL DU MATIN — ${new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' }).toUpperCase()}
+      </p>
+    </div>
+
+    <!-- Corps principal -->
+    <div style="background:#fff; padding:32px; border-left:1px solid #e2e8f0; border-right:1px solid #e2e8f0;">
+
+      ${expiryWarning}
+
+      <!-- Accroche personnalisée -->
+      <h2 style="color:#003087; margin-top:0; font-size:20px;">Bonjour ${firstName} 👋</h2>
+      <p style="color:#475569; font-size:15px; line-height:1.7; margin-bottom:20px;">
+        C'est l'heure de votre session quotidienne ! Votre pack <strong style="color:#003087;">${data.packName}</strong>
+        vous donne accès à ${modulesAvailable.length === 4 ? 'tous les modules du TEF Canada' : 'l\'Expression Écrite et Orale'}.
+        Profitez-en dès maintenant.
+      </p>
+
+      <!-- Citation motivation -->
+      <div style="background:#f8faff; border-left:4px solid #003087; border-radius:0 8px 8px 0; padding:14px 20px; margin-bottom:28px;">
+        <p style="margin:0; color:#003087; font-style:italic; font-size:14px; line-height:1.6;">
+          💡 ${motivation}
+        </p>
+      </div>
+
+      <!-- Modules disponibles -->
+      <h3 style="color:#003087; font-size:15px; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:16px;">
+        Vos modules disponibles
+      </h3>
+      <table style="width:100%; border-collapse:separate; border-spacing:0; margin-bottom:28px;">
+        <tr>${moduleCardsArr.slice(0, 2).join('')}</tr>
+        ${modulesAvailable.length > 2 ? `<tr style="margin-top:0;">${moduleCardsArr.slice(2, 4).join('')}</tr>` : ''}
+      </table>
+
+      <!-- CTA principal -->
+      <div style="text-align:center; margin-bottom:28px;">
+        <a href="${siteUrl}/dashboard"
+           style="display:inline-block; background:#003087; color:#fff; font-weight:bold; font-size:16px;
+                  padding:16px 40px; border-radius:8px; text-decoration:none; letter-spacing:0.3px;
+                  box-shadow:0 4px 12px rgba(0,48,135,0.3);">
+          🚀 Commencer ma session du jour
+        </a>
+      </div>
+
+      <!-- Modules TEF rappel rapide -->
+      <div style="background:#f8faff; border-radius:8px; padding:18px 20px; margin-bottom:8px;">
+        <p style="margin:0 0 10px; color:#64748b; font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:0.4px;">
+          Conseils pour votre session
+        </p>
+        <ul style="margin:0; padding-left:18px; color:#475569; font-size:13px; line-height:2;">
+          <li>Faites au moins <strong>1 série complète</strong> par session (40 min – 1h)</li>
+          <li>Entraînez-vous dans le <strong>silence</strong> pour simuler les conditions réelles</li>
+          <li>Consultez vos <strong>résultats</strong> après chaque série pour cibler vos lacunes</li>
+          <li>Pour l'EO, pratiquez à voix haute même si vous êtes seul(e)</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Pied de page -->
+    <div style="background:#1e293b; border-radius:0 0 12px 12px; padding:20px 32px; text-align:center;">
+      <p style="color:#94a3b8; font-size:12px; margin:0 0 8px;">
+        Des questions ? Écrivez-nous sur
+        <a href="https://wa.me/${config.adminWhatsapp}" style="color:#25D366; text-decoration:none; font-weight:bold;">WhatsApp</a>
+        ou à <a href="mailto:${config.adminEmail}" style="color:#93c5fd; text-decoration:none;">${config.adminEmail}</a>
+      </p>
+      <p style="color:#64748b; font-size:11px; margin:0;">
+        © ${new Date().getFullYear()} TEF-LAB ·
+        <a href="${siteUrl}" style="color:#64748b; text-decoration:none;">tef-lab.com</a>
+      </p>
+    </div>
+
+  </div>
+</body>
+</html>`
+
+  await transporter.sendMail({
+    from: config.smtp.from,
+    to: data.clientEmail,
+    subject: `🎯 ${firstName}, c'est l'heure de votre session TEF Canada !`,
+    html,
+  })
+}
+
+// ─── Template 10 : Rappel quotidien upgrade → Utilisateurs gratuits ──────────
+
+export interface DailyUpgradeReminderData {
+  clientName: string
+  clientEmail: string
+}
+
+export async function sendDailyUpgradeReminder(data: DailyUpgradeReminderData): Promise<void> {
+  const firstName = data.clientName.split(' ')[0]
+  const siteUrl = config.siteUrl
+
+  const lockedFeatures = [
+    { icon: '✍️', label: 'Expression Écrite (EE)', desc: 'Rédaction + correction IA', locked: true },
+    { icon: '🎙️', label: 'Expression Orale (EO)', desc: 'Simulation + IA conversationnelle', locked: true },
+    { icon: '📊', label: '30+ séries avancées', desc: 'Toutes les séries CE & CO', locked: true },
+    { icon: '🤖', label: 'Correction IA', desc: 'Feedback détaillé sur vos textes', locked: true },
+  ]
+
+  const lockedCards = lockedFeatures.map(f => `
+    <tr>
+      <td style="padding:12px 14px; font-size:18px; width:40px;">${f.icon}</td>
+      <td style="padding:12px 0;">
+        <div style="font-weight:bold; color:#1e293b; font-size:14px;">${f.label}</div>
+        <div style="color:#64748b; font-size:12px; margin-top:2px;">${f.desc}</div>
+      </td>
+      <td style="padding:12px 14px; text-align:right;">
+        <span style="background:#fef2f2; color:#E30613; font-size:11px; font-weight:bold;
+                     padding:3px 10px; border-radius:20px; white-space:nowrap;">🔒 Verrouillé</span>
+      </td>
+    </tr>`).join('<tr><td colspan="3" style="padding:0; border-bottom:1px solid #f1f5f9;"></td></tr>')
+
+  const packs = [
+    { name: 'Essai', price: '5 000', modules: 'Tous modules', duration: '30j', ia: '2/j', recommended: false },
+    { name: 'Silver ⭐', price: '25 000', modules: 'Tous modules', duration: '30j', ia: '10/j', recommended: true },
+    { name: 'Bronze', price: '10 000', modules: 'Tous modules', duration: '30j', ia: '3/j', recommended: false },
+  ]
+
+  const packCards = packs.map(p => `
+    <td style="width:33%; padding:6px; vertical-align:top;">
+      <div style="border:${p.recommended ? '2px solid #003087' : '1px solid #e2e8f0'};
+                  border-radius:10px; padding:16px 12px; text-align:center;
+                  background:${p.recommended ? '#f0f4ff' : '#fff'}; position:relative;">
+        ${p.recommended ? '<div style="background:#003087; color:#fff; font-size:10px; font-weight:bold; padding:2px 10px; border-radius:10px; display:inline-block; margin-bottom:8px;">RECOMMANDÉ</div>' : '<div style="height:22px;"></div>'}
+        <div style="font-weight:900; color:#003087; font-size:15px; margin-bottom:4px;">${p.name}</div>
+        <div style="font-size:20px; font-weight:bold; color:#E30613; margin-bottom:4px;">${p.price} <span style="font-size:11px; color:#64748b;">FCFA</span></div>
+        <div style="font-size:11px; color:#64748b; line-height:1.8;">
+          ${p.modules}<br>${p.duration} · IA ${p.ia}
+        </div>
+      </div>
+    </td>`).join('')
+
+  const html = `
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Débloquez votre potentiel TEF-LAB</title>
+</head>
+<body style="font-family:'Segoe UI',Arial,sans-serif; background:#f0f4f8; margin:0; padding:20px;">
+  <div style="max-width:600px; margin:0 auto;">
+
+    <!-- Logo + En-tête -->
+    <div style="background:linear-gradient(135deg,#003087 0%,#0055B3 100%); border-radius:12px 12px 0 0; padding:28px 32px; text-align:center;">
+      <h1 style="color:#fff; margin:0; font-size:26px; font-weight:900; letter-spacing:-0.5px;">
+        TEF<span style="color:#E30613;">-</span>LAB
+      </h1>
+      <p style="color:#cce0ff; margin:6px 0 0; font-size:14px;">Votre préparation TEF Canada au quotidien</p>
+    </div>
+
+    <!-- Bandeau accroche -->
+    <div style="background:#E30613; padding:10px 32px; text-align:center;">
+      <p style="color:#fff; margin:0; font-size:13px; font-weight:600; letter-spacing:0.5px;">
+        🚀 PASSEZ AU NIVEAU SUPÉRIEUR · OFFRE DISPONIBLE MAINTENANT
+      </p>
+    </div>
+
+    <!-- Corps principal -->
+    <div style="background:#fff; padding:32px; border-left:1px solid #e2e8f0; border-right:1px solid #e2e8f0;">
+
+      <!-- Accroche personnalisée -->
+      <h2 style="color:#003087; margin-top:0; font-size:20px;">Bonjour ${firstName} 👋</h2>
+      <p style="color:#475569; font-size:15px; line-height:1.7; margin-bottom:24px;">
+        Vous avez un compte gratuit sur TEF-LAB — c'est un bon début !
+        Mais pour maximiser vos chances à l'examen, vous avez besoin d'accéder aux <strong>4 modules officiels</strong>
+        du TEF Canada, notamment l'Expression Écrite et l'Expression Orale.
+      </p>
+
+      <!-- Ce que vous manquez -->
+      <div style="background:#fafafa; border:1px solid #f1f5f9; border-radius:10px; overflow:hidden; margin-bottom:28px;">
+        <div style="background:#1e293b; padding:12px 18px;">
+          <p style="margin:0; color:#fff; font-size:13px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">
+            🔒 Fonctionnalités verrouillées sur votre compte
+          </p>
+        </div>
+        <table style="width:100%; border-collapse:collapse;">
+          ${lockedCards}
+        </table>
+      </div>
+
+      <!-- Comparaison packs -->
+      <h3 style="color:#003087; font-size:15px; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:16px;">
+        Choisissez votre pack
+      </h3>
+      <table style="width:100%; border-collapse:separate; border-spacing:0; margin-bottom:28px;">
+        <tr>${packCards}</tr>
+      </table>
+
+      <!-- CTA principal -->
+      <div style="text-align:center; margin-bottom:24px;">
+        <a href="${siteUrl}/packs"
+           style="display:inline-block; background:#E30613; color:#fff; font-weight:bold; font-size:16px;
+                  padding:16px 40px; border-radius:8px; text-decoration:none; letter-spacing:0.3px;
+                  box-shadow:0 4px 12px rgba(227,6,19,0.35);">
+          Voir tous les packs →
+        </a>
+        <p style="color:#94a3b8; font-size:12px; margin:10px 0 0;">
+          Paiement sécurisé via NotchPay (Mobile Money) ou PayPal
+        </p>
+      </div>
+
+      <!-- Modes de paiement -->
+      <div style="background:#f8faff; border-radius:8px; padding:16px 20px; text-align:center; margin-bottom:8px;">
+        <p style="margin:0 0 8px; color:#64748b; font-size:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.3px;">
+          Moyens de paiement acceptés
+        </p>
+        <p style="margin:0; font-size:14px; color:#475569; line-height:2;">
+          📱 <strong>Orange Money</strong> &nbsp;·&nbsp; 📱 <strong>MTN Mobile Money</strong>
+          &nbsp;·&nbsp; 💳 <strong>PayPal</strong> (USD)
+        </p>
+      </div>
+
+      <!-- Preuve sociale -->
+      <div style="border-top:1px solid #f1f5f9; padding-top:20px; margin-top:20px;">
+        <p style="color:#64748b; font-size:13px; text-align:center; line-height:1.6; margin:0;">
+          Des milliers de candidats camerounais ont déjà obtenu leur score TEF grâce à TEF-LAB.
+          <strong style="color:#003087;">Commencez votre préparation complète aujourd'hui.</strong>
+        </p>
+      </div>
+    </div>
+
+    <!-- Pied de page -->
+    <div style="background:#1e293b; border-radius:0 0 12px 12px; padding:20px 32px; text-align:center;">
+      <p style="color:#94a3b8; font-size:12px; margin:0 0 8px;">
+        Questions ? Contactez-nous sur
+        <a href="https://wa.me/${config.adminWhatsapp}" style="color:#25D366; text-decoration:none; font-weight:bold;">WhatsApp</a>
+        ou à <a href="mailto:${config.adminEmail}" style="color:#93c5fd; text-decoration:none;">${config.adminEmail}</a>
+      </p>
+      <p style="color:#64748b; font-size:11px; margin:0;">
+        © ${new Date().getFullYear()} TEF-LAB ·
+        <a href="${siteUrl}" style="color:#64748b; text-decoration:none;">tef-lab.com</a>
+      </p>
+    </div>
+
+  </div>
+</body>
+</html>`
+
+  await transporter.sendMail({
+    from: config.smtp.from,
+    to: data.clientEmail,
+    subject: `🎓 ${firstName}, débloquez votre potentiel TEF Canada dès aujourd'hui`,
+    html,
+  })
+}
