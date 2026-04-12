@@ -40,7 +40,7 @@ const VOICE_MAP: Record<string, string[]> = {
   'Q15-20': ['Alain', 'Hélène', 'Mathieu', 'Étienne'], // Micro-trottoirs: multiple
   'Q21-22': ['Mathieu'],                        // Chroniques audio: male reporter
   'Q23-28': ['Alain', 'Hélène'],                // Interviews: interviewer + guest
-  'Q29-30': ['Étienne', 'Alain'],               // Reportages RFI: reporter + witness/interviewé
+  'Q29-30': ['Étienne', 'Alain', 'Hélène', 'Mathieu'], // Reportages RFI: reporter + up to 3 interviewés
   'Q31-40': ['Alain', 'Hélène'],                // Documents divers: alternating
 }
 
@@ -123,6 +123,115 @@ function splitBySpeaker(text: string, voices: string[]): SpeechSegment[] {
   }
 
   return segments
+}
+
+/**
+ * Split an RFI-style reportage transcript into TTS segments.
+ *
+ * Format handled:
+ *   - Reporter narration (regular paragraphs) → voices[0] (Étienne)
+ *   - Interviewee intro line ending with ":" → reporter reads it, sets pendingVoice
+ *     e.g. "Patrick Essomba est le président de la coopérative :"
+ *   - Quote in « guillemets » → interviewee voice (Alain / Hélène / Mathieu in order)
+ *   - Anonymous opening quote (no prior intro) → voices[1] (Alain) without advancing counter
+ *   - End credit "Name, City, RFI." → reporter voice
+ *
+ * Blank lines flush the narrative buffer so each paragraph becomes its own TTS chunk.
+ */
+function splitRFIReportage(text: string, voices: string[]): SpeechSegment[] {
+  const reporterVoice = voices[0] ?? 'Étienne'
+  const intervieweeVoices = voices.length > 1 ? voices.slice(1) : ['Alain']
+
+  const segments: SpeechSegment[] = []
+  const speakerVoiceMap = new Map<string, string>()
+  let intervieweeIdx = 0
+  let pendingVoice: string | null = null
+  const narrativeBuffer: string[] = []
+
+  const flushNarrative = () => {
+    const t = narrativeBuffer.join(' ').trim()
+    if (t) segments.push({ text: t, voice: reporterVoice })
+    narrativeBuffer.length = 0
+  }
+
+  // Intro line: starts with uppercase letter, contains ≥5 chars before ":" at end of line
+  // e.g. "Patrick Essomba est le président de la coopérative :"
+  // e.g. "Marie Atangana, responsable qualité :"
+  const INTRO_LINE = /^[A-ZÀÉÈÊËÎÏÔÙÛÜ].{5,}:\s*$/
+
+  let inQuote = false
+  let quoteLines: string[] = []
+  let quoteVoice = intervieweeVoices[0]
+
+  for (const raw of text.split('\n')) {
+    const line = raw.trim()
+
+    // Blank line → flush narrative buffer (one TTS chunk per paragraph)
+    if (!line) {
+      flushNarrative()
+      continue
+    }
+
+    // Inside a multi-line « ... » block
+    if (inQuote) {
+      quoteLines.push(line)
+      if (line.includes('»')) {
+        inQuote = false
+        const quoteText = quoteLines.join(' ').replace(/^«\s*/, '').replace(/\s*».*$/, '').trim()
+        if (quoteText) segments.push({ text: quoteText, voice: quoteVoice })
+        quoteLines = []
+      }
+      continue
+    }
+
+    // Quote starting with «
+    if (line.startsWith('«')) {
+      flushNarrative()
+      quoteVoice = pendingVoice !== null
+        ? pendingVoice
+        : intervieweeVoices[0] // anonymous quote → first interviewee voice, no counter advance
+      pendingVoice = null
+
+      if (line.includes('»')) {
+        // Single-line quote
+        const quoteText = line.replace(/^«\s*/, '').replace(/\s*».*$/, '').trim()
+        if (quoteText) segments.push({ text: quoteText, voice: quoteVoice })
+      } else {
+        inQuote = true
+        quoteLines = [line]
+      }
+      continue
+    }
+
+    // Interviewee introduction line ending with ":"
+    if (INTRO_LINE.test(line)) {
+      // Reporter reads the intro (it's part of the narration)
+      narrativeBuffer.push(line.replace(/:\s*$/, '.'))
+      // Extract the speaker's first name(s) for voice assignment
+      const nameMatch = line.match(/^([A-ZÀÉÈÊËÎÏÔÙÛÜ][a-zàáâãäåæçèéêëìíîïñòóôõöùúûü]+(?:\s+[A-ZÀÉÈÊËÎÏÔÙÛÜ][a-zàáâãäåæçèéêëìíîïñòóôõöùúûü]+)*)/)
+      const name = nameMatch?.[1] ?? `speaker_${intervieweeIdx}`
+      if (!speakerVoiceMap.has(name)) {
+        speakerVoiceMap.set(name, intervieweeVoices[intervieweeIdx % intervieweeVoices.length])
+        intervieweeIdx++
+      }
+      pendingVoice = speakerVoiceMap.get(name)!
+      continue
+    }
+
+    // End credit line: "FirstName LastName, City, RFI."
+    if (/,\s*RFI\.?\s*$/.test(line)) {
+      flushNarrative()
+      segments.push({ text: line, voice: reporterVoice })
+      continue
+    }
+
+    // Regular narrative line
+    narrativeBuffer.push(line)
+  }
+
+  flushNarrative()
+
+  return segments.length > 0 ? segments : [{ text: text.trim(), voice: reporterVoice }]
 }
 
 /**
@@ -461,7 +570,10 @@ export async function POST(req: NextRequest) {
           console.log(`[CO_AUDIO] Q${q.questionOrder} [${catKey}]: lines=${transcriptLines.length} dashLines=${dashLineCount} namedSpeaker=${hasNamedSpeaker} detected=${detectedDialogue} forced=${forceMultiVoice} multiVoice=${useMultiVoice} firstChar=U+${firstCharHex}`)
 
           if (useMultiVoice) {
-            const segments = splitBySpeaker(transcript, voices)
+            // Q29-30 use dedicated RFI reportage parser (reporter narration + « guillemet » quotes)
+            const segments = catKey === 'Q29-30'
+              ? splitRFIReportage(transcript, voices)
+              : splitBySpeaker(transcript, voices)
             console.log(`[CO_AUDIO] Q${q.questionOrder}: ${segments.length} segment(s) — ${segments.map(s => `${s.voice}:"${s.text.slice(0, 30)}"`).join(' | ')}`)
             const audioChunks: Buffer[] = []
 
