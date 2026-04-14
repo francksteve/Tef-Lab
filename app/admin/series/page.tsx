@@ -29,6 +29,8 @@ const emptyForm: SeriesFormData = {
   isFree: false,
 }
 
+const PAGE_SIZE = 10
+
 export default function SeriesAdminPage() {
   const [series, setSeries] = useState<Series[]>([])
   const [modules, setModules] = useState<Module[]>([])
@@ -38,6 +40,8 @@ export default function SeriesAdminPage() {
   const [form, setForm] = useState<SeriesFormData>(emptyForm)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [filterModule, setFilterModule] = useState<string>('')
+  const [page, setPage] = useState(1)
 
   const loadData = () => {
     setLoading(true)
@@ -145,6 +149,18 @@ export default function SeriesAdminPage() {
     ? series.find((s) => s.id === editingId)?.isFree ?? false
     : false
 
+  const filtered = [...series]
+    .filter((s) => !filterModule || s.moduleId === filterModule)
+    .sort((a, b) => a.title.localeCompare(b.title, 'fr'))
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
+  const handleFilterChange = (moduleId: string) => {
+    setFilterModule(moduleId)
+    setPage(1)
+  }
+
   return (
     <div className="p-6 space-y-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between">
@@ -240,11 +256,34 @@ export default function SeriesAdminPage() {
         </div>
       )}
 
+      {/* Filtre */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <span className="text-sm font-medium text-gray-600">Filtrer par module :</span>
+        <button
+          onClick={() => handleFilterChange('')}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${filterModule === '' ? 'bg-tef-blue text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+        >
+          Tous ({series.length})
+        </button>
+        {modules.map((m) => {
+          const count = series.filter((s) => s.moduleId === m.id).length
+          return (
+            <button
+              key={m.id}
+              onClick={() => handleFilterChange(m.id)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${filterModule === m.id ? 'bg-tef-blue text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+            >
+              {m.code} ({count})
+            </button>
+          )
+        })}
+      </div>
+
       {/* Liste */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         {loading ? (
           <div className="p-10 text-center text-gray-400">Chargement…</div>
-        ) : series.length === 0 ? (
+        ) : filtered.length === 0 ? (
           <div className="p-10 text-center text-gray-400">Aucune série trouvée</div>
         ) : (
           <div className="overflow-x-auto">
@@ -262,7 +301,7 @@ export default function SeriesAdminPage() {
                 </tr>
               </thead>
               <tbody>
-                {series.map((s, index) => (
+                {paginated.map((s, index) => (
                   <tr key={s.id} className={`border-b border-blue-100 transition-colors hover:bg-blue-100 ${index % 2 === 0 ? 'bg-white' : 'bg-blue-50'}`}>
                     <td className="px-4 py-3 font-medium text-gray-900">{s.title}</td>
                     <td className="px-4 py-3">
@@ -300,6 +339,40 @@ export default function SeriesAdminPage() {
                 ))}
               </tbody>
             </table>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
+                <p className="text-xs text-gray-500">
+                  {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} sur {filtered.length} série{filtered.length !== 1 ? 's' : ''}
+                </p>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="px-3 py-1 rounded-lg text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    ← Préc.
+                  </button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                    <button
+                      key={p}
+                      onClick={() => setPage(p)}
+                      className={`w-8 h-8 rounded-lg text-xs font-semibold transition-colors ${p === page ? 'bg-tef-blue text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    className="px-3 py-1 rounded-lg text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Suiv. →
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
