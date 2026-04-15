@@ -120,13 +120,13 @@ function getCOCategory(order: number): string {
   return 'Q31-40'
 }
 
-/** Q22, Q24, Q26, Q28, Q30 — second question of a 2-per-page pair */
+/** Q24, Q26, Q28, Q30 — second question of a 2-per-page pair (Q21/Q22 each have their own audio) */
 function isCOPairedSecond(order: number): boolean {
-  return order === 22 || order === 24 || order === 26 || order === 28 || order === 30
+  return order === 24 || order === 26 || order === 28 || order === 30
 }
-/** Q21, Q23, Q25, Q27, Q29 — first question of a 2-per-page pair */
+/** Q23, Q25, Q27, Q29 — first question of a 2-per-page pair (Q21/Q22 each have their own audio) */
 function isCOPairedStart(order: number): boolean {
-  return order === 21 || order === 23 || order === 25 || order === 27 || order === 29
+  return order === 23 || order === 25 || order === 27 || order === 29
 }
 /** Next page start index for CO (skips by 2 for paired pages) */
 function getCONextIdx(qs: Question[], idx: number): number {
@@ -950,7 +950,7 @@ export default function QuizPage() {
 
         {/* Question card — CE: 2-col card with nav inside; CO: 2-col card (audio managed by sequencer above) */}
         {isCO ? (() => {
-          // ── CO layout: consigne banner + 2-col card; Q21-22, Q23-28, Q29-30 are paired pages ──
+          // ── CO layout: consigne banner + 2-col card; Q23-28, Q29-30 are paired pages (Q21/Q22 separate) ──
           const firstQ     = currentQuestion
           const catKey     = getCOCategory(firstQ.questionOrder)
           const catInfo    = CO_CATEGORIES[catKey]
