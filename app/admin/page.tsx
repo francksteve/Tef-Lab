@@ -232,7 +232,9 @@ export default function AdminDashboard() {
                           </span>
                         </td>
                         <td className="px-4 py-3 text-gray-700">
-                          {score != null ? `${score} / 100` : '—'}
+                          {score != null
+                            ? `${score} / ${a.moduleCode === 'CE' || a.moduleCode === 'CO' ? 40 : 100}`
+                            : '—'}
                         </td>
                         <td className="px-4 py-3">
                           {level ? (
