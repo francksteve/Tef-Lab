@@ -28,7 +28,8 @@ const modules = [
     duration: '60 min',
     questions: '40 questions',
     desc: 'Documents du quotidien, textes lacunaires, articles de presse, graphiques.',
-    color: 'border-blue-400',
+    iconBg: 'bg-blue-100',
+    headerBg: 'from-blue-50 to-white',
     pdf: '/tef-exemples-ce.pdf',
   },
   {
@@ -38,7 +39,8 @@ const modules = [
     duration: '40 min',
     questions: '40 questions',
     desc: 'Annonces, répondeurs, interviews, chroniques radio. Audio unique.',
-    color: 'border-purple-400',
+    iconBg: 'bg-purple-100',
+    headerBg: 'from-purple-50 to-white',
     pdf: '/tef-exemples-co.pdf',
   },
   {
@@ -48,7 +50,8 @@ const modules = [
     duration: '60 min',
     questions: '2 tâches',
     desc: 'Suite d\'article (80 mots min.) et lettre au journal (200 mots min.).',
-    color: 'border-green-400',
+    iconBg: 'bg-green-100',
+    headerBg: 'from-green-50 to-white',
     pdf: '/tef-exemples-epreuve-ee.pdf',
   },
   {
@@ -58,7 +61,8 @@ const modules = [
     duration: '15 min',
     questions: '2 sections',
     desc: 'Obtenir des informations (formel) et présenter pour convaincre (informel).',
-    color: 'border-orange-400',
+    iconBg: 'bg-orange-100',
+    headerBg: 'from-orange-50 to-white',
     pdf: '/tef-exemples-epreuve-eo.pdf',
   },
 ]
@@ -67,6 +71,12 @@ const moduleLabels: Record<string, string> = {
   EE_EO: 'EE + EO uniquement',
   ALL: 'CE · CO · EE · EO',
 }
+
+const testimonials = [
+  { quote: 'J\'ai obtenu B2 au premier essai grâce aux séries CO réalistes de TEF-LAB.', author: 'Lionel K.', city: 'Douala', initial: 'L' },
+  { quote: 'La correction IA de l\'expression écrite m\'a fait progresser en 2 semaines seulement.', author: 'Patricia N.', city: 'Yaoundé', initial: 'P' },
+  { quote: 'Les séries sont calquées sur l\'examen réel. Aucune mauvaise surprise le jour J.', author: 'Rodrigue M.', city: 'Ottawa', initial: 'R' },
+]
 
 export default function HomePage() {
   const [packs, setPacks] = useState<Pack[]>([])
@@ -114,7 +124,7 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/inscription"
-              className="px-8 py-3.5 bg-tef-red text-white font-bold rounded-xl hover:bg-red-700 transition-colors text-base"
+              className="px-8 py-3.5 bg-tef-red text-white font-bold rounded-xl hover:bg-red-700 transition-colors text-base shadow-lg shadow-red-900/30"
             >
               Démarrer gratuitement →
             </Link>
@@ -128,25 +138,46 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ─── STATS BAR ─── */}
+      <section className="bg-white border-b border-gray-100 shadow-sm">
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="flex divide-x divide-gray-200">
+            {[
+              { value: '4', label: 'modules officiels' },
+              { value: '14+', label: 'séries CO' },
+              { value: '🤖', label: 'Correction IA' },
+              { value: '⚡', label: 'Accès immédiat' },
+            ].map((stat) => (
+              <div key={stat.label} className="flex-1 py-4 flex flex-col items-center gap-0.5 text-center">
+                <span className="text-xl sm:text-2xl font-extrabold text-tef-blue">{stat.value}</span>
+                <span className="text-[11px] sm:text-xs text-gray-500 font-medium leading-tight">{stat.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ─── TEF CANADA INFO ─── */}
       <section className="py-16 px-4 bg-gray-50">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-2xl sm:text-3xl font-bold text-center text-gray-900 mb-3">
-            Qu'est-ce que le TEF Canada ?
+            Qu&apos;est-ce que le TEF Canada ?
           </h2>
           <p className="text-center text-gray-500 mb-10 max-w-2xl mx-auto">
-            Le Test d'Évaluation de Français (TEF Canada) est le test de langue officiel reconnu par l'IRCC pour les demandes d'immigration.
+            Le Test d&apos;Évaluation de Français (TEF Canada) est le test de langue officiel reconnu par l&apos;IRCC pour les demandes d&apos;immigration.
           </p>
           <div className="grid sm:grid-cols-3 gap-6">
             {[
-              { icon: '🏛️', title: 'Reconnu par l\'IRCC', desc: 'Obligatoire pour Entrée Express, PVP et regroupement familial.' },
-              { icon: '📅', title: 'Validité 2 ans', desc: 'Tes résultats sont valables 2 ans pour ta demande d\'immigration.' },
-              { icon: '🎯', title: 'Niveau NCLC 7', desc: 'Vise un score B2 minimum pour maximiser tes points CRS.' },
+              { icon: '🏛️', title: 'Reconnu par l\'IRCC', desc: 'Obligatoire pour Entrée Express, PVP et regroupement familial.', border: 'border-l-4 border-tef-blue', iconBg: 'bg-blue-50' },
+              { icon: '📅', title: 'Validité 2 ans', desc: 'Tes résultats sont valables 2 ans pour ta demande d\'immigration.', border: 'border-l-4 border-tef-red', iconBg: 'bg-red-50' },
+              { icon: '🎯', title: 'Niveau NCLC 7', desc: 'Vise un score B2 minimum pour maximiser tes points CRS.', border: 'border-l-4 border-green-500', iconBg: 'bg-green-50' },
             ].map((item) => (
-              <div key={item.title} className="bg-white rounded-xl p-6 shadow-sm text-center border border-gray-100">
-                <div className="text-4xl mb-3">{item.icon}</div>
+              <div key={item.title} className={`bg-white rounded-xl p-6 shadow-sm ${item.border}`}>
+                <div className={`w-14 h-14 ${item.iconBg} rounded-2xl flex items-center justify-center text-3xl mb-4`}>
+                  {item.icon}
+                </div>
                 <h3 className="font-bold text-gray-900 mb-2">{item.title}</h3>
-                <p className="text-sm text-gray-500">{item.desc}</p>
+                <p className="text-sm text-gray-500 leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -160,31 +191,73 @@ export default function HomePage() {
             Les 4 modules du TEF Canada
           </h2>
           <p className="text-center text-gray-500 mb-10">
-            Entraîne-toi sur chaque module avec des séries réalistes calibrées sur l'examen officiel.
+            Entraîne-toi sur chaque module avec des séries réalistes calibrées sur l&apos;examen officiel.
           </p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
             {modules.map((mod) => (
               <div
                 key={mod.code}
-                className={`bg-white rounded-xl p-5 shadow-sm border-t-4 ${mod.color} hover:shadow-md transition-shadow`}
+                className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md hover:scale-[1.02] transition-all"
               >
-                <div className="text-3xl mb-3">{mod.icon}</div>
-                <h3 className="font-bold text-gray-900 text-sm mb-1">{mod.name}</h3>
-                <div className="flex gap-2 mb-3 flex-wrap">
-                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{mod.duration}</span>
-                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{mod.questions}</span>
+                <div className={`bg-gradient-to-br ${mod.headerBg} p-5`}>
+                  <div className={`w-12 h-12 ${mod.iconBg} rounded-xl flex items-center justify-center text-2xl mb-3`}>
+                    {mod.icon}
+                  </div>
+                  <h3 className="font-bold text-gray-900 text-sm mb-2">{mod.name}</h3>
+                  <div className="flex gap-1.5 flex-wrap">
+                    <span className="text-xs bg-white/80 text-gray-600 px-2 py-0.5 rounded-full border border-gray-200">{mod.duration}</span>
+                    <span className="text-xs bg-white/80 text-gray-600 px-2 py-0.5 rounded-full border border-gray-200">{mod.questions}</span>
+                  </div>
                 </div>
-                <p className="text-xs text-gray-500 leading-relaxed">{mod.desc}</p>
-                <a
-                  href={mod.pdf}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-xs text-tef-blue hover:underline font-medium mt-3"
-                >
-                  📄 En savoir plus →
-                </a>
+                <div className="p-5 pt-4">
+                  <p className="text-xs text-gray-500 leading-relaxed">{mod.desc}</p>
+                  <a
+                    href={mod.pdf}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs text-tef-blue hover:underline font-medium mt-3"
+                  >
+                    📄 En savoir plus →
+                  </a>
+                </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── COMMENT ÇA MARCHE ─── */}
+      <section className="py-16 px-4 bg-gradient-to-br from-tef-blue to-blue-800 text-white">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl font-bold text-center mb-3">
+            Comment ça marche ?
+          </h2>
+          <p className="text-center text-blue-200 mb-12 max-w-xl mx-auto">
+            Commence à te préparer en 3 étapes simples, sans attendre.
+          </p>
+          <div className="grid sm:grid-cols-3 gap-8">
+            {[
+              { step: '1', icon: '🎁', title: 'Crée un compte gratuit', desc: 'Inscription en 30 secondes. Aucune carte bancaire requise.' },
+              { step: '2', icon: '📝', title: 'Passe une série', desc: '40 questions réalistes pour chaque module, dans les conditions de l\'examen.' },
+              { step: '3', icon: '🤖', title: 'Obtiens ta correction IA', desc: 'Feedback détaillé, niveau CECRL estimé et texte amélioré fournis instantanément.' },
+            ].map((item) => (
+              <div key={item.step} className="text-center">
+                <div className="text-4xl mb-3">{item.icon}</div>
+                <div className="w-10 h-10 bg-white/20 border-2 border-white/40 rounded-full flex items-center justify-center text-lg font-extrabold mx-auto mb-4">
+                  {item.step}
+                </div>
+                <h3 className="font-bold text-lg mb-2">{item.title}</h3>
+                <p className="text-blue-200 text-sm leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+          <div className="text-center mt-12">
+            <Link
+              href="/inscription"
+              className="inline-block px-8 py-3.5 bg-white text-tef-blue font-bold rounded-xl hover:bg-blue-50 transition-colors shadow-lg"
+            >
+              Démarrer gratuitement →
+            </Link>
           </div>
         </div>
       </section>
@@ -264,7 +337,7 @@ export default function HomePage() {
                       </div>
                       <div className="flex items-center gap-2 text-xs text-gray-600">
                         <span className="text-green-500 font-bold">✓</span>
-                        <span>{pack.durationDays} jours d'accès</span>
+                        <span>{pack.durationDays} jours d&apos;accès</span>
                       </div>
                     </div>
 
@@ -292,20 +365,56 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─── FREE START ─── */}
+      {/* ─── TESTIMONIALS ─── */}
       <section className="py-16 px-4">
-        <div className="max-w-3xl mx-auto text-center space-y-4">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-2xl sm:text-3xl font-bold text-center text-gray-900 mb-3">
+            Ils ont réussi leur TEF Canada
+          </h2>
+          <p className="text-center text-gray-500 mb-10">
+            Des candidats camerounais qui ont atteint leur niveau cible.
+          </p>
+          <div className="grid sm:grid-cols-3 gap-5">
+            {testimonials.map((t) => (
+              <div key={t.author} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+                <div className="text-5xl text-tef-blue/20 font-serif leading-none mb-3">&ldquo;</div>
+                <p className="text-sm text-gray-600 leading-relaxed italic mb-5">{t.quote}</p>
+                <div className="flex items-center gap-3 pt-4 border-t border-gray-100">
+                  <div className="w-9 h-9 rounded-full bg-tef-blue text-white flex items-center justify-center text-sm font-bold shrink-0">
+                    {t.initial}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">{t.author}</p>
+                    <p className="text-xs text-gray-400">{t.city}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── FREE START ─── */}
+      <section className="py-16 px-4 bg-gray-50">
+        <div className="max-w-3xl mx-auto text-center space-y-5">
           <div className="text-5xl">🎁</div>
           <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
             Commence gratuitement
           </h2>
           <p className="text-gray-500 max-w-xl mx-auto">
             Crée ton compte gratuit et accède immédiatement aux séries de Compréhension Écrite et Orale.
-            Aucune carte bancaire requise.
           </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center text-sm text-gray-600 items-center">
+            {['Séries CE et CO incluses', 'Niveau CECRL instantané', 'Sans carte bancaire'].map((benefit) => (
+              <div key={benefit} className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-xs font-bold shrink-0">✓</span>
+                <span>{benefit}</span>
+              </div>
+            ))}
+          </div>
           <Link
             href="/inscription"
-            className="inline-block px-8 py-3.5 bg-tef-blue text-white font-bold rounded-xl hover:bg-tef-blue-hover transition-colors"
+            className="inline-block px-8 py-3.5 bg-tef-blue text-white font-bold rounded-xl hover:bg-tef-blue-hover transition-colors shadow-lg shadow-tef-blue/20"
           >
             Démarrer gratuitement →
           </Link>
@@ -323,7 +432,7 @@ export default function HomePage() {
         <div className="max-w-3xl mx-auto text-center space-y-4">
           <h2 className="text-2xl sm:text-3xl font-bold">Une question ?</h2>
           <p className="text-blue-200">
-            Notre équipe est disponible pour t'accompagner dans ta préparation.
+            Notre équipe est disponible pour t&apos;accompagner dans ta préparation.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <a
