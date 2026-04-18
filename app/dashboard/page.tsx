@@ -51,14 +51,14 @@ const moduleGradients: Record<string, string> = {
   CE: 'from-blue-600 to-blue-500',
   CO: 'from-purple-600 to-purple-500',
   EE: 'from-emerald-600 to-emerald-500',
-  EO: 'from-orange-500 to-amber-500',
+  EO: 'from-blue-500 to-blue-600',
 }
 
 const moduleAccentColors: Record<string, { ring: string; chip: string; chipText: string; chipHover: string; doneChip: string; doneText: string; iconBg: string; pillBg: string; pillText: string }> = {
   CE: { ring: 'ring-blue-200', chip: 'border-gray-200 hover:border-blue-400 hover:text-blue-700', chipText: 'text-gray-700', chipHover: '', doneChip: 'bg-blue-50 border-blue-300 text-blue-800', doneText: 'text-blue-800', iconBg: 'bg-blue-600', pillBg: 'bg-blue-100', pillText: 'text-blue-700' },
   CO: { ring: 'ring-purple-200', chip: 'border-gray-200 hover:border-purple-400 hover:text-purple-700', chipText: 'text-gray-700', chipHover: '', doneChip: 'bg-purple-50 border-purple-300 text-purple-800', doneText: 'text-purple-800', iconBg: 'bg-purple-600', pillBg: 'bg-purple-100', pillText: 'text-purple-700' },
   EE: { ring: 'ring-emerald-200', chip: 'border-gray-200 hover:border-emerald-400 hover:text-emerald-700', chipText: 'text-gray-700', chipHover: '', doneChip: 'bg-emerald-50 border-emerald-300 text-emerald-800', doneText: 'text-emerald-800', iconBg: 'bg-emerald-600', pillBg: 'bg-emerald-100', pillText: 'text-emerald-700' },
-  EO: { ring: 'ring-orange-200', chip: 'border-gray-200 hover:border-orange-400 hover:text-orange-700', chipText: 'text-gray-700', chipHover: '', doneChip: 'bg-orange-50 border-orange-300 text-orange-800', doneText: 'text-orange-800', iconBg: 'bg-orange-500', pillBg: 'bg-orange-100', pillText: 'text-orange-700' },
+  EO: { ring: 'ring-blue-200', chip: 'border-gray-200 hover:border-blue-400 hover:text-blue-700', chipText: 'text-gray-700', chipHover: '', doneChip: 'bg-blue-50 border-blue-300 text-blue-800', doneText: 'text-blue-800', iconBg: 'bg-blue-600', pillBg: 'bg-blue-100', pillText: 'text-blue-700' },
 }
 
 const moduleDescriptions: Record<string, string> = {

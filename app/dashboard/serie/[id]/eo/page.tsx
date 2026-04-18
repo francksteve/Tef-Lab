@@ -130,18 +130,9 @@ function SectionDocument({
   const hasContent = section.imageUrl || section.longText
   if (!hasContent && !consigne) return null
 
-  const consigneBg =
-    consigneColor === 'orange'
-      ? 'bg-orange-50 text-orange-800'
-      : 'bg-blue-50 text-blue-800'
-
-  const annonceBorder =
-    consigneColor === 'orange'
-      ? 'border-orange-200 bg-orange-50'
-      : 'border-blue-200 bg-blue-50'
-
-  const annonceTitleColor =
-    consigneColor === 'orange' ? 'text-orange-700' : 'text-tef-blue'
+  const consigneBg = 'bg-blue-50 text-blue-800'
+  const annonceBorder = 'border-blue-200 bg-blue-50'
+  const annonceTitleColor = 'text-tef-blue'
 
   return (
     <div className="space-y-4">
@@ -171,11 +162,7 @@ function SectionDocument({
               <p className={`text-center font-bold text-xl mb-3 ${annonceTitleColor}`}>
                 {section.taskTitle}
               </p>
-              <hr
-                className={`w-full mb-4 ${
-                  consigneColor === 'orange' ? 'border-orange-300' : 'border-blue-300'
-                }`}
-              />
+              <hr className="w-full mb-4 border-blue-300" />
             </>
           )}
           {compact && section.taskTitle && (
@@ -215,8 +202,8 @@ function EOSectionCard({
   extraInfo?: string
 }) {
   const isA = label.includes('Section A') || label.includes('informations')
-  const accentBg = isA ? 'bg-blue-50 border-blue-100' : 'bg-orange-50 border-orange-100'
-  const accentText = isA ? 'text-tef-blue' : 'text-orange-600'
+  const accentBg = 'bg-blue-50 border-blue-100'
+  const accentText = 'text-tef-blue'
   const accentIcon = isA ? '🎙️' : '💬'
 
   return (
@@ -230,7 +217,7 @@ function EOSectionCard({
         <div className="flex items-center gap-2 flex-shrink-0">
           <span className={`text-xl font-black ${accentText}`}>{score.score}<span className="text-sm text-gray-300">/100</span></span>
           <span className={`text-xs font-extrabold px-2.5 py-0.5 rounded-full ${
-            isA ? 'bg-tef-blue text-white' : 'bg-orange-500 text-white'
+            'bg-tef-blue text-white'
           }`}>{score.cecrlLevel}</span>
         </div>
       </div>
@@ -774,7 +761,7 @@ ${documentContext}`
   const isLow = timeLeft <= 60
   const sectionLabel =
     section === 'A' ? 'Section A — Obtenir des informations' : 'Section B — Présenter et convaincre'
-  const accentBg = section === 'A' ? 'bg-tef-blue' : 'bg-orange-500'
+  const accentBg = 'bg-tef-blue'
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
@@ -792,7 +779,7 @@ ${documentContext}`
               ❓ {questionCount}/10
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
               💬 {argCount} arg.
             </span>
           )}
@@ -841,23 +828,15 @@ ${documentContext}`
                 className={`rounded-xl border-2 p-4 lg:p-6 shadow-sm flex flex-col items-center ${
                   section === 'A'
                     ? 'border-blue-200 bg-blue-50'
-                    : 'border-orange-200 bg-orange-50'
+                    : 'border-blue-200 bg-blue-50'
                 }`}
               >
                 {sectionData.taskTitle && (
                   <>
-                    <h2
-                      className={`text-center font-bold text-lg lg:text-xl mb-3 ${
-                        section === 'A' ? 'text-tef-blue' : 'text-orange-700'
-                      }`}
-                    >
+                    <h2 className="text-center font-bold text-lg lg:text-xl mb-3 text-tef-blue">
                       {sectionData.taskTitle}
                     </h2>
-                    <hr
-                      className={`w-full mb-4 ${
-                        section === 'A' ? 'border-blue-300' : 'border-orange-300'
-                      }`}
-                    />
+                    <hr className="w-full mb-4 border-blue-300" />
                   </>
                 )}
                 <p className="text-gray-800 text-sm leading-normal whitespace-pre-wrap text-center w-full">
@@ -882,7 +861,7 @@ ${documentContext}`
               className={`w-full max-w-xl rounded-lg px-3 py-2 text-xs ${
                 section === 'A'
                   ? 'bg-blue-50 text-blue-800 border border-blue-200'
-                  : 'bg-orange-50 text-orange-800 border border-orange-200'
+                  : 'bg-blue-50 text-blue-800 border border-blue-200'
               }`}
             >
               <span className="font-semibold">Consigne : </span>
@@ -971,11 +950,7 @@ ${documentContext}`
                     </div>
                   )}
                   {rtcState === 'user_speaking' && (
-                    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs animate-pulse ${
-                      section === 'A'
-                        ? 'bg-blue-50 border border-blue-200 text-tef-blue'
-                        : 'bg-orange-50 border border-orange-200 text-orange-700'
-                    }`}>
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs animate-pulse bg-blue-50 border border-blue-200 text-tef-blue">
                       <span className="flex gap-0.5 items-end h-3">
                         <span className="w-0.5 rounded bg-current" style={{ height: '50%' }} />
                         <span className="w-0.5 rounded bg-current" style={{ height: '100%' }} />
@@ -986,11 +961,7 @@ ${documentContext}`
                     </div>
                   )}
                   {rtcState === 'ai_speaking' && (
-                    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs ${
-                      section === 'A'
-                        ? 'bg-blue-50 border border-blue-200 text-tef-blue'
-                        : 'bg-orange-50 border border-orange-200 text-orange-700'
-                    }`}>
+                    <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs bg-blue-50 border border-blue-200 text-tef-blue">
                       <span className="w-2 h-2 rounded-full bg-current inline-block animate-bounce" />
                       Interlocuteur répond…
                     </div>
@@ -1326,7 +1297,7 @@ export default function EOPage() {
       B1: 'from-yellow-500 to-amber-500', B2: 'from-green-500 to-emerald-500',
       C1: 'from-blue-600 to-tef-blue', C2: 'from-purple-600 to-purple-700',
     }
-    const cecrlGrad = result ? (CECRL_GRADIENT[result.globalCecrlLevel] ?? 'from-orange-500 to-amber-500') : 'from-gray-400 to-gray-500'
+    const cecrlGrad = result ? (CECRL_GRADIENT[result.globalCecrlLevel] ?? 'from-blue-600 to-tef-blue') : 'from-gray-400 to-gray-500'
 
     return (
       <div className="min-h-screen bg-gray-50">
@@ -1366,7 +1337,7 @@ export default function EOPage() {
               <div className="grid grid-cols-2 gap-4">
                 {[
                   { label: 'Section A', sub: 'Obtenir des informations', score: result.sectionA, color: 'from-blue-600 to-tef-blue' },
-                  { label: 'Section B', sub: 'Présenter et convaincre', score: result.sectionB, color: 'from-orange-500 to-amber-500' },
+                  { label: 'Section B', sub: 'Présenter et convaincre', score: result.sectionB, color: 'from-blue-600 to-blue-700' },
                 ].map(({ label, sub, score, color }) => (
                   <div key={label} className={`bg-gradient-to-br ${color} rounded-xl p-4 text-white`}>
                     <p className="text-white/70 text-[11px] font-semibold uppercase tracking-wide">{label}</p>
@@ -1460,7 +1431,7 @@ export default function EOPage() {
     return (
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
-        <div className="bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-400 text-white">
+        <div className="bg-gradient-to-br from-tef-blue via-blue-700 to-blue-600 text-white">
           <div className="max-w-2xl mx-auto px-4 py-8 text-center">
             <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-3">🎤</div>
             <h1 className="text-2xl font-extrabold">Expression Orale</h1>
@@ -1491,21 +1462,21 @@ export default function EOPage() {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-orange-100 shadow-sm overflow-hidden">
-              <div className="bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-3">
+            <div className="bg-white rounded-2xl border border-blue-100 shadow-sm overflow-hidden">
+              <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3">
                 <p className="text-white font-extrabold text-sm">Section B</p>
                 <p className="text-white/70 text-xs">Présenter et convaincre</p>
               </div>
               <div className="p-4 space-y-2">
                 <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <span className="w-5 h-5 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-bold text-[10px] flex-shrink-0">B</span>
+                  <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-[10px] flex-shrink-0">B</span>
                   Lisez l&apos;annonce et préparez-vous (60 s)
                 </div>
                 <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <span className="w-5 h-5 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-bold text-[10px] flex-shrink-0">10'</span>
+                  <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-[10px] flex-shrink-0">10'</span>
                   Présentez et convainquez un(e) ami(e) IA
                 </div>
-                <p className="text-xs text-orange-600 font-semibold mt-1">
+                <p className="text-xs text-blue-600 font-semibold mt-1">
                   👕 Registre informel · tutoiement · 3+ arguments
                 </p>
               </div>
@@ -1527,7 +1498,7 @@ export default function EOPage() {
           <div className="text-center">
             <button
               onClick={() => setStep('prepA')}
-              className="px-8 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-extrabold rounded-xl hover:opacity-90 transition-opacity shadow-sm"
+              className="px-8 py-3 bg-gradient-to-r from-tef-blue to-blue-600 text-white font-extrabold rounded-xl hover:opacity-90 transition-opacity shadow-sm"
             >
               Commencer l&apos;épreuve →
             </button>
@@ -1709,7 +1680,7 @@ export default function EOPage() {
           <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <span className="inline-block px-3 py-1 bg-orange-500 text-white text-xs font-semibold rounded-full mb-3">
+                <span className="inline-block px-3 py-1 bg-tef-blue text-white text-xs font-semibold rounded-full mb-3">
                   Section B — Préparation
                 </span>
                 <h1 className="text-xl font-bold text-gray-900">Lisez l&apos;annonce suivante</h1>
@@ -1727,7 +1698,7 @@ export default function EOPage() {
                 <SectionDocument
                   section={sectionB}
                   consigne={sectionB.consigne}
-                  consigneColor="orange"
+                  consigneColor="blue"
                 />
               </div>
               <div className="flex-shrink-0 flex flex-col items-center justify-center lg:pt-4">
