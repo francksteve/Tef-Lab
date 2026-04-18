@@ -214,54 +214,73 @@ function EOSectionCard({
   score: SectionScore
   extraInfo?: string
 }) {
+  const isA = label.includes('Section A') || label.includes('informations')
+  const accentBg = isA ? 'bg-blue-50 border-blue-100' : 'bg-orange-50 border-orange-100'
+  const accentText = isA ? 'text-tef-blue' : 'text-orange-600'
+  const accentIcon = isA ? '🎙️' : '💬'
+
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-5 space-y-3">
-      <div className="flex items-center justify-between">
-        <h3 className="font-semibold text-gray-900 text-sm">{label}</h3>
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      {/* Header */}
+      <div className={`px-4 py-3 border-b flex items-center justify-between gap-2 ${accentBg}`}>
         <div className="flex items-center gap-2">
-          <span className="text-xl font-black text-tef-blue">{score.score}/100</span>
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-tef-blue/10 text-tef-blue">
-            {score.cecrlLevel}
-          </span>
+          <span className="text-base">{accentIcon}</span>
+          <p className={`font-extrabold text-xs ${accentText}`}>{label}</p>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <span className={`text-xl font-black ${accentText}`}>{score.score}<span className="text-sm text-gray-300">/100</span></span>
+          <span className={`text-xs font-extrabold px-2.5 py-0.5 rounded-full ${
+            isA ? 'bg-tef-blue text-white' : 'bg-orange-500 text-white'
+          }`}>{score.cecrlLevel}</span>
         </div>
       </div>
-      {extraInfo && <p className="text-xs text-gray-500 italic">{extraInfo}</p>}
-      {score.registreAdapte !== undefined && (
-        <p
-          className={`text-xs font-medium ${
-            score.registreAdapte ? 'text-green-600' : 'text-orange-600'
-          }`}
-        >
-          {score.registreAdapte ? '✓ Registre adapté' : '⚠ Registre à ajuster'}
-        </p>
-      )}
-      <p className="text-sm text-gray-700 leading-relaxed">{score.feedback}</p>
-      {score.strengths.length > 0 && (
-        <div>
-          <p className="text-xs font-semibold text-green-700 mb-1">Points forts</p>
-          <ul className="space-y-1">
-            {score.strengths.map((s, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
-                <span className="text-green-500 mt-0.5">✓</span>
-                {s}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {score.improvements.length > 0 && (
-        <div>
-          <p className="text-xs font-semibold text-orange-700 mb-1">Axes d&apos;amélioration</p>
-          <ul className="space-y-1">
-            {score.improvements.map((s, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
-                <span className="text-orange-500 mt-0.5">→</span>
-                {s}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+
+      <div className="p-4 space-y-3">
+        {extraInfo && (
+          <p className={`text-xs font-semibold ${accentText} flex items-center gap-1`}>
+            <span>📊</span> {extraInfo}
+          </p>
+        )}
+        {score.registreAdapte !== undefined && (
+          <p className={`text-xs font-semibold flex items-center gap-1 ${
+            score.registreAdapte ? 'text-emerald-600' : 'text-orange-600'
+          }`}>
+            {score.registreAdapte ? '✅ Registre adapté' : '⚠️ Registre à ajuster'}
+          </p>
+        )}
+        <p className="text-sm text-gray-700 leading-relaxed">{score.feedback}</p>
+
+        {score.strengths.length > 0 && (
+          <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-100">
+            <p className="text-xs font-extrabold text-emerald-700 mb-2 flex items-center gap-1">
+              <span>✅</span> Points forts
+            </p>
+            <ul className="space-y-1">
+              {score.strengths.map((s, i) => (
+                <li key={i} className="flex items-start gap-2 text-xs text-emerald-800">
+                  <span className="text-emerald-500 mt-0.5 flex-shrink-0">•</span>
+                  {s}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {score.improvements.length > 0 && (
+          <div className="bg-orange-50 rounded-xl p-3 border border-orange-100">
+            <p className="text-xs font-extrabold text-orange-700 mb-2 flex items-center gap-1">
+              <span>💡</span> À améliorer
+            </p>
+            <ul className="space-y-1">
+              {score.improvements.map((s, i) => (
+                <li key={i} className="flex items-start gap-2 text-xs text-orange-800">
+                  <span className="text-orange-500 mt-0.5 flex-shrink-0">→</span>
+                  {s}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
@@ -1247,20 +1266,24 @@ export default function EOPage() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-400">Chargement…</p>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center space-y-3">
+          <div className="w-10 h-10 border-4 border-tef-blue border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-gray-400 text-sm">Chargement de la série…</p>
+        </div>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 font-semibold mb-2">{error}</p>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+        <div className="bg-white rounded-2xl border border-red-100 shadow-sm p-8 text-center max-w-sm w-full space-y-4">
+          <div className="text-4xl">❌</div>
+          <p className="font-bold text-gray-800">{error}</p>
           <button
             onClick={() => router.push('/dashboard')}
-            className="px-4 py-2 bg-tef-blue text-white rounded-lg text-sm"
+            className="px-5 py-2.5 bg-tef-blue text-white font-semibold rounded-xl text-sm hover:bg-tef-blue-hover transition-colors"
           >
             Retour au tableau de bord
           </button>
@@ -1273,10 +1296,21 @@ export default function EOPage() {
 
   if (step === 'scoring') {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <div className="w-12 h-12 border-4 border-tef-blue border-t-transparent rounded-full animate-spin" />
-        <p className="text-gray-600 font-semibold">Correction par IA en cours…</p>
-        <p className="text-gray-400 text-sm">Cela peut prendre quelques secondes.</p>
+      <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-gray-50 px-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-10 text-center max-w-sm w-full space-y-5">
+          <div className="w-16 h-16 bg-tef-blue/10 rounded-2xl flex items-center justify-center mx-auto">
+            <div className="w-8 h-8 border-4 border-tef-blue border-t-transparent rounded-full animate-spin" />
+          </div>
+          <div>
+            <p className="font-extrabold text-gray-800 text-lg">Correction en cours…</p>
+            <p className="text-gray-400 text-sm mt-1">L&apos;IA analyse vos deux sections.</p>
+          </div>
+          <div className="flex gap-1 justify-center">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="w-2 h-2 rounded-full bg-tef-blue animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+            ))}
+          </div>
+        </div>
       </div>
     )
   }
@@ -1285,74 +1319,93 @@ export default function EOPage() {
 
   if (step === 'results') {
     const buildTranscript = (h: DialogueTurn[]) =>
-      h
-        .map(
-          (t) =>
-            `${t.role === 'user' ? 'Vous' : 'Interlocuteur'}: ${t.content}`
-        )
-        .join('\n')
+      h.map((t) => `${t.role === 'user' ? 'Vous' : 'Interlocuteur'}: ${t.content}`).join('\n')
+
+    const CECRL_GRADIENT: Record<string, string> = {
+      A1: 'from-red-500 to-red-600', A2: 'from-orange-500 to-orange-600',
+      B1: 'from-yellow-500 to-amber-500', B2: 'from-green-500 to-emerald-500',
+      C1: 'from-blue-600 to-tef-blue', C2: 'from-purple-600 to-purple-700',
+    }
+    const cecrlGrad = result ? (CECRL_GRADIENT[result.globalCecrlLevel] ?? 'from-orange-500 to-amber-500') : 'from-gray-400 to-gray-500'
 
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
-          <div className="text-center">
-            <h1 className="text-2xl font-extrabold text-gray-900">
-              Résultats — Expression Orale
-            </h1>
-            <p className="text-gray-500 text-sm mt-1">{series?.title}</p>
+        {/* Results hero */}
+        <div className={`bg-gradient-to-br ${cecrlGrad} text-white`}>
+          <div className="max-w-3xl mx-auto px-4 py-8">
+            <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-4">
+              <div>
+                <p className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-1">Expression Orale</p>
+                <h1 className="text-2xl font-extrabold">{series?.title}</h1>
+                <p className="text-white/70 text-sm mt-1">Correction par intelligence artificielle</p>
+              </div>
+              {result && (
+                <div className="text-center bg-white/15 rounded-2xl px-6 py-4 border border-white/20">
+                  <div className="text-5xl font-black text-white leading-none">
+                    {result.globalScore}<span className="text-xl text-white/60">/100</span>
+                  </div>
+                  <div className="text-2xl font-extrabold text-white mt-1">{result.globalCecrlLevel}</div>
+                  <div className="text-white/60 text-xs mt-0.5">Score global · Niveau CECRL</div>
+                </div>
+              )}
+            </div>
           </div>
+        </div>
 
+        <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
           {aiError && (
-            <div className="bg-orange-50 border border-orange-200 text-orange-700 px-4 py-3 rounded-lg text-sm">
+            <div className="bg-orange-50 border border-orange-200 text-orange-700 px-4 py-3 rounded-xl text-sm flex items-start gap-2">
+              <span className="text-lg flex-shrink-0">⚠️</span>
               {aiError}
             </div>
           )}
 
-          {/* AI results */}
           {result && (
             <>
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
-                <p className="text-5xl font-black text-tef-blue mb-2">
-                  {result.globalScore}
-                  <span className="text-2xl text-gray-400">/100</span>
-                </p>
-                <p className="text-2xl font-bold text-tef-red">{result.globalCecrlLevel}</p>
-                <p className="text-sm text-gray-500 mt-1">Score global / Niveau CECRL</p>
+              {/* Section score summary */}
+              <div className="grid grid-cols-2 gap-4">
+                {[
+                  { label: 'Section A', sub: 'Obtenir des informations', score: result.sectionA, color: 'from-blue-600 to-tef-blue' },
+                  { label: 'Section B', sub: 'Présenter et convaincre', score: result.sectionB, color: 'from-orange-500 to-amber-500' },
+                ].map(({ label, sub, score, color }) => (
+                  <div key={label} className={`bg-gradient-to-br ${color} rounded-xl p-4 text-white`}>
+                    <p className="text-white/70 text-[11px] font-semibold uppercase tracking-wide">{label}</p>
+                    <p className="font-bold text-sm mt-0.5 leading-tight">{sub}</p>
+                    <div className="mt-2 flex items-end gap-2">
+                      <span className="text-3xl font-black leading-none">{score.score}</span>
+                      <span className="text-white/60 text-sm mb-0.5">/100 · {score.cecrlLevel}</span>
+                    </div>
+                  </div>
+                ))}
               </div>
 
               <div className="grid sm:grid-cols-2 gap-4">
                 <EOSectionCard
                   label="Section A — Obtenir des informations"
                   score={result.sectionA}
-                  extraInfo={
-                    result.sectionA.nbQuestionsDetectees !== undefined
-                      ? `${result.sectionA.nbQuestionsDetectees} question(s) détectée(s)`
-                      : undefined
-                  }
+                  extraInfo={result.sectionA.nbQuestionsDetectees !== undefined
+                    ? `${result.sectionA.nbQuestionsDetectees} question(s) détectée(s)` : undefined}
                 />
                 <EOSectionCard
                   label="Section B — Présenter et convaincre"
                   score={result.sectionB}
-                  extraInfo={
-                    result.sectionB.argumentsDetectes !== undefined
-                      ? `${result.sectionB.argumentsDetectes} argument(s) détecté(s)`
-                      : undefined
-                  }
+                  extraInfo={result.sectionB.argumentsDetectes !== undefined
+                    ? `${result.sectionB.argumentsDetectes} argument(s) détecté(s)` : undefined}
                 />
               </div>
 
               {(result.pronunciation || result.lexique) && (
-                <div className="bg-white rounded-xl border border-gray-100 p-5 space-y-3">
-                  <h3 className="font-semibold text-gray-900">Commentaires généraux</h3>
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
+                  <h3 className="font-extrabold text-gray-900">Commentaires généraux</h3>
                   {result.pronunciation && (
-                    <div>
-                      <p className="text-xs font-semibold text-gray-500 mb-1">Prononciation & Fluidité</p>
+                    <div className="bg-blue-50 rounded-xl p-3 border border-blue-100">
+                      <p className="text-xs font-extrabold text-blue-700 mb-1">🗣️ Prononciation & Fluidité</p>
                       <p className="text-sm text-gray-700">{result.pronunciation}</p>
                     </div>
                   )}
                   {result.lexique && (
-                    <div>
-                      <p className="text-xs font-semibold text-gray-500 mb-1">Lexique & Grammaire</p>
+                    <div className="bg-purple-50 rounded-xl p-3 border border-purple-100">
+                      <p className="text-xs font-extrabold text-purple-700 mb-1">📚 Lexique & Grammaire</p>
                       <p className="text-sm text-gray-700">{result.lexique}</p>
                     </div>
                   )}
@@ -1361,28 +1414,26 @@ export default function EOPage() {
             </>
           )}
 
-          {/* Conversation transcripts */}
+          {/* Transcripts */}
           {(historyA.length > 0 || historyB.length > 0) && (
-            <div className="space-y-4">
-              <h2 className="text-lg font-bold text-gray-900">Transcriptions de dialogue</h2>
-
+            <div className="space-y-3">
+              <h2 className="text-base font-extrabold text-gray-900">📄 Transcriptions</h2>
               {historyA.length > 0 && (
-                <details className="bg-white rounded-xl border border-gray-100 p-5">
-                  <summary className="font-semibold text-gray-800 cursor-pointer">
-                    Section A — Obtenir des informations
+                <details className="bg-white rounded-xl border border-gray-100 shadow-sm">
+                  <summary className="px-5 py-4 font-semibold text-gray-800 cursor-pointer text-sm hover:bg-gray-50 rounded-xl transition-colors">
+                    Section A — Obtenir des informations ({historyA.length} répliques)
                   </summary>
-                  <pre className="mt-3 text-xs text-gray-600 whitespace-pre-wrap leading-relaxed font-sans">
+                  <pre className="px-5 pb-4 text-xs text-gray-600 whitespace-pre-wrap leading-relaxed font-sans border-t border-gray-50 pt-3">
                     {buildTranscript(historyA)}
                   </pre>
                 </details>
               )}
-
               {historyB.length > 0 && (
-                <details className="bg-white rounded-xl border border-gray-100 p-5">
-                  <summary className="font-semibold text-gray-800 cursor-pointer">
-                    Section B — Présenter et convaincre
+                <details className="bg-white rounded-xl border border-gray-100 shadow-sm">
+                  <summary className="px-5 py-4 font-semibold text-gray-800 cursor-pointer text-sm hover:bg-gray-50 rounded-xl transition-colors">
+                    Section B — Présenter et convaincre ({historyB.length} répliques)
                   </summary>
-                  <pre className="mt-3 text-xs text-gray-600 whitespace-pre-wrap leading-relaxed font-sans">
+                  <pre className="px-5 pb-4 text-xs text-gray-600 whitespace-pre-wrap leading-relaxed font-sans border-t border-gray-50 pt-3">
                     {buildTranscript(historyB)}
                   </pre>
                 </details>
@@ -1390,12 +1441,12 @@ export default function EOPage() {
             </div>
           )}
 
-          <div className="flex justify-center">
+          <div className="flex justify-center pt-2">
             <button
               onClick={() => router.push('/dashboard')}
-              className="px-6 py-3 bg-gray-700 text-white font-semibold rounded-lg hover:bg-gray-800 transition-colors"
+              className="px-8 py-3 bg-tef-blue text-white font-bold rounded-xl hover:bg-tef-blue-hover transition-colors shadow-sm"
             >
-              Retour au tableau de bord
+              Retour au tableau de bord →
             </button>
           </div>
         </div>
@@ -1408,65 +1459,78 @@ export default function EOPage() {
   if (step === 'intro') {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="max-w-2xl mx-auto px-4 py-8 space-y-8">
-          <div className="text-center">
-            <h1 className="text-2xl font-extrabold text-gray-900">Expression Orale</h1>
-            <p className="text-gray-500 text-sm mt-1">{series?.title}</p>
+        {/* Header */}
+        <div className="bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-400 text-white">
+          <div className="max-w-2xl mx-auto px-4 py-8 text-center">
+            <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-3">🎤</div>
+            <h1 className="text-2xl font-extrabold">Expression Orale</h1>
+            <p className="text-white/80 text-sm mt-1">{series?.title} · 15 minutes · 2 sections</p>
+          </div>
+        </div>
+
+        <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
+          {/* Sections */}
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="bg-white rounded-2xl border border-blue-100 shadow-sm overflow-hidden">
+              <div className="bg-gradient-to-r from-blue-600 to-tef-blue px-4 py-3">
+                <p className="text-white font-extrabold text-sm">Section A</p>
+                <p className="text-white/70 text-xs">Obtenir des informations</p>
+              </div>
+              <div className="p-4 space-y-2">
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <span className="w-5 h-5 rounded-full bg-blue-100 text-tef-blue flex items-center justify-center font-bold text-[10px] flex-shrink-0">A</span>
+                  Préparez votre appel téléphonique (30 s)
+                </div>
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <span className="w-5 h-5 rounded-full bg-blue-100 text-tef-blue flex items-center justify-center font-bold text-[10px] flex-shrink-0">5'</span>
+                  Dialogue en direct avec l&apos;interlocuteur IA
+                </div>
+                <p className="text-xs text-blue-600 font-semibold mt-1">
+                  🎩 Registre formel · vouvoiement · ~10 questions
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-orange-100 shadow-sm overflow-hidden">
+              <div className="bg-gradient-to-r from-orange-500 to-amber-500 px-4 py-3">
+                <p className="text-white font-extrabold text-sm">Section B</p>
+                <p className="text-white/70 text-xs">Présenter et convaincre</p>
+              </div>
+              <div className="p-4 space-y-2">
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <span className="w-5 h-5 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-bold text-[10px] flex-shrink-0">B</span>
+                  Lisez l&apos;annonce et préparez-vous (60 s)
+                </div>
+                <div className="flex items-center gap-2 text-xs text-gray-500">
+                  <span className="w-5 h-5 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center font-bold text-[10px] flex-shrink-0">10'</span>
+                  Présentez et convainquez un(e) ami(e) IA
+                </div>
+                <p className="text-xs text-orange-600 font-semibold mt-1">
+                  👕 Registre informel · tutoiement · 3+ arguments
+                </p>
+              </div>
+            </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 space-y-6">
-            <h2 className="text-lg font-bold text-gray-900 text-center">
-              Présentation de l&apos;épreuve
-            </h2>
+          {/* Tips */}
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-1.5">
+            <p className="text-xs font-extrabold text-amber-800 mb-2">Avant de commencer :</p>
+            {[
+              '🎙️ Activez votre microphone — la voix est recommandée',
+              '🌐 Utilisez Chrome ou Edge pour la reconnaissance vocale',
+              '🔇 Placez-vous dans un endroit calme pour de meilleurs résultats',
+            ].map((tip) => (
+              <p key={tip} className="text-xs text-amber-800">{tip}</p>
+            ))}
+          </div>
 
-            <div className="space-y-4">
-              <div className="flex gap-4 p-4 bg-blue-50 rounded-xl">
-                <span className="text-2xl">🎤</span>
-                <div>
-                  <p className="font-semibold text-tef-blue text-sm">
-                    Section A — Obtenir des informations
-                  </p>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Vous lisez une annonce, puis échangez en direct avec un interlocuteur IA.
-                    Posez une dizaine de questions pour obtenir des informations.
-                  </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Préparation : 30 s · Dialogue : 5 min · Registre formel (vouvoiement)
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex gap-4 p-4 bg-orange-50 rounded-xl">
-                <span className="text-2xl">💬</span>
-                <div>
-                  <p className="font-semibold text-orange-700 text-sm">
-                    Section B — Présenter et convaincre
-                  </p>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Vous lisez une nouvelle annonce, puis la présentez à un(e) ami(e) IA
-                    et essayez de le / la convaincre d&apos;y participer.
-                  </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    Préparation : 60 s · Dialogue : 10 min · Registre informel (tutoiement)
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-yellow-800 space-y-1">
-              <p>🎙️ Activez votre microphone avant de commencer.</p>
-              <p>🌐 La reconnaissance vocale fonctionne sur Chrome et Edge.</p>
-              <p>🔇 Placez-vous dans un endroit calme pour de meilleurs résultats.</p>
-            </div>
-
-            <div className="text-center">
-              <button
-                onClick={() => setStep('prepA')}
-                className="px-8 py-3 bg-tef-blue text-white font-semibold rounded-lg hover:bg-tef-blue-hover transition-colors"
-              >
-                Commencer l&apos;épreuve →
-              </button>
-            </div>
+          <div className="text-center">
+            <button
+              onClick={() => setStep('prepA')}
+              className="px-8 py-3 bg-gradient-to-r from-orange-500 to-amber-500 text-white font-extrabold rounded-xl hover:opacity-90 transition-opacity shadow-sm"
+            >
+              Commencer l&apos;épreuve →
+            </button>
           </div>
         </div>
       </div>
