@@ -56,15 +56,23 @@ STRUCTURE OBLIGATOIRE de la lettre :
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 BARÈME DE NOTATION (score sur 100)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-- A1 : 0–24  (très faible, nombreuses erreurs bloquantes, hors sujet)
-- A2 : 25–44 (faible, structures simples, erreurs fréquentes)
-- B1 : 45–59 (moyen, compréhensible, quelques erreurs mais idées présentes)
-- B2 : 60–74 (bon, argumentation claire, vocabulaire varié, erreurs mineures)
-- C1 : 75–89 (très bon, riche, structuré, syntaxe élaborée, peu d'erreurs)
-- C2 : 90–100 (excellent, production quasi parfaite, style soutenu)
+- A1 : 0–19  (très faible, nombreuses erreurs bloquantes, hors sujet)
+- A2 : 20–39 (faible, structures simples, erreurs fréquentes)
+- B1 : 40–54 (moyen, compréhensible, quelques erreurs mais idées présentes)
+- B2 : 55–69 (bon, argumentation claire, vocabulaire varié, erreurs mineures)
+- C1 : 70–84 (très bon, riche, structuré, syntaxe élaborée, peu d'erreurs)
+- C2 : 85–100 (excellent, production très aboutie, style soutenu)
 
-Le score doit être COHÉRENT avec le niveau CECRL : un B2 = entre 60 et 74, un C1 = entre 75 et 89, etc.
+Le score doit être COHÉRENT avec le niveau CECRL : un B2 = entre 55 et 69, un C1 = entre 70 et 84, etc.
 Le globalScore est la moyenne pondérée : tâche 1 = 40%, tâche 2 = 60%.
+
+PRINCIPES D'ÉVALUATION BIENVEILLANTE (à appliquer systématiquement) :
+→ Évalue ce que le candidat SAIT FAIRE, pas uniquement ce qu'il ne maîtrise pas encore.
+→ En cas de doute entre deux niveaux, accorde le niveau supérieur.
+→ Récompense la prise de risque lexicale et syntaxique même si des erreurs subsistent.
+→ Valorise la communication réussie : si le message est clair et le sujet traité, c'est un point fort.
+→ Ne pénalise pas deux fois la même erreur récurrente.
+→ Les erreurs mineures d'orthographe ou d'accord isolées ne doivent pas faire baisser le score d'un niveau entier.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ANNOTATION PÉDAGOGIQUE (annotatedText) — les deux tâches
@@ -235,14 +243,23 @@ Richesse et maîtrise de la langue orale :
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 BARÈME CECRL (score sur 100)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-A1 : 0–24   — très faible, phrases isolées, communication bloquée
-A2 : 25–44  — faible, structures simples, communication difficile
-B1 : 45–59  — moyen, compréhensible, idées présentes, quelques lacunes
-B2 : 60–74  — bon, aisé, vocabulaire varié, erreurs mineures
-C1 : 75–89  — très bon, fluide, riche, syntaxe élaborée
-C2 : 90–100 — excellent, maîtrise quasi parfaite, registre soutenu
+A1 : 0–19   — très faible, phrases isolées, communication bloquée
+A2 : 20–39  — faible, structures simples, communication difficile
+B1 : 40–54  — moyen, compréhensible, idées présentes, quelques lacunes
+B2 : 55–69  — bon, aisé, vocabulaire varié, erreurs mineures
+C1 : 70–84  — très bon, fluide, riche, syntaxe élaborée
+C2 : 85–100 — excellent, maîtrise très aboutie, registre soutenu
 
 Score global = moyenne pondérée : Section A 40 % + Section B 60 %.
+
+PRINCIPES D'ÉVALUATION BIENVEILLANTE (à appliquer systématiquement) :
+→ Évalue ce que le candidat SAIT FAIRE, pas uniquement ce qu'il ne maîtrise pas encore.
+→ En cas de doute entre deux niveaux, accorde le niveau supérieur.
+→ Récompense la prise de risque communicative même si des erreurs subsistent.
+→ La reconnaissance vocale peut introduire des erreurs de transcription : ignore-les totalement.
+→ Si la communication orale est fluide et le message clairement transmis, c'est un point fort.
+→ Ne pénalise pas deux fois la même hésitation ou le même type d'erreur.
+→ Les candidats en préparation au TEF Canada ont souvent un niveau oral en cours de développement : valorise les progrès et les acquis.
 
 Retourne UNIQUEMENT un JSON valide (sans balises markdown) :
 {
