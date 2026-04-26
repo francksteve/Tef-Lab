@@ -18,7 +18,8 @@ interface Series {
 
 interface SectionScore {
   cecrlLevel: string
-  score: number
+  nclcLevel?: number   // 0–12
+  score: number        // sur 225
   feedback: string
   nbQuestionsDetectees?: number
   argumentsDetectes?: number
@@ -31,7 +32,8 @@ interface EOResult {
   sectionA: SectionScore
   sectionB: SectionScore
   globalCecrlLevel: string
-  globalScore: number
+  globalNclcLevel?: number  // 0–12
+  globalScore: number       // sur 450
   pronunciation?: string
   lexique?: string
 }
@@ -215,10 +217,13 @@ function EOSectionCard({
           <p className={`font-extrabold text-xs ${accentText}`}>{label}</p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
-          <span className={`text-xl font-black ${accentText}`}>{score.score}<span className="text-sm text-gray-300">/100</span></span>
-          <span className={`text-xs font-extrabold px-2.5 py-0.5 rounded-full ${
-            'bg-tef-blue text-white'
-          }`}>{score.cecrlLevel}</span>
+          <span className={`text-xl font-black ${accentText}`}>{score.score}<span className="text-sm text-gray-300">/225</span></span>
+          <div className="flex flex-col items-end gap-0.5">
+            <span className="text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-tef-blue text-white">{score.cecrlLevel}</span>
+            {score.nclcLevel !== undefined && (
+              <span className="text-[10px] font-bold text-blue-400">NCLC {score.nclcLevel}</span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -1313,10 +1318,15 @@ export default function EOPage() {
               {result && (
                 <div className="text-center bg-white/15 rounded-2xl px-6 py-4 border border-white/20">
                   <div className="text-5xl font-black text-white leading-none">
-                    {result.globalScore}<span className="text-xl text-white/60">/100</span>
+                    {result.globalScore}<span className="text-xl text-white/60">/450</span>
                   </div>
                   <div className="text-2xl font-extrabold text-white mt-1">{result.globalCecrlLevel}</div>
-                  <div className="text-white/60 text-xs mt-0.5">Score global · Niveau CECRL</div>
+                  {result.globalNclcLevel !== undefined && (
+                    <div className="mt-1 inline-block bg-white/20 text-white text-xs font-bold px-2.5 py-0.5 rounded-full">
+                      NCLC {result.globalNclcLevel}
+                    </div>
+                  )}
+                  <div className="text-white/60 text-xs mt-1">Score global · Niveau CECRL</div>
                 </div>
               )}
             </div>
@@ -1344,7 +1354,13 @@ export default function EOPage() {
                     <p className="font-bold text-sm mt-0.5 leading-tight">{sub}</p>
                     <div className="mt-2 flex items-end gap-2">
                       <span className="text-3xl font-black leading-none">{score.score}</span>
-                      <span className="text-white/60 text-sm mb-0.5">/100 · {score.cecrlLevel}</span>
+                      <span className="text-white/60 text-sm mb-0.5">/225</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className="text-white/80 text-xs font-bold">{score.cecrlLevel}</span>
+                      {score.nclcLevel !== undefined && (
+                        <span className="bg-white/20 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">NCLC {score.nclcLevel}</span>
+                      )}
                     </div>
                   </div>
                 ))}

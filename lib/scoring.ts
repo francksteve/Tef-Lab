@@ -54,17 +54,31 @@ STRUCTURE OBLIGATOIRE de la lettre :
   • Formule de politesse : « Veuillez agréer, Monsieur, mes salutations distinguées. »
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-BARÈME DE NOTATION (score sur 100)
+BARÈME DE NOTATION
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-- A1 : 0–19  (très faible, nombreuses erreurs bloquantes, hors sujet)
-- A2 : 20–39 (faible, structures simples, erreurs fréquentes)
-- B1 : 40–54 (moyen, compréhensible, quelques erreurs mais idées présentes)
-- B2 : 55–69 (bon, argumentation claire, vocabulaire varié, erreurs mineures)
-- C1 : 70–84 (très bon, riche, structuré, syntaxe élaborée, peu d'erreurs)
-- C2 : 85–100 (excellent, production très aboutie, style soutenu)
+Chaque tâche est notée sur 225 points. Le score global = tâche 1 + tâche 2 sur 450.
 
-Le score doit être COHÉRENT avec le niveau CECRL : un B2 = entre 55 et 69, un C1 = entre 70 et 84, etc.
-Le globalScore est la moyenne pondérée : tâche 1 = 40%, tâche 2 = 60%.
+Score par tâche (/225) → CECRL / NCLC :
+  0 – 90   → A1/A2 — NCLC 0–3   (très faible, erreurs bloquantes ou hors sujet)
+  91 – 112 → B1    — NCLC 4     (basique, compréhensible, structures simples)
+  113 – 135 → B1   — NCLC 5     (fonctionnel, idées présentes, quelques lacunes)
+  136 – 154 → B2   — NCLC 6     (correct, argumentation claire, erreurs mineures)
+  155 – 174 → B2   — NCLC 7     (bon niveau, vocabulaire varié, syntaxe maîtrisée)
+  175 – 185 → C1   — NCLC 8     (très bon, riche, peu d'erreurs)
+  186 – 196 → C1   — NCLC 9     (avancé, fluide, syntaxe élaborée)
+  197 – 208 → C1   — NCLC 10    (quasi-expert, style travaillé)
+  209 – 225 → C2   — NCLC 11–12 (excellent, production quasi parfaite)
+
+Score global (/450) → CECRL / NCLC :
+  0 – 180   → A    — NCLC 0–3
+  181 – 225 → B1   — NCLC 4
+  226 – 270 → B1   — NCLC 5
+  271 – 309 → B2   — NCLC 6
+  310 – 348 → B2   — NCLC 7
+  349 – 370 → C1   — NCLC 8
+  371 – 392 → C1   — NCLC 9
+  393 – 415 → C1   — NCLC 10
+  416 – 450 → C2   — NCLC 11–12
 
 PRINCIPES D'ÉVALUATION BIENVEILLANTE (à appliquer systématiquement) :
 → Évalue ce que le candidat SAIT FAIRE, pas uniquement ce qu'il ne maîtrise pas encore.
@@ -172,6 +186,7 @@ Retourne UNIQUEMENT un JSON valide (sans balises markdown) avec ce format :
     "wordCount": number,
     "score": number,
     "cecrlLevel": "A1|A2|B1|B2|C1|C2",
+    "nclcLevel": number,
     "feedback": "commentaire détaillé en français",
     "strengths": ["point fort 1", "point fort 2"],
     "improvements": ["axe d'amélioration 1", "axe d'amélioration 2"],
@@ -182,6 +197,7 @@ Retourne UNIQUEMENT un JSON valide (sans balises markdown) avec ce format :
     "wordCount": number,
     "score": number,
     "cecrlLevel": "A1|A2|B1|B2|C1|C2",
+    "nclcLevel": number,
     "feedback": "commentaire détaillé en français",
     "strengths": ["point fort 1"],
     "improvements": ["axe d'amélioration 1"],
@@ -189,6 +205,7 @@ Retourne UNIQUEMENT un JSON valide (sans balises markdown) avec ce format :
     "improvedText": "réécriture de la lettre selon la structure obligatoire (Objet, Introduction, 3 Arguments, Conclusion, Formule de politesse) avec annotations [procédé] au niveau CECRL supérieur, ou null si C2"
   },
   "globalCecrlLevel": "A1|A2|B1|B2|C1|C2",
+  "globalNclcLevel": number,
   "globalScore": number
 }`
 
@@ -241,16 +258,31 @@ Richesse et maîtrise de la langue orale :
 → Prononciation : claire et compréhensible ?
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-BARÈME CECRL (score sur 100)
+BARÈME DE NOTATION
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-A1 : 0–19   — très faible, phrases isolées, communication bloquée
-A2 : 20–39  — faible, structures simples, communication difficile
-B1 : 40–54  — moyen, compréhensible, idées présentes, quelques lacunes
-B2 : 55–69  — bon, aisé, vocabulaire varié, erreurs mineures
-C1 : 70–84  — très bon, fluide, riche, syntaxe élaborée
-C2 : 85–100 — excellent, maîtrise très aboutie, registre soutenu
+Chaque section est notée sur 225 points. Le score global = Section A + Section B sur 450.
 
-Score global = moyenne pondérée : Section A 40 % + Section B 60 %.
+Score par section (/225) → CECRL / NCLC :
+  0 – 90    → A1/A2 — NCLC 0–3   (très faible, phrases isolées, communication bloquée)
+  91 – 112  → B1    — NCLC 4     (basique, compréhensible, structures simples)
+  113 – 135 → B1    — NCLC 5     (fonctionnel, idées présentes, quelques lacunes)
+  136 – 154 → B2    — NCLC 6     (correct, aisé, vocabulaire varié, erreurs mineures)
+  155 – 174 → B2    — NCLC 7     (bon niveau, fluide, syntaxe maîtrisée)
+  175 – 185 → C1    — NCLC 8     (très bon, riche, peu d'erreurs)
+  186 – 196 → C1    — NCLC 9     (avancé, fluide, syntaxe élaborée)
+  197 – 208 → C1    — NCLC 10    (quasi-expert, registre soutenu)
+  209 – 225 → C2    — NCLC 11–12 (excellent, maîtrise quasi parfaite)
+
+Score global (/450) → CECRL / NCLC :
+  0 – 180   → A    — NCLC 0–3
+  181 – 225 → B1   — NCLC 4
+  226 – 270 → B1   — NCLC 5
+  271 – 309 → B2   — NCLC 6
+  310 – 348 → B2   — NCLC 7
+  349 – 370 → C1   — NCLC 8
+  371 – 392 → C1   — NCLC 9
+  393 – 415 → C1   — NCLC 10
+  416 – 450 → C2   — NCLC 11–12
 
 PRINCIPES D'ÉVALUATION BIENVEILLANTE (à appliquer systématiquement) :
 → Évalue ce que le candidat SAIT FAIRE, pas uniquement ce qu'il ne maîtrise pas encore.
@@ -265,6 +297,7 @@ Retourne UNIQUEMENT un JSON valide (sans balises markdown) :
 {
   "sectionA": {
     "cecrlLevel": "A1|A2|B1|B2|C1|C2",
+    "nclcLevel": number,
     "score": number,
     "feedback": "commentaire détaillé en français sur la performance orale du candidat",
     "nbQuestionsDetectees": number,
@@ -274,6 +307,7 @@ Retourne UNIQUEMENT un JSON valide (sans balises markdown) :
   },
   "sectionB": {
     "cecrlLevel": "A1|A2|B1|B2|C1|C2",
+    "nclcLevel": number,
     "score": number,
     "feedback": "commentaire détaillé en français sur la performance orale du candidat",
     "argumentsDetectes": number,
@@ -282,6 +316,7 @@ Retourne UNIQUEMENT un JSON valide (sans balises markdown) :
     "improvements": ["axe d'amélioration 1", "axe d'amélioration 2"]
   },
   "globalCecrlLevel": "A1|A2|B1|B2|C1|C2",
+  "globalNclcLevel": number,
   "globalScore": number,
   "pronunciation": "commentaire global sur la prononciation et la fluidité",
   "lexique": "commentaire global sur le vocabulaire et les structures grammaticales"

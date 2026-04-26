@@ -26,7 +26,8 @@ interface EEQuestion {
 
 interface TaskScore {
   wordCount: number
-  score: number
+  score: number        // sur 225
+  nclcLevel?: number   // 0–12
   cecrlLevel: string
   feedback: string
   strengths: string[]
@@ -39,7 +40,8 @@ interface EEResult {
   task1: TaskScore
   task2: TaskScore
   globalCecrlLevel: string
-  globalScore: number
+  globalNclcLevel?: number  // 0–12
+  globalScore: number       // sur 450
 }
 
 type PagePhase = 'task1' | 'task2' | 'submitting' | 'results'
@@ -259,10 +261,15 @@ export default function EEPage() {
               {result && (
                 <div className="text-center bg-white/15 rounded-2xl px-6 py-4 border border-white/20">
                   <div className="text-5xl font-black text-white leading-none">
-                    {result.globalScore}<span className="text-xl text-white/60">/100</span>
+                    {result.globalScore}<span className="text-xl text-white/60">/450</span>
                   </div>
                   <div className="text-2xl font-extrabold text-white mt-1">{result.globalCecrlLevel}</div>
-                  <div className="text-white/60 text-xs mt-0.5">Score global · Niveau CECRL</div>
+                  {result.globalNclcLevel !== undefined && (
+                    <div className="mt-1 inline-block bg-white/20 text-white text-xs font-bold px-2.5 py-0.5 rounded-full">
+                      NCLC {result.globalNclcLevel}
+                    </div>
+                  )}
+                  <div className="text-white/60 text-xs mt-1">Score global · Niveau CECRL</div>
                 </div>
               )}
             </div>
@@ -292,7 +299,13 @@ export default function EEPage() {
                       <p className="font-bold text-sm mt-0.5 leading-tight">{label}</p>
                       <div className="mt-2 flex items-end gap-2">
                         <span className="text-3xl font-black leading-none">{score.score}</span>
-                        <span className="text-white/60 text-sm mb-0.5">/100 · {score.cecrlLevel}</span>
+                        <span className="text-white/60 text-sm mb-0.5">/225</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-1">
+                        <span className="text-white/80 text-xs font-bold">{score.cecrlLevel}</span>
+                        {score.nclcLevel !== undefined && (
+                          <span className="bg-white/20 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">NCLC {score.nclcLevel}</span>
+                        )}
                       </div>
                     </div>
                   )
@@ -594,14 +607,19 @@ function TaskResultCard({ taskNumber, label, score }: { taskNumber: number; labe
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-2xl font-black text-tef-blue">{score.score}<span className="text-base text-gray-300">/100</span></span>
-          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-extrabold ${
-            CECRL_GRADIENT[score.cecrlLevel]
-              ? `bg-gradient-to-r ${CECRL_GRADIENT[score.cecrlLevel]} text-white`
-              : 'bg-tef-blue/10 text-tef-blue'
-          }`}>
-            {score.cecrlLevel}
-          </span>
+          <span className="text-2xl font-black text-tef-blue">{score.score}<span className="text-base text-gray-300">/225</span></span>
+          <div className="flex flex-col items-end gap-0.5">
+            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-extrabold ${
+              CECRL_GRADIENT[score.cecrlLevel]
+                ? `bg-gradient-to-r ${CECRL_GRADIENT[score.cecrlLevel]} text-white`
+                : 'bg-tef-blue/10 text-tef-blue'
+            }`}>
+              {score.cecrlLevel}
+            </span>
+            {score.nclcLevel !== undefined && (
+              <span className="text-[10px] font-bold text-gray-400">NCLC {score.nclcLevel}</span>
+            )}
+          </div>
         </div>
       </div>
 
