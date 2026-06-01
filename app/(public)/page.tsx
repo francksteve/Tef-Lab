@@ -57,9 +57,9 @@ export default function HomePage() {
           <div className="flex-1 bg-[#E30613]" />
         </div>
 
-        <div className="max-w-6xl mx-auto px-6 sm:px-10 py-20 sm:py-28 lg:py-32 pl-8 sm:pl-12">
+        <div className="max-w-6xl mx-auto px-6 sm:px-10 py-14 sm:py-20 pl-8 sm:pl-12">
           <div className="max-w-2xl">
-            <p className="text-white/50 text-xs font-semibold uppercase tracking-[0.2em] mb-5">
+            <p className="text-white/50 text-xs font-semibold uppercase tracking-[0.2em] mb-3">
               Test d&apos;Évaluation de Français · Reconnu IRCC
             </p>
             <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-black leading-[1.1] tracking-tight text-white">
@@ -67,11 +67,11 @@ export default function HomePage() {
               <span className="text-tef-red">TEF Canada</span><br />
               avec méthode.
             </h1>
-            <p className="mt-7 text-white/60 text-base sm:text-lg leading-relaxed max-w-xl">
+            <p className="mt-4 text-white/60 text-base leading-relaxed max-w-xl">
               Entraînement sur les 4 modules officiels, conditions réelles d&apos;examen,
               et correction par IA avec score NCLC instantané.
             </p>
-            <div className="mt-9 flex flex-col sm:flex-row gap-3">
+            <div className="mt-6 flex flex-col sm:flex-row gap-3">
               <Link
                 href="/inscription"
                 className="inline-flex items-center justify-center px-8 py-3.5 bg-tef-red hover:bg-red-700 text-white font-bold rounded-lg transition-colors text-sm tracking-wide"
@@ -88,7 +88,7 @@ export default function HomePage() {
                 Voir les tarifs
               </a>
             </div>
-            <div className="mt-10 flex flex-wrap gap-6">
+            <div className="mt-7 flex flex-wrap gap-6">
               {[
                 { n: '4', label: 'modules officiels' },
                 { n: '15+', label: 'séries CO' },
@@ -105,9 +105,9 @@ export default function HomePage() {
       </section>
 
       {/* ── MODULES ── */}
-      <section className="py-20 px-4 sm:px-6 bg-white">
+      <section className="py-12 px-4 sm:px-6 bg-white">
         <div className="max-w-6xl mx-auto">
-          <div className="mb-12">
+          <div className="mb-7">
             <p className="text-tef-red text-xs font-bold uppercase tracking-[0.15em] mb-2">Structure de l&apos;examen</p>
             <h2 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">Les 4 modules du TEF Canada</h2>
             <p className="text-gray-500 mt-3 max-w-xl text-sm leading-relaxed">
@@ -163,7 +163,7 @@ export default function HomePage() {
       </section>
 
       {/* ── LE TEF CANADA ── */}
-      <section className="py-20 px-4 sm:px-6 bg-gray-50 border-y border-gray-100">
+      <section className="py-10 px-4 sm:px-6 bg-gray-50 border-y border-gray-100">
         <div className="max-w-6xl mx-auto">
           <div className="grid sm:grid-cols-3 gap-6">
             {[
@@ -210,13 +210,13 @@ export default function HomePage() {
       </section>
 
       {/* ── COMMENT ÇA MARCHE ── */}
-      <section className="py-20 px-4 sm:px-6 bg-white">
+      <section className="py-12 px-4 sm:px-6 bg-white">
         <div className="max-w-6xl mx-auto">
-          <div className="mb-12">
+          <div className="mb-7">
             <p className="text-tef-red text-xs font-bold uppercase tracking-[0.15em] mb-2">Démarrage</p>
             <h2 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">Trois étapes pour commencer</h2>
           </div>
-          <div className="grid sm:grid-cols-3 gap-8">
+          <div className="grid sm:grid-cols-3 gap-6">
             {[
               {
                 n: '01',
@@ -247,7 +247,7 @@ export default function HomePage() {
               </div>
             ))}
           </div>
-          <div className="mt-12 pt-8 border-t border-gray-100">
+          <div className="mt-8 pt-6 border-t border-gray-100">
             <Link
               href="/inscription"
               className="inline-flex items-center gap-2 px-7 py-3.5 bg-tef-blue hover:bg-[#001F60] text-white font-bold rounded-lg transition-colors text-sm"
@@ -262,9 +262,9 @@ export default function HomePage() {
       </section>
 
       {/* ── PACKS ── */}
-      <section id="packs" className="py-20 px-4 sm:px-6 bg-gray-50 border-t border-gray-100">
+      <section id="packs" className="py-12 px-4 sm:px-6 bg-gray-50 border-t border-gray-100">
         <div className="max-w-6xl mx-auto">
-          <div className="mb-12">
+          <div className="mb-7">
             <p className="text-tef-red text-xs font-bold uppercase tracking-[0.15em] mb-2">Tarifs</p>
             <h2 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">Packs de préparation</h2>
             <p className="text-gray-500 mt-3 text-sm max-w-xl">
@@ -360,13 +360,13 @@ export default function HomePage() {
       </section>
 
       {/* ── ENGAGEMENTS ── */}
-      <section className="py-20 px-4 sm:px-6 bg-white border-t border-gray-100">
+      <section className="py-12 px-4 sm:px-6 bg-white border-t border-gray-100">
         <div className="max-w-6xl mx-auto">
-          <div className="mb-12">
+          <div className="mb-7">
             <p className="text-tef-red text-xs font-bold uppercase tracking-[0.15em] mb-2">Nos engagements</p>
             <h2 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">Pourquoi TEF-Lab ?</h2>
           </div>
-          <div className="grid sm:grid-cols-3 gap-8 border-t border-gray-100 pt-10">
+          <div className="grid sm:grid-cols-3 gap-7 border-t border-gray-100 pt-7">
             {[
               {
                 title: 'Structure authentique',
@@ -409,8 +409,8 @@ export default function HomePage() {
       </section>
 
       {/* ── CTA ── */}
-      <section className="py-16 px-4 sm:px-6 bg-[#001344]">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-8">
+      <section className="py-10 px-4 sm:px-6 bg-[#001344]">
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div>
             <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
               Accès gratuit, sans carte bancaire.
@@ -440,7 +440,7 @@ export default function HomePage() {
       </section>
 
       {/* ── CONTACT ── */}
-      <section className="py-12 px-4 sm:px-6 bg-[#001344] border-t border-white/5">
+      <section className="py-8 px-4 sm:px-6 bg-[#001344] border-t border-white/5">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-white/40 text-sm">Une question ? Notre équipe est disponible.</p>
           <div className="flex gap-3">
