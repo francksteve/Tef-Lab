@@ -48,17 +48,17 @@ const moduleIcons: Record<string, string> = {
 }
 
 const moduleGradients: Record<string, string> = {
-  CE: 'from-blue-600 to-blue-500',
-  CO: 'from-blue-600 to-blue-500',
-  EE: 'from-blue-600 to-blue-500',
-  EO: 'from-blue-500 to-blue-600',
+  CE: 'from-tef-blue to-[#001F60]',
+  CO: 'from-tef-blue to-[#001F60]',
+  EE: 'from-tef-red to-red-700',
+  EO: 'from-tef-red to-red-700',
 }
 
 const moduleAccentColors: Record<string, { ring: string; chip: string; chipText: string; chipHover: string; doneChip: string; doneText: string; iconBg: string; pillBg: string; pillText: string }> = {
-  CE: { ring: 'ring-blue-200', chip: 'border-gray-200 hover:border-blue-400 hover:text-blue-700', chipText: 'text-gray-700', chipHover: '', doneChip: 'bg-blue-50 border-blue-300 text-blue-800', doneText: 'text-blue-800', iconBg: 'bg-blue-600', pillBg: 'bg-blue-100', pillText: 'text-blue-700' },
-  CO: { ring: 'ring-blue-200', chip: 'border-gray-200 hover:border-blue-400 hover:text-blue-700', chipText: 'text-gray-700', chipHover: '', doneChip: 'bg-blue-50 border-blue-300 text-blue-800', doneText: 'text-blue-800', iconBg: 'bg-blue-600', pillBg: 'bg-blue-100', pillText: 'text-blue-700' },
-  EE: { ring: 'ring-blue-200', chip: 'border-gray-200 hover:border-blue-400 hover:text-blue-700', chipText: 'text-gray-700', chipHover: '', doneChip: 'bg-blue-50 border-blue-300 text-blue-800', doneText: 'text-blue-800', iconBg: 'bg-blue-600', pillBg: 'bg-blue-100', pillText: 'text-blue-700' },
-  EO: { ring: 'ring-blue-200', chip: 'border-gray-200 hover:border-blue-400 hover:text-blue-700', chipText: 'text-gray-700', chipHover: '', doneChip: 'bg-blue-50 border-blue-300 text-blue-800', doneText: 'text-blue-800', iconBg: 'bg-blue-600', pillBg: 'bg-blue-100', pillText: 'text-blue-700' },
+  CE: { ring: 'ring-blue-200', chip: 'border-gray-200 hover:border-tef-blue hover:text-tef-blue', chipText: 'text-gray-700', chipHover: '', doneChip: 'bg-tef-blue/10 border-tef-blue/30 text-tef-blue', doneText: 'text-tef-blue', iconBg: 'bg-tef-blue', pillBg: 'bg-tef-blue/10', pillText: 'text-tef-blue' },
+  CO: { ring: 'ring-blue-200', chip: 'border-gray-200 hover:border-tef-blue hover:text-tef-blue', chipText: 'text-gray-700', chipHover: '', doneChip: 'bg-tef-blue/10 border-tef-blue/30 text-tef-blue', doneText: 'text-tef-blue', iconBg: 'bg-tef-blue', pillBg: 'bg-tef-blue/10', pillText: 'text-tef-blue' },
+  EE: { ring: 'ring-red-200', chip: 'border-gray-200 hover:border-tef-red hover:text-tef-red', chipText: 'text-gray-700', chipHover: '', doneChip: 'bg-red-50 border-red-300 text-red-700', doneText: 'text-red-700', iconBg: 'bg-tef-red', pillBg: 'bg-red-50', pillText: 'text-red-600' },
+  EO: { ring: 'ring-red-200', chip: 'border-gray-200 hover:border-tef-red hover:text-tef-red', chipText: 'text-gray-700', chipHover: '', doneChip: 'bg-red-50 border-red-300 text-red-700', doneText: 'text-red-700', iconBg: 'bg-tef-red', pillBg: 'bg-red-50', pillText: 'text-red-600' },
 }
 
 const moduleDescriptions: Record<string, string> = {
