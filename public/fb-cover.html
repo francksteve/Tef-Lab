@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 820px; height: 312px; overflow: hidden; }
+  .cover {
+    width: 820px;
+    height: 312px;
+    background: linear-gradient(135deg, #001a4d 0%, #003087 40%, #0040b0 100%);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 50px;
+    position: relative;
+    overflow: hidden;
+    font-family: 'Segoe UI', Arial, sans-serif;
+  }
+  /* Subtle pattern overlay */
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(circle at 80% 20%, rgba(255,255,255,0.05) 0%, transparent 50%),
+                radial-gradient(circle at 20% 80%, rgba(255,255,255,0.03) 0%, transparent 40%);
+  }
+  /* Decorative maple leaves */
+  .leaf-1, .leaf-2, .leaf-3 {
+    position: absolute;
+    font-size: 120px;
+    opacity: 0.06;
+    z-index: 0;
+  }
+  .leaf-1 { top: -20px; right: 30px; transform: rotate(15deg); }
+  .leaf-2 { bottom: -30px; right: 180px; transform: rotate(-25deg); font-size: 90px; }
+  .leaf-3 { top: 10px; left: 280px; transform: rotate(30deg); font-size: 70px; opacity: 0.04; }
+
+  .left {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    z-index: 1;
+  }
+  .logo-container {
+    width: 120px;
+    height: 120px;
+    background: white;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    flex-shrink: 0;
+  }
+  .logo-container img {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+  }
+  .text-block {
+    z-index: 1;
+  }
+  .main-title {
+    color: #fff;
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.2;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    margin-bottom: 8px;
+  }
+  .main-title .highlight {
+    color: #E30613;
+  }
+  .subtitle {
+    color: rgba(255,255,255,0.9);
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 14px;
+    letter-spacing: 0.5px;
+  }
+  .features {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .feature {
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 20px;
+    padding: 5px 14px;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    backdrop-filter: blur(4px);
+  }
+  .feature .icon { margin-right: 4px; }
+  .bottom-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 36px;
+    background: rgba(0,0,0,0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 30px;
+    z-index: 1;
+  }
+  .bottom-bar span {
+    color: rgba(255,255,255,0.8);
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .bottom-bar .dot {
+    color: #E30613;
+  }
+  /* Red accent line */
+  .accent-line {
+    position: absolute;
+    bottom: 36px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #E30613, #ff4444, #E30613);
+  }
+  /* Right decorative element */
+  .right-deco {
+    position: absolute;
+    right: 40px;
+    top: 50%;
+    transform: translateY(-60%);
+    z-index: 1;
+    text-align: center;
+  }
+  .maple-big {
+    font-size: 60px;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.3));
+  }
+  .gratuit-badge {
+    background: #E30613;
+    color: white;
+    font-size: 11px;
+    font-weight: 800;
+    padding: 4px 12px;
+    border-radius: 12px;
+    margin-top: 6px;
+    display: inline-block;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    box-shadow: 0 2px 8px rgba(227,6,19,0.4);
+  }
+</style>
+</head>
+<body>
+<div class="cover">
+  <div class="leaf-1">🍁</div>
+  <div class="leaf-2">🍁</div>
+  <div class="leaf-3">🍁</div>
+
+  <div class="left">
+    <div class="logo-container">
+      <img src="/logo.png" alt="TEF-LAB">
+    </div>
+    <div class="text-block">
+      <div class="main-title">
+        Prépare ton <span class="highlight">TEF Canada</span><br>en ligne
+      </div>
+      <div class="subtitle">La 1ère plateforme camerounaise de préparation au TEF</div>
+      <div class="features">
+        <div class="feature"><span class="icon">📖</span>4 modules</div>
+        <div class="feature"><span class="icon">🤖</span>Correction IA</div>
+        <div class="feature"><span class="icon">🎯</span>Séries réalistes</div>
+        <div class="feature"><span class="icon">💰</span>Gratuit pour commencer</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="right-deco">
+    <div class="maple-big">🍁</div>
+    <div class="gratuit-badge">Essai gratuit</div>
+  </div>
+
+  <div class="accent-line"></div>
+  <div class="bottom-bar">
+    <span>tef-lab.vercel.app</span>
+    <span class="dot">•</span>
+    <span>WhatsApp : +237 683 008 287</span>
+    <span class="dot">•</span>
+    <span>Orange Money &amp; MTN MoMo</span>
+  </div>
+</div>
+</body>
+</html>
