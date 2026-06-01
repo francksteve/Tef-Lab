@@ -29,6 +29,10 @@ yarn-error.log*
 .env*.local
 .env
 
+# fichiers sensibles locaux
+pass supabase.txt
+pass*.txt
+
 # Claude Code local settings (may contain secrets in permission history)
 .claude/settings.local.json
 
