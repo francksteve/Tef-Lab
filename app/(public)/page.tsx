@@ -57,46 +57,71 @@ export default function HomePage() {
           <div className="flex-1 bg-[#E30613]" />
         </div>
 
-        <div className="max-w-6xl mx-auto px-6 sm:px-10 py-14 sm:py-20 pl-8 sm:pl-12">
-          <div className="max-w-2xl">
-            <p className="text-white/50 text-xs font-semibold uppercase tracking-[0.2em] mb-3">
-              Test d&apos;Évaluation de Français · Reconnu IRCC
-            </p>
-            <h1 className="text-4xl sm:text-5xl lg:text-[3.5rem] font-black leading-[1.1] tracking-tight text-white">
-              Préparez votre<br />
-              <span className="text-tef-red">TEF Canada</span><br />
-              avec méthode.
-            </h1>
-            <p className="mt-4 text-white/60 text-base leading-relaxed max-w-xl">
-              Entraînement sur les 4 modules officiels, conditions réelles d&apos;examen,
-              et correction par IA avec score NCLC instantané.
-            </p>
-            <div className="mt-6 flex flex-col sm:flex-row gap-3">
-              <Link
-                href="/inscription"
-                className="inline-flex items-center justify-center px-8 py-3.5 bg-tef-red hover:bg-red-700 text-white font-bold rounded-lg transition-colors text-sm tracking-wide"
-              >
-                Commencer gratuitement
-                <svg className="ml-2 w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                </svg>
-              </Link>
-              <a
-                href="#packs"
-                className="inline-flex items-center justify-center px-8 py-3.5 border border-white/20 text-white/80 hover:border-white/40 hover:text-white font-semibold rounded-lg transition-colors text-sm"
-              >
-                Voir les tarifs
-              </a>
+        <div className="max-w-6xl mx-auto px-6 sm:px-12 py-14 sm:py-20">
+          {/* Deux colonnes : texte à gauche, modules à droite */}
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+
+            {/* Colonne gauche — texte */}
+            <div>
+              <p className="text-white/50 text-xs font-semibold uppercase tracking-[0.2em] mb-3">
+                Test d&apos;Évaluation de Français · Reconnu IRCC
+              </p>
+              <h1 className="text-4xl sm:text-5xl font-black leading-[1.1] tracking-tight text-white">
+                Préparez votre<br />
+                <span className="text-tef-red">TEF Canada</span><br />
+                avec méthode.
+              </h1>
+              <p className="mt-4 text-white/60 text-sm leading-relaxed">
+                Entraînement sur les 4 modules officiels, conditions réelles d&apos;examen,
+                et correction par IA avec score NCLC instantané.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Link
+                  href="/inscription"
+                  className="inline-flex items-center justify-center px-7 py-3 bg-tef-red hover:bg-red-700 text-white font-bold rounded-lg transition-colors text-sm"
+                >
+                  Commencer gratuitement
+                  <svg className="ml-2 w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                  </svg>
+                </Link>
+                <a
+                  href="#packs"
+                  className="inline-flex items-center justify-center px-7 py-3 border border-white/20 text-white/80 hover:border-white/40 hover:text-white font-semibold rounded-lg transition-colors text-sm"
+                >
+                  Voir les tarifs
+                </a>
+              </div>
+              <div className="mt-7 flex gap-8">
+                {[
+                  { n: '4', label: 'modules officiels' },
+                  { n: '15+', label: 'séries CO' },
+                  { n: 'NCLC', label: 'score IA instantané' },
+                ].map(s => (
+                  <div key={s.label}>
+                    <p className="text-2xl font-black text-white leading-none">{s.n}</p>
+                    <p className="text-white/40 text-xs mt-0.5">{s.label}</p>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="mt-7 flex flex-wrap gap-6">
+
+            {/* Colonne droite — aperçu des 4 modules */}
+            <div className="hidden lg:grid grid-cols-2 gap-3">
               {[
-                { n: '4', label: 'modules officiels' },
-                { n: '15+', label: 'séries CO' },
-                { n: 'NCLC', label: 'score IA instantané' },
-              ].map(s => (
-                <div key={s.label}>
-                  <p className="text-2xl font-black text-white leading-none">{s.n}</p>
-                  <p className="text-white/40 text-xs mt-0.5 font-medium">{s.label}</p>
+                { code: 'CE', name: 'Compréhension Écrite',  meta: '60 min · 40 QCM',      color: 'bg-tef-blue' },
+                { code: 'CO', name: 'Compréhension Orale',   meta: '40 min · 40 QCM',      color: 'bg-tef-blue' },
+                { code: 'EE', name: 'Expression Écrite',     meta: '60 min · 2 tâches',    color: 'bg-tef-red' },
+                { code: 'EO', name: 'Expression Orale',      meta: '15 min · 2 sections',  color: 'bg-tef-red' },
+              ].map(m => (
+                <div key={m.code} className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col gap-3">
+                  <div className={`w-9 h-9 ${m.color} rounded-lg flex items-center justify-center text-white text-xs font-black`}>
+                    {m.code}
+                  </div>
+                  <div>
+                    <p className="text-white text-sm font-bold leading-tight">{m.name}</p>
+                    <p className="text-white/40 text-xs mt-0.5">{m.meta}</p>
+                  </div>
                 </div>
               ))}
             </div>
