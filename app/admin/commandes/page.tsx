@@ -20,8 +20,8 @@ type Filter = 'ALL' | 'PENDING' | 'VALIDATED' | 'REJECTED'
 
 const statusLabel: Record<string, string> = { PENDING: '⏳ En attente', VALIDATED: '✅ Validée', REJECTED: '❌ Rejetée' }
 const statusBg: Record<string, string> = {
-  PENDING: 'bg-orange-100 text-orange-700',
-  VALIDATED: 'bg-green-100 text-green-700',
+  PENDING: 'bg-red-100 text-red-700',
+  VALIDATED: 'bg-blue-100 text-blue-700',
   REJECTED: 'bg-red-100 text-red-700',
 }
 
@@ -121,7 +121,7 @@ export default function CommandesPage() {
                         href={`https://wa.me/${order.visitorPhone.replace('+', '')}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-green-600 hover:underline"
+                        className="text-xs text-blue-600 hover:underline"
                       >
                         {order.visitorPhone}
                       </a>
@@ -144,7 +144,7 @@ export default function CommandesPage() {
                           <button
                             onClick={() => handleValidate(order.id)}
                             disabled={actionLoading === order.id + '-validate'}
-                            className="px-3 py-1 bg-green-600 text-white text-xs rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                            className="px-3 py-1 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
                           >
                             {actionLoading === order.id + '-validate' ? '…' : 'Valider'}
                           </button>

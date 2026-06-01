@@ -741,14 +741,14 @@ export default function QuizPage() {
                 <div
                   key={item.question.id}
                   className={`bg-white rounded-xl border p-5 ${
-                    item.isCorrect ? 'border-green-200' : 'border-red-200'
+                    item.isCorrect ? 'border-blue-200' : 'border-red-200'
                   }`}
                 >
                   <div className="flex items-start gap-3">
                     <span
                       className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold flex-shrink-0 ${
                         item.isCorrect
-                          ? 'bg-green-100 text-green-700'
+                          ? 'bg-blue-100 text-blue-700'
                           : 'bg-red-100 text-red-700'
                       }`}
                     >
@@ -772,7 +772,7 @@ export default function QuizPage() {
                               key={opt}
                               className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm ${
                                 isCorrectAnswer
-                                  ? 'bg-green-100 text-green-800 font-semibold'
+                                  ? 'bg-blue-100 text-blue-800 font-semibold'
                                   : isUserAnswer && !isCorrectAnswer
                                   ? 'bg-red-100 text-red-700'
                                   : 'bg-gray-50 text-gray-600'
@@ -787,7 +787,7 @@ export default function QuizPage() {
                         })}
                       </div>
                       {!item.userAnswer && (
-                        <p className="text-xs text-orange-600 mt-2 italic">Sans réponse</p>
+                        <p className="text-xs text-red-600 mt-2 italic">Sans réponse</p>
                       )}
                       {item.question.explanation && (
                         <p className="text-xs text-gray-500 mt-3 p-2 bg-gray-50 rounded-lg leading-relaxed">
@@ -1080,7 +1080,7 @@ export default function QuizPage() {
                   isActive
                     ? 'bg-tef-blue text-white ring-2 ring-tef-blue ring-offset-1'
                     : answers[q.id]
-                    ? 'bg-green-100 text-green-700'
+                    ? 'bg-blue-100 text-blue-700'
                     : 'bg-white border border-gray-200 text-gray-400 hover:border-tef-blue'
                 }`}
               >

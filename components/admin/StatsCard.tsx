@@ -9,8 +9,8 @@ interface StatsCardProps {
 const colorMap: Record<NonNullable<StatsCardProps['color']>, string> = {
   blue: 'bg-blue-50 border-tef-blue text-tef-blue',
   red: 'bg-red-50 border-tef-red text-tef-red',
-  green: 'bg-green-50 border-green-500 text-green-700',
-  orange: 'bg-orange-50 border-orange-500 text-orange-700',
+  green: 'bg-blue-50 border-blue-500 text-blue-700',
+  orange: 'bg-red-50 border-red-500 text-red-700',
 }
 
 export default function StatsCard({ title, value, subtitle, icon, color = 'blue' }: StatsCardProps) {

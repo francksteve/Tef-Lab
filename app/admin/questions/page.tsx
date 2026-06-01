@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useState } from 'react'
 import FileUpload from '@/components/admin/FileUpload'
 
@@ -157,7 +157,7 @@ const sectionBadge = (category: string | null | undefined) => {
   if (!category) return null
   const isA = category === 'SECTION_A'
   return (
-    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${isA ? 'bg-tef-blue/10 text-tef-blue' : 'bg-purple-100 text-purple-700'}`}>
+    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${isA ? 'bg-tef-blue/10 text-tef-blue' : 'bg-blue-100 text-blue-700'}`}>
       {isA ? 'Section A' : category === 'SECTION_B' ? 'Section B' : category}
     </span>
   )
@@ -623,7 +623,7 @@ export default function QuestionsAdminPage() {
                 handleGenerateSingleAudio(qObj, (audioUrl) => set('audioUrl', audioUrl))
               }}
               disabled={generatingAudioId === editingId || generatingAudio}
-              className="mt-2 w-full px-4 py-2.5 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="mt-2 w-full px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {generatingAudioId === editingId ? (
                 <><span className="animate-spin">⏳</span> Génération de l&apos;audio en cours…</>
@@ -897,7 +897,7 @@ export default function QuestionsAdminPage() {
                 <span className="font-semibold">{selectedSeries.title}</span>
                 {' — '}
                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
-                  isTask ? 'bg-purple-100 text-purple-700' : 'bg-tef-blue/10 text-tef-blue'
+                  isTask ? 'bg-blue-100 text-blue-700' : 'bg-tef-blue/10 text-tef-blue'
                 }`}>Module {moduleCode}</span>
               </p>
               <p className="text-xs text-gray-500 mt-0.5">
@@ -911,7 +911,7 @@ export default function QuestionsAdminPage() {
                 <button
                   onClick={() => handleGenerateAudio(false)}
                   disabled={generatingAudio}
-                  className="px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                  className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
                 >
                   {generatingAudio ? '⏳ Génération…' : '🎙️ Générer audios CO'}
                 </button>
@@ -925,7 +925,7 @@ export default function QuestionsAdminPage() {
             </div>
           </div>
           {audioGenResult && (
-            <p className={`text-sm font-medium ${audioGenResult.startsWith('✅') ? 'text-green-600' : 'text-red-600'}`}>
+            <p className={`text-sm font-medium ${audioGenResult.startsWith('✅') ? 'text-blue-600' : 'text-red-600'}`}>
               {audioGenResult}
             </p>
           )}
@@ -983,7 +983,7 @@ export default function QuestionsAdminPage() {
                                 <div className="flex items-center gap-2">
                                   {/* eslint-disable-next-line @next/next/no-img-element */}
                                   <img src={q.imageUrl} alt="Annonce" className="h-20 w-auto rounded border border-gray-200 object-contain bg-white" />
-                                  <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded font-medium">🖼 Image</span>
+                                  <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-medium">🖼 Image</span>
                                 </div>
                               )}
                               {q.longText && (
@@ -1021,12 +1021,12 @@ export default function QuestionsAdminPage() {
                         <div className="flex items-center gap-2 flex-wrap">
                           <span className="inline-flex items-center justify-center w-6 h-6 bg-tef-blue text-white text-xs font-bold rounded-full flex-shrink-0">{q.questionOrder}</span>
                           {q.category && <span className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">{q.category}</span>}
-                          {q.subCategory && <span className="text-xs text-purple-700 bg-purple-100 px-1.5 py-0.5 rounded">{q.subCategory}</span>}
-                          {q.audioUrl && <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded">🎵 Audio</span>}
-                          {q.imageUrl && <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">🖼 Image</span>}
-                          {q.consigne && <span className="text-xs bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded">📋 Consigne</span>}
+                          {q.subCategory && <span className="text-xs text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded">{q.subCategory}</span>}
+                          {q.audioUrl && <span className="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded">🎵 Audio</span>}
+                          {q.imageUrl && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">🖼 Image</span>}
+                          {q.consigne && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">📋 Consigne</span>}
                         </div>
-                        {q.consigne && <p className="text-xs text-yellow-700 italic line-clamp-1">{q.consigne}</p>}
+                        {q.consigne && <p className="text-xs text-blue-700 italic line-clamp-1">{q.consigne}</p>}
                         {q.longText && <p className="text-xs text-gray-400 italic line-clamp-1">{q.longText}</p>}
                         <p className="text-sm text-gray-900 font-medium line-clamp-2">{q.question}</p>
                         <div className="flex flex-wrap gap-x-3 text-xs text-gray-500">
@@ -1035,7 +1035,7 @@ export default function QuestionsAdminPage() {
                           {q.optionC && <span>C: {q.optionC}</span>}
                           {q.optionD && <span>D: {q.optionD}</span>}
                         </div>
-                        {q.correctAnswer && <p className="text-xs font-semibold text-green-600">✓ Réponse : Option {q.correctAnswer}</p>}
+                        {q.correctAnswer && <p className="text-xs font-semibold text-blue-600">✓ Réponse : Option {q.correctAnswer}</p>}
                       </div>
                       <div className="flex gap-2 flex-shrink-0 flex-wrap justify-end">
                         {moduleCode === 'CO' && q.longText && (
@@ -1048,7 +1048,7 @@ export default function QuestionsAdminPage() {
                                 : `Générer l'audio TTS${isMultiVoiceOrder(q.questionOrder) ? ' — 2 voix (dialogue)' : ''}`
                             }
                             className={`px-3 py-1.5 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1 ${
-                              q.audioUrl ? 'bg-orange-500 hover:bg-orange-600' : 'bg-green-600 hover:bg-green-700'
+                              q.audioUrl ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-600 hover:bg-blue-700'
                             }`}
                           >
                             {generatingAudioId === q.id
@@ -1072,3 +1072,4 @@ export default function QuestionsAdminPage() {
     </div>
   )
 }
+

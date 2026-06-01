@@ -94,7 +94,7 @@ export default function UpgradeModal({ isOpen, onClose, reason }: Props) {
             <div className="flex-1 overflow-y-auto p-6">
               {/* Discount banner */}
               {settings.discountRate > 0 && (
-                <div className="mb-4 flex items-center gap-2 px-4 py-2.5 bg-green-50 border border-green-200 rounded-xl text-sm font-semibold text-green-700">
+                <div className="mb-4 flex items-center gap-2 px-4 py-2.5 bg-blue-50 border border-blue-200 rounded-xl text-sm font-semibold text-blue-700">
                   🎉 Remise de {settings.discountRate}% appliquée sur tous les packs !
                 </div>
               )}
@@ -182,7 +182,7 @@ export default function UpgradeModal({ isOpen, onClose, reason }: Props) {
                           className={`w-full py-2.5 font-bold rounded-lg text-sm transition-colors ${
                             pack.isRecommended
                               ? 'bg-tef-blue text-white hover:bg-tef-blue-hover'
-                              : 'bg-gray-900 text-white hover:bg-gray-700'
+                              : 'bg-[#001344] text-white hover:bg-gray-700'
                           }`}
                         >
                           Payer →

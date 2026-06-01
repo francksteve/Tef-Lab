@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useState, useRef, Suspense } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -49,15 +49,15 @@ const moduleIcons: Record<string, string> = {
 
 const moduleGradients: Record<string, string> = {
   CE: 'from-blue-600 to-blue-500',
-  CO: 'from-purple-600 to-purple-500',
-  EE: 'from-emerald-600 to-emerald-500',
+  CO: 'from-blue-600 to-blue-500',
+  EE: 'from-blue-600 to-blue-500',
   EO: 'from-blue-500 to-blue-600',
 }
 
 const moduleAccentColors: Record<string, { ring: string; chip: string; chipText: string; chipHover: string; doneChip: string; doneText: string; iconBg: string; pillBg: string; pillText: string }> = {
   CE: { ring: 'ring-blue-200', chip: 'border-gray-200 hover:border-blue-400 hover:text-blue-700', chipText: 'text-gray-700', chipHover: '', doneChip: 'bg-blue-50 border-blue-300 text-blue-800', doneText: 'text-blue-800', iconBg: 'bg-blue-600', pillBg: 'bg-blue-100', pillText: 'text-blue-700' },
-  CO: { ring: 'ring-purple-200', chip: 'border-gray-200 hover:border-purple-400 hover:text-purple-700', chipText: 'text-gray-700', chipHover: '', doneChip: 'bg-purple-50 border-purple-300 text-purple-800', doneText: 'text-purple-800', iconBg: 'bg-purple-600', pillBg: 'bg-purple-100', pillText: 'text-purple-700' },
-  EE: { ring: 'ring-emerald-200', chip: 'border-gray-200 hover:border-emerald-400 hover:text-emerald-700', chipText: 'text-gray-700', chipHover: '', doneChip: 'bg-emerald-50 border-emerald-300 text-emerald-800', doneText: 'text-emerald-800', iconBg: 'bg-emerald-600', pillBg: 'bg-emerald-100', pillText: 'text-emerald-700' },
+  CO: { ring: 'ring-blue-200', chip: 'border-gray-200 hover:border-blue-400 hover:text-blue-700', chipText: 'text-gray-700', chipHover: '', doneChip: 'bg-blue-50 border-blue-300 text-blue-800', doneText: 'text-blue-800', iconBg: 'bg-blue-600', pillBg: 'bg-blue-100', pillText: 'text-blue-700' },
+  EE: { ring: 'ring-blue-200', chip: 'border-gray-200 hover:border-blue-400 hover:text-blue-700', chipText: 'text-gray-700', chipHover: '', doneChip: 'bg-blue-50 border-blue-300 text-blue-800', doneText: 'text-blue-800', iconBg: 'bg-blue-600', pillBg: 'bg-blue-100', pillText: 'text-blue-700' },
   EO: { ring: 'ring-blue-200', chip: 'border-gray-200 hover:border-blue-400 hover:text-blue-700', chipText: 'text-gray-700', chipHover: '', doneChip: 'bg-blue-50 border-blue-300 text-blue-800', doneText: 'text-blue-800', iconBg: 'bg-blue-600', pillBg: 'bg-blue-100', pillText: 'text-blue-700' },
 }
 
@@ -70,11 +70,11 @@ const moduleDescriptions: Record<string, string> = {
 
 const CECRL_COLORS: Record<string, string> = {
   A1: 'bg-red-100 text-red-700',
-  A2: 'bg-orange-100 text-orange-700',
-  B1: 'bg-yellow-100 text-yellow-700',
-  B2: 'bg-green-100 text-green-700',
-  C1: 'bg-blue-100 text-blue-700',
-  C2: 'bg-purple-100 text-purple-700',
+  A2: 'bg-red-100 text-red-600',
+  B1: 'bg-blue-100 text-blue-600',
+  B2: 'bg-blue-200 text-blue-800',
+  C1: 'bg-tef-blue/20 text-tef-blue',
+  C2: 'bg-blue-900 text-white',
 }
 
 function formatTime(seconds: number): string {
@@ -253,23 +253,23 @@ function DashboardContent() {
     <div>
       {/* ─── Payment banners ─── */}
       {paymentBanner === 'pending' && (
-        <div className="bg-amber-50 border-b border-amber-200 px-4 py-3">
+        <div className="bg-red-50 border-b border-red-200 px-4 py-3">
           <div className="max-w-5xl mx-auto flex items-center gap-3">
-            <div className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin flex-shrink-0" />
-            <p className="text-sm text-amber-800 font-medium">Confirmation du paiement en cours…</p>
+            <div className="w-4 h-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin flex-shrink-0" />
+            <p className="text-sm text-red-800 font-medium">Confirmation du paiement en cours…</p>
           </div>
         </div>
       )}
       {paymentBanner === 'success' && (
-        <div className="bg-emerald-50 border-b border-emerald-200 px-4 py-3">
+        <div className="bg-blue-50 border-b border-blue-200 px-4 py-3">
           <div className="max-w-5xl mx-auto flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <span className="text-emerald-500 text-lg flex-shrink-0">✅</span>
-              <p className="text-sm text-emerald-800 font-semibold">
+              <span className="text-blue-500 text-lg flex-shrink-0">✅</span>
+              <p className="text-sm text-blue-800 font-semibold">
                 Paiement confirmé ! Votre abonnement est maintenant actif. Bonne préparation 🎯
               </p>
             </div>
-            <button onClick={() => setPaymentBanner(null)} className="text-emerald-400 hover:text-emerald-600 text-xl leading-none flex-shrink-0">×</button>
+            <button onClick={() => setPaymentBanner(null)} className="text-blue-400 hover:text-blue-600 text-xl leading-none flex-shrink-0">×</button>
           </div>
         </div>
       )}
@@ -296,9 +296,9 @@ function DashboardContent() {
                 </span>
                 {daysLeft !== null && (
                   <span className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 ${
-                    daysLeft > 6 ? 'bg-emerald-500/25 text-emerald-100 border border-emerald-400/40' : 'bg-red-500/25 text-red-100 border border-red-400/40'
+                    daysLeft > 6 ? 'bg-blue-500/25 text-blue-100 border border-blue-400/40' : 'bg-red-500/25 text-red-100 border border-red-400/40'
                   }`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${daysLeft > 6 ? 'bg-emerald-300' : 'bg-red-300'}`} />
+                    <span className={`w-1.5 h-1.5 rounded-full ${daysLeft > 6 ? 'bg-blue-300' : 'bg-red-300'}`} />
                     {daysLeft}j restants
                   </span>
                 )}
@@ -565,7 +565,7 @@ function DashboardContent() {
                           <span className={`text-xs font-extrabold ${acc.pillText}`}>{attempt.score}/40</span>
                         )}
                         {attempt.aiScore != null && attempt.score == null && (
-                          <span className="text-xs font-extrabold text-emerald-700">{Math.round(attempt.aiScore)}/100</span>
+                          <span className="text-xs font-extrabold text-blue-700">{Math.round(attempt.aiScore)}/100</span>
                         )}
                         {attempt.cecrlLevel && (
                           <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${cecrlColor}`}>{attempt.cecrlLevel}</span>
@@ -605,7 +605,7 @@ function DashboardContent() {
                             {attempt.score != null ? (
                               <span className={`font-extrabold ${acc.pillText}`}>{attempt.score}/40</span>
                             ) : attempt.aiScore != null ? (
-                              <span className="font-extrabold text-emerald-600">{Math.round(attempt.aiScore)}/100</span>
+                              <span className="font-extrabold text-blue-600">{Math.round(attempt.aiScore)}/100</span>
                             ) : (
                               <span className="text-gray-300">—</span>
                             )}
@@ -655,3 +655,4 @@ export default function DashboardPage() {
     </Suspense>
   )
 }
+

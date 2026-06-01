@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
@@ -11,7 +11,7 @@ interface Series {
 
 const moduleConfig: Record<string, { icon: string; borderColor: string; bgColor: string }> = {
   CE: { icon: '📖', borderColor: 'border-blue-400',   bgColor: 'bg-blue-50'   },
-  CO: { icon: '🎧', borderColor: 'border-purple-400', bgColor: 'bg-purple-50' },
+  CO: { icon: '🎧', borderColor: 'border-blue-400', bgColor: 'bg-blue-50' },
 }
 
 const moduleDetails: Record<string, { questions: number; duration: number; hoverBorder: string; hoverText: string; pillBg: string; pillText: string; iconCircle: string }> = {
@@ -27,11 +27,11 @@ const moduleDetails: Record<string, { questions: number; duration: number; hover
   CO: {
     questions: 40,
     duration: 40,
-    hoverBorder: 'hover:border-purple-500',
-    hoverText: 'group-hover:text-purple-700',
-    pillBg: 'bg-purple-100',
-    pillText: 'text-purple-700',
-    iconCircle: 'bg-purple-100',
+    hoverBorder: 'hover:border-blue-500',
+    hoverText: 'group-hover:text-blue-700',
+    pillBg: 'bg-blue-100',
+    pillText: 'text-blue-700',
+    iconCircle: 'bg-blue-100',
   },
 }
 
@@ -66,7 +66,7 @@ export default function EntrainementGratuitPage() {
             Des séries gratuites disponibles pour commencer dès maintenant.
           </p>
           {/* Free badge */}
-          <div className="inline-flex items-center gap-2 bg-green-500/20 border border-green-400/40 rounded-full px-4 py-1.5 text-sm text-green-200 font-medium mb-5">
+          <div className="inline-flex items-center gap-2 bg-blue-500/20 border border-blue-400/40 rounded-full px-4 py-1.5 text-sm text-blue-200 font-medium mb-5">
             <span>🆓</span>
             <span>Aucune carte bancaire requise</span>
           </div>
@@ -76,7 +76,7 @@ export default function EntrainementGratuitPage() {
               Pour accéder aux simulateurs d&apos;Expression Écrite et Orale,{' '}
               <Link
                 href="/packs"
-                className="text-white font-semibold underline underline-offset-2 hover:text-yellow-300 transition-colors"
+                className="text-white font-semibold underline underline-offset-2 hover:text-blue-200 transition-colors"
               >
                 découvrez nos packs →
               </Link>
@@ -139,7 +139,7 @@ export default function EntrainementGratuitPage() {
                               <span className={`text-xs font-bold uppercase tracking-wide px-2 py-0.5 rounded-full ${cfg.bgColor} ${det.pillText}`}>
                                 Série {i + 1}
                               </span>
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">
                                 🎁 Gratuite
                               </span>
                             </div>
@@ -180,8 +180,8 @@ export default function EntrainementGratuitPage() {
                 code: 'EE',
                 icon: '✍️',
                 name: 'Expression Écrite',
-                border: 'border-green-200',
-                bg: 'bg-green-50',
+                border: 'border-blue-200',
+                bg: 'bg-blue-50',
                 lockCircle: 'bg-gray-200',
                 desc: '2 tâches de rédaction (lettre + article) avec correction par intelligence artificielle.',
               },
@@ -189,8 +189,8 @@ export default function EntrainementGratuitPage() {
                 code: 'EO',
                 icon: '🎤',
                 name: 'Expression Orale',
-                border: 'border-orange-200',
-                bg: 'bg-orange-50',
+                border: 'border-red-200',
+                bg: 'bg-red-50',
                 lockCircle: 'bg-gray-200',
                 desc: '2 sections d\'enregistrement (formel + informel) avec évaluation et feedback IA.',
               },
@@ -246,3 +246,4 @@ export default function EntrainementGratuitPage() {
     </div>
   )
 }
+

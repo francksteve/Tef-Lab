@@ -212,7 +212,7 @@ export default function InscriptionPage() {
                   { ok: pwdHasNum, label: 'Au moins un chiffre' },
                   { ok: pwdHasSpecial, label: 'Au moins un caractère spécial (!@#$…)' },
                 ].map(({ ok, label }) => (
-                  <p key={label} className={`text-xs flex items-center gap-1.5 ${ok ? 'text-green-600' : 'text-gray-400'}`}>
+                  <p key={label} className={`text-xs flex items-center gap-1.5 ${ok ? 'text-blue-600' : 'text-gray-400'}`}>
                     <span>{ok ? '✓' : '○'}</span> {label}
                   </p>
                 ))}
@@ -232,7 +232,7 @@ export default function InscriptionPage() {
                 required
                 className={`w-full px-4 py-2.5 pr-11 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue ${
                   form.confirmPassword.length > 0
-                    ? pwdMatch ? 'border-green-400' : 'border-red-400'
+                    ? pwdMatch ? 'border-blue-400' : 'border-red-400'
                     : 'border-gray-300'
                 }`}
               />
@@ -255,7 +255,7 @@ export default function InscriptionPage() {
               </button>
             </div>
             {form.confirmPassword.length > 0 && (
-              <p className={`text-xs mt-1 ${pwdMatch ? 'text-green-600' : 'text-red-500'}`}>
+              <p className={`text-xs mt-1 ${pwdMatch ? 'text-blue-600' : 'text-red-500'}`}>
                 {pwdMatch ? '✓ Les mots de passe correspondent' : '✗ Les mots de passe ne correspondent pas'}
               </p>
             )}

@@ -48,14 +48,14 @@ const methodConfig: Record<PayMethod, { label: string; sub: string; icon: string
     sub: 'Paiement manuel — activation sous 5-10 min',
     icon: '🟠',
     color: 'bg-white text-gray-900',
-    borderColor: 'border-orange-400',
+    borderColor: 'border-red-400',
   },
   mtn_momo: {
     label: 'MTN MoMo',
     sub: 'Paiement manuel — activation sous 5-10 min',
     icon: '🟡',
     color: 'bg-white text-gray-900',
-    borderColor: 'border-yellow-400',
+    borderColor: 'border-blue-300',
   },
 }
 
@@ -310,7 +310,7 @@ export default function PaymentModal({ isOpen, onClose, pack }: Props) {
 
               {/* Discount badge */}
               {settings.discountRate > 0 && (
-                <div className="flex items-center gap-2 px-3 py-2 bg-green-50 border border-green-200 rounded-xl text-xs font-semibold text-green-700">
+                <div className="flex items-center gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-xl text-xs font-semibold text-blue-700">
                   🎉 Remise de {settings.discountRate}% appliquée
                 </div>
               )}
@@ -328,7 +328,7 @@ export default function PaymentModal({ isOpen, onClose, pack }: Props) {
                       <p className="text-xs text-gray-500 mt-0.5">
                         Orange Money · MTN MoMo
                       </p>
-                      <span className="inline-flex items-center mt-1 gap-1 text-xs font-semibold text-green-600">
+                      <span className="inline-flex items-center mt-1 gap-1 text-xs font-semibold text-blue-600">
                         ✓ Accès activé immédiatement
                       </span>
                     </div>
@@ -358,7 +358,7 @@ export default function PaymentModal({ isOpen, onClose, pack }: Props) {
                       <p className="text-xs text-gray-500 mt-0.5">
                         Carte bancaire internationale · Compte PayPal
                       </p>
-                      <span className="inline-flex items-center mt-1 gap-1 text-xs font-semibold text-green-600">
+                      <span className="inline-flex items-center mt-1 gap-1 text-xs font-semibold text-blue-600">
                         ✓ Accès activé immédiatement
                       </span>
                     </div>
@@ -384,15 +384,15 @@ export default function PaymentModal({ isOpen, onClose, pack }: Props) {
                 </div>
 
                 {/* Orange Money */}
-                <div className="rounded-xl border-2 border-orange-400 overflow-hidden mb-3">
-                  <div className="bg-orange-50 px-4 py-3 flex items-start gap-3">
+                <div className="rounded-xl border-2 border-red-400 overflow-hidden mb-3">
+                  <div className="bg-red-50 px-4 py-3 flex items-start gap-3">
                     <span className="text-2xl flex-shrink-0">🟠</span>
                     <div className="flex-1">
                       <p className="font-bold text-gray-900 text-sm">Orange Money</p>
                       <p className="text-xs text-gray-500 mt-0.5">
                         Envoi direct sur notre numéro Orange
                       </p>
-                      <span className="inline-flex items-center mt-1 gap-1 text-xs font-semibold text-orange-600">
+                      <span className="inline-flex items-center mt-1 gap-1 text-xs font-semibold text-red-600">
                         ⏱ Activation en 5-10 min
                       </span>
                     </div>
@@ -401,7 +401,7 @@ export default function PaymentModal({ isOpen, onClose, pack }: Props) {
                     <button
                       onClick={() => { setSelectedMethod('orange_money'); setStep('manual_form') }}
                       disabled={paying}
-                      className="w-full py-3 bg-orange-500 text-white font-bold rounded-xl text-sm hover:bg-orange-600 disabled:opacity-50 transition-colors"
+                      className="w-full py-3 bg-red-500 text-white font-bold rounded-xl text-sm hover:bg-red-600 disabled:opacity-50 transition-colors"
                     >
                       Payer {finalPrice.toLocaleString('fr-FR')} FCFA — Orange Money
                     </button>
@@ -409,15 +409,15 @@ export default function PaymentModal({ isOpen, onClose, pack }: Props) {
                 </div>
 
                 {/* MTN MoMo */}
-                <div className="rounded-xl border-2 border-yellow-400 overflow-hidden mb-3">
-                  <div className="bg-yellow-50 px-4 py-3 flex items-start gap-3">
+                <div className="rounded-xl border-2 border-blue-300 overflow-hidden mb-3">
+                  <div className="bg-blue-50 px-4 py-3 flex items-start gap-3">
                     <span className="text-2xl flex-shrink-0">🟡</span>
                     <div className="flex-1">
                       <p className="font-bold text-gray-900 text-sm">MTN MoMo</p>
                       <p className="text-xs text-gray-500 mt-0.5">
                         Envoi direct sur notre numéro MTN
                       </p>
-                      <span className="inline-flex items-center mt-1 gap-1 text-xs font-semibold text-yellow-600">
+                      <span className="inline-flex items-center mt-1 gap-1 text-xs font-semibold text-blue-600">
                         ⏱ Activation en 5-10 min
                       </span>
                     </div>
@@ -426,7 +426,7 @@ export default function PaymentModal({ isOpen, onClose, pack }: Props) {
                     <button
                       onClick={() => { setSelectedMethod('mtn_momo'); setStep('manual_form') }}
                       disabled={paying}
-                      className="w-full py-3 bg-yellow-400 text-gray-900 font-bold rounded-xl text-sm hover:bg-yellow-500 disabled:opacity-50 transition-colors"
+                      className="w-full py-3 bg-blue-300 text-gray-900 font-bold rounded-xl text-sm hover:bg-blue-400 disabled:opacity-50 transition-colors"
                     >
                       Payer {finalPrice.toLocaleString('fr-FR')} FCFA — MTN MoMo
                     </button>
@@ -500,7 +500,7 @@ export default function PaymentModal({ isOpen, onClose, pack }: Props) {
               <button
                 onClick={handleManualOrder}
                 disabled={paying}
-                className="w-full py-3 bg-gray-900 text-white font-bold rounded-xl text-sm hover:bg-gray-700 disabled:opacity-50 transition-colors"
+                className="w-full py-3 bg-[#001344] text-white font-bold rounded-xl text-sm hover:bg-gray-700 disabled:opacity-50 transition-colors"
               >
                 {paying ? 'Enregistrement…' : 'Confirmer ma commande'}
               </button>
@@ -527,7 +527,7 @@ export default function PaymentModal({ isOpen, onClose, pack }: Props) {
                 href={whatsappLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 w-full py-3 bg-green-500 hover:bg-green-600 text-white rounded-xl font-bold text-sm transition-colors"
+                className="flex items-center justify-center gap-2 w-full py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold text-sm transition-colors"
               >
                 💬 Confirmer le paiement sur WhatsApp
               </a>

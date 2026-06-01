@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useState } from 'react'
 
 interface Pack {
@@ -335,7 +335,7 @@ export default function PacksAdminPage() {
                         className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${
                           pack.moduleAccess === 'ALL'
                             ? 'bg-blue-100 text-blue-700'
-                            : 'bg-purple-100 text-purple-700'
+                            : 'bg-blue-100 text-blue-700'
                         }`}
                       >
                         {pack.moduleAccess}
@@ -357,7 +357,7 @@ export default function PacksAdminPage() {
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                           pack.isActive
-                            ? 'bg-green-100 text-green-700'
+                            ? 'bg-blue-100 text-blue-700'
                             : 'bg-gray-100 text-gray-500'
                         }`}
                       >
@@ -390,3 +390,4 @@ export default function PacksAdminPage() {
     </div>
   )
 }
+

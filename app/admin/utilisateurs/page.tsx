@@ -47,7 +47,7 @@ function SortHeader({ label, col, sortKey, sortDir, onSort, className = '' }: So
     >
       <span className="inline-flex items-center gap-1">
         {label}
-        <span className={`text-[10px] ${active ? 'text-yellow-300' : 'text-blue-300'}`}>
+        <span className={`text-[10px] ${active ? 'text-blue-200' : 'text-blue-300'}`}>
           {active ? (sortDir === 'asc' ? '▲' : '▼') : '⇅'}
         </span>
       </span>
@@ -263,7 +263,7 @@ export default function UtilisateursPage() {
                       <td className="px-4 py-3">
                         <p className="font-medium text-gray-900">{user.name}</p>
                         {user.mustChangePassword && (
-                          <p className="text-xs text-orange-500">Doit changer son mdp</p>
+                          <p className="text-xs text-red-500">Doit changer son mdp</p>
                         )}
                       </td>
 
@@ -271,7 +271,7 @@ export default function UtilisateursPage() {
                       <td className="px-4 py-3">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                           user.accountStatus === 'ACTIVE'
-                            ? 'bg-green-100 text-green-700'
+                            ? 'bg-blue-100 text-blue-700'
                             : 'bg-red-100 text-red-700'
                         }`}>
                           {user.accountStatus === 'ACTIVE' ? 'Actif' : 'Suspendu'}
@@ -284,7 +284,7 @@ export default function UtilisateursPage() {
                           <div className="flex flex-col gap-0.5">
                             <span className="font-medium text-gray-800 text-xs">{activePack.name}</span>
                             <span className={`inline-flex items-center gap-0.5 text-[11px] font-semibold ${
-                              activePack.daysLeft > 6 ? 'text-green-600' : 'text-red-600'
+                              activePack.daysLeft > 6 ? 'text-blue-600' : 'text-red-600'
                             }`}>
                               <span>{activePack.daysLeft > 6 ? '🟢' : '🔴'}</span>
                               {activePack.daysLeft}j restants
@@ -309,7 +309,7 @@ export default function UtilisateursPage() {
                             title={`Envoyer un email de rappel à ${user.name}`}
                             className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 inline-flex items-center gap-1 ${
                               mailStatus[user.id] === 'sent'
-                                ? 'bg-green-100 text-green-700'
+                                ? 'bg-blue-100 text-blue-700'
                                 : mailStatus[user.id] === 'error'
                                 ? 'bg-red-100 text-red-700'
                                 : 'bg-blue-50 text-tef-blue hover:bg-blue-100'
@@ -337,7 +337,7 @@ export default function UtilisateursPage() {
                             className={`px-3 py-1 text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 ${
                               user.accountStatus === 'ACTIVE'
                                 ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                                : 'bg-green-100 text-green-700 hover:bg-green-200'
+                                : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
                             }`}
                           >
                             {actionLoading === user.id

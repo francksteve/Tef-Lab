@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
@@ -71,15 +71,15 @@ const MODULE_COLORS: Record<string, string> = {
 }
 
 const CECRL_COLORS: Record<string, string> = {
-  A1: '#ef4444', A2: '#f97316',
-  B1: '#eab308', B2: '#22c55e',
-  C1: '#0055B3', C2: '#003087',
+  A1: '#E30613', A2: '#ef4444',
+  B1: '#60a5fa', B2: '#2563eb',
+  C1: '#003087', C2: '#001344',
 }
 
 // ─── Small helpers ────────────────────────────────────────────────────────────
 function ScoreBar({ value }: { value: number | null }) {
   if (value == null) return <span className="text-gray-400 text-sm">—</span>
-  const color = value >= 75 ? 'bg-green-500' : value >= 50 ? 'bg-yellow-400' : 'bg-red-400'
+  const color = value >= 75 ? 'bg-blue-500' : value >= 50 ? 'bg-blue-300' : 'bg-red-400'
   return (
     <div className="flex items-center gap-2">
       <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
@@ -200,8 +200,8 @@ export default function PerformancePage() {
             subscription.daysLeft <= 3
               ? 'bg-red-50 border-red-200 text-red-700'
               : subscription.daysLeft <= 7
-              ? 'bg-amber-50 border-amber-200 text-amber-700'
-              : 'bg-green-50 border-green-200 text-green-700'
+              ? 'bg-red-50 border-red-200 text-red-700'
+              : 'bg-blue-50 border-blue-200 text-blue-700'
           }`}>
             <span>{subscription.daysLeft <= 7 ? '⚠️' : '✅'}</span>
             <span>
@@ -235,16 +235,16 @@ export default function PerformancePage() {
             label: 'Score moyen',
             value: summary.totalAttempts > 0 ? `${summary.avgScorePercent}%` : '—',
             sub: 'toutes séries',
-            color: 'from-green-50 to-green-100 border-green-200',
-            textColor: 'text-green-700',
+            color: 'from-blue-50 to-blue-100 border-blue-200',
+            textColor: 'text-blue-700',
           },
           {
             icon: '🏆',
             label: 'Meilleur niveau',
             value: summary.topLevel,
             sub: 'CECRL atteint',
-            color: 'from-purple-50 to-purple-100 border-purple-200',
-            textColor: 'text-purple-700',
+            color: 'from-blue-50 to-blue-100 border-blue-200',
+            textColor: 'text-blue-700',
           },
           {
             icon: '⏱️',
@@ -253,8 +253,8 @@ export default function PerformancePage() {
               ? `${Math.floor(summary.totalMinutes / 60)}h${summary.totalMinutes % 60 > 0 ? String(summary.totalMinutes % 60).padStart(2, '0') : ''}`
               : `${summary.totalMinutes}min`,
             sub: 'total cumulé',
-            color: 'from-orange-50 to-orange-100 border-orange-200',
-            textColor: 'text-orange-600',
+            color: 'from-red-50 to-red-100 border-red-200',
+            textColor: 'text-red-600',
           },
         ].map((card) => (
           <div
@@ -523,3 +523,4 @@ export default function PerformancePage() {
     </div>
   )
 }
+

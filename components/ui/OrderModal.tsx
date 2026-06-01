@@ -184,7 +184,7 @@ export default function OrderModal({ isOpen, onClose, pack }: OrderModalProps) {
                 href={whatsappLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 w-full py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold transition-colors"
+                className="flex items-center justify-center gap-2 w-full py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-semibold transition-colors"
               >
                 💬 Continuer sur WhatsApp
               </a>
@@ -205,7 +205,7 @@ export default function OrderModal({ isOpen, onClose, pack }: OrderModalProps) {
                 href="https://wa.me/237683008287"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 w-full py-3 bg-green-500 text-white rounded-lg font-semibold"
+                className="flex items-center justify-center gap-2 w-full py-3 bg-blue-500 text-white rounded-lg font-semibold"
               >
                 💬 Contacter sur WhatsApp
               </a>

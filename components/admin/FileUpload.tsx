@@ -118,7 +118,7 @@ export default function FileUpload({ type, value, onChange, label, required }: F
       </div>
 
       {uploadError && <p className="text-red-600 text-xs mt-1">{uploadError}</p>}
-      {sizeInfo && <p className="text-green-600 text-xs mt-1">✅ Compressé : {sizeInfo}</p>}
+      {sizeInfo && <p className="text-blue-600 text-xs mt-1">✅ Compressé : {sizeInfo}</p>}
     </div>
   )
 }

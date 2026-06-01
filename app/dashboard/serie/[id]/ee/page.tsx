@@ -55,12 +55,12 @@ const TASK1_MIN = 80
 const TASK2_MIN = 200
 
 const CECRL_GRADIENT: Record<string, string> = {
-  A1: 'from-red-500 to-red-600',
-  A2: 'from-orange-500 to-orange-600',
-  B1: 'from-yellow-500 to-amber-500',
-  B2: 'from-green-500 to-emerald-500',
-  C1: 'from-blue-600 to-tef-blue',
-  C2: 'from-purple-600 to-purple-700',
+  A1: 'from-tef-red to-red-700',
+  A2: 'from-red-500 to-red-600',
+  B1: 'from-blue-400 to-blue-500',
+  B2: 'from-blue-600 to-blue-700',
+  C1: 'from-tef-blue to-blue-800',
+  C2: 'from-blue-900 to-[#001344]',
 }
 
 /* ─── Progress stepper ─── */
@@ -80,18 +80,18 @@ function ProgressStepper({ phase }: { phase: PagePhase }) {
           <div key={step.key} className="flex items-center">
             <div className="flex flex-col items-center">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-extrabold border-2 transition-all ${
-                done ? 'bg-emerald-500 border-emerald-500 text-white' :
+                done ? 'bg-blue-500 border-blue-500 text-white' :
                 active ? 'bg-tef-blue border-tef-blue text-white shadow-md' :
                 'bg-white border-gray-200 text-gray-400'
               }`}>
                 {done ? '✓' : i + 1}
               </div>
-              <div className={`text-[10px] font-semibold mt-0.5 ${active ? 'text-tef-blue' : done ? 'text-emerald-600' : 'text-gray-400'}`}>
+              <div className={`text-[10px] font-semibold mt-0.5 ${active ? 'text-tef-blue' : done ? 'text-blue-600' : 'text-gray-400'}`}>
                 {step.label}
               </div>
             </div>
             {i < steps.length - 1 && (
-              <div className={`w-12 h-0.5 mb-4 mx-1 ${i < activeIdx ? 'bg-emerald-400' : 'bg-gray-200'}`} />
+              <div className={`w-12 h-0.5 mb-4 mx-1 ${i < activeIdx ? 'bg-blue-400' : 'bg-gray-200'}`} />
             )}
           </div>
         )
@@ -278,7 +278,7 @@ export default function EEPage() {
 
         <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
           {aiError && (
-            <div className="bg-orange-50 border border-orange-200 text-orange-700 px-4 py-3 rounded-xl text-sm flex items-start gap-2">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm flex items-start gap-2">
               <span className="text-lg flex-shrink-0">⚠️</span>
               {aiError}
             </div>
@@ -431,7 +431,7 @@ export default function EEPage() {
 
             {/* Actions */}
             <div className="flex items-center justify-between gap-4">
-              <p className={`text-xs font-medium transition-colors ${task1OK ? 'text-emerald-600' : 'text-red-500'}`}>
+              <p className={`text-xs font-medium transition-colors ${task1OK ? 'text-blue-600' : 'text-red-500'}`}>
                 {task1Count}/{TASK1_MIN} mots minimum
               </p>
               <button
@@ -561,7 +561,7 @@ function renderAnnotatedText(text: string): React.ReactNode {
     }
     if (part.startsWith('<ins>')) {
       const content = part.replace(/^<ins>/, '').replace(/<\/ins>$/, '')
-      return <span key={i} className="text-green-700 bg-green-50 px-0.5 rounded underline decoration-green-600">{content}</span>
+      return <span key={i} className="text-blue-700 bg-blue-50 px-0.5 rounded underline decoration-blue-600">{content}</span>
     }
     return <span key={i}>{part}</span>
   })
@@ -572,13 +572,13 @@ function renderImprovedText(text: string): React.ReactNode {
   return lines.map((line, lineIdx) => {
     if (line.trim() === '') return <div key={lineIdx} className="h-2" />
     const isHeader = /^[0-9]e[r]?\w*\s+paragraphe\s*\(/i.test(line.trim())
-    if (isHeader) return <p key={lineIdx} className="font-bold text-indigo-700 mt-3 mb-0.5 text-sm">{line}</p>
+    if (isHeader) return <p key={lineIdx} className="font-bold text-blue-700 mt-3 mb-0.5 text-sm">{line}</p>
     const parts = line.split(/(\[[^\]]+\])/g)
     return (
       <p key={lineIdx} className="text-sm text-gray-800 leading-relaxed">
         {parts.map((part, i) =>
           /^\[.+\]$/.test(part) ? (
-            <span key={i} className="inline-block text-[10px] font-semibold text-indigo-600 bg-indigo-50 border border-indigo-200 px-1 rounded mx-0.5 leading-none py-0.5 align-middle">
+            <span key={i} className="inline-block text-[10px] font-semibold text-blue-600 bg-blue-50 border border-blue-200 px-1 rounded mx-0.5 leading-none py-0.5 align-middle">
               {part}
             </span>
           ) : <span key={i}>{part}</span>
@@ -630,14 +630,14 @@ function TaskResultCard({ taskNumber, label, score }: { taskNumber: number; labe
         {/* Strengths & Improvements */}
         <div className="grid sm:grid-cols-2 gap-4">
           {score.strengths.length > 0 && (
-            <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-100">
-              <p className="text-xs font-extrabold text-emerald-700 mb-2 flex items-center gap-1">
+            <div className="bg-blue-50 rounded-xl p-3 border border-blue-100">
+              <p className="text-xs font-extrabold text-blue-700 mb-2 flex items-center gap-1">
                 <span>✅</span> Points forts
               </p>
               <ul className="space-y-1.5">
                 {score.strengths.map((s, i) => (
-                  <li key={i} className="flex items-start gap-2 text-xs text-emerald-800">
-                    <span className="text-emerald-500 mt-0.5 flex-shrink-0">•</span>
+                  <li key={i} className="flex items-start gap-2 text-xs text-blue-800">
+                    <span className="text-blue-500 mt-0.5 flex-shrink-0">•</span>
                     {s}
                   </li>
                 ))}
@@ -645,14 +645,14 @@ function TaskResultCard({ taskNumber, label, score }: { taskNumber: number; labe
             </div>
           )}
           {score.improvements.length > 0 && (
-            <div className="bg-orange-50 rounded-xl p-3 border border-orange-100">
-              <p className="text-xs font-extrabold text-orange-700 mb-2 flex items-center gap-1">
+            <div className="bg-red-50 rounded-xl p-3 border border-red-100">
+              <p className="text-xs font-extrabold text-red-700 mb-2 flex items-center gap-1">
                 <span>💡</span> À améliorer
               </p>
               <ul className="space-y-1.5">
                 {score.improvements.map((s, i) => (
-                  <li key={i} className="flex items-start gap-2 text-xs text-orange-800">
-                    <span className="text-orange-500 mt-0.5 flex-shrink-0">→</span>
+                  <li key={i} className="flex items-start gap-2 text-xs text-red-800">
+                    <span className="text-red-500 mt-0.5 flex-shrink-0">→</span>
                     {s}
                   </li>
                 ))}
@@ -665,21 +665,21 @@ function TaskResultCard({ taskNumber, label, score }: { taskNumber: number; labe
         {score.annotatedText && nextLevel && (
           <div className="border-t border-gray-50 pt-3">
             <button onClick={() => setShowImproved((v) => !v)}
-              className="flex items-center gap-2 text-sm font-semibold text-orange-600 hover:text-orange-800 transition-colors">
+              className="flex items-center gap-2 text-sm font-semibold text-red-600 hover:text-red-800 transition-colors">
               <span>✏️</span>
               {showImproved ? 'Masquer les corrections' : 'Voir les corrections de ton texte'}
               <span className={`transition-transform duration-200 ${showImproved ? 'rotate-180' : ''}`}>▾</span>
             </button>
             {showImproved && (
-              <div className="mt-3 bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-amber-800 font-semibold pb-2 border-b border-amber-200">
+              <div className="mt-3 bg-red-50 border border-red-200 rounded-xl p-4 space-y-3">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-red-800 font-semibold pb-2 border-b border-red-200">
                   <span>Corrections pour atteindre le niveau {nextLevel} :</span>
                   <span className="flex items-center gap-1 font-normal">
                     <span className="line-through text-red-600 bg-red-50 px-1 rounded">erreur</span>
                     <span className="text-gray-500">= à corriger</span>
                   </span>
                   <span className="flex items-center gap-1 font-normal">
-                    <span className="text-green-700 bg-green-50 px-1 rounded underline decoration-green-600">correction</span>
+                    <span className="text-blue-700 bg-blue-50 px-1 rounded underline decoration-blue-600">correction</span>
                     <span className="text-gray-500">= texte corrigé</span>
                   </span>
                 </div>
@@ -693,17 +693,17 @@ function TaskResultCard({ taskNumber, label, score }: { taskNumber: number; labe
         {taskNumber === 1 && score.improvedText && nextLevel && (
           <div className="border-t border-gray-50 pt-3">
             <button onClick={() => setShowImprovedFull((v) => !v)}
-              className="flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition-colors">
+              className="flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors">
               <span>📝</span>
               {showImprovedFull ? 'Masquer la production corrigée' : `Production corrigée — structure 4 paragraphes (niveau ${nextLevel})`}
               <span className={`transition-transform duration-200 ${showImprovedFull ? 'rotate-180' : ''}`}>▾</span>
             </button>
             {showImprovedFull && (
-              <div className="mt-3 bg-indigo-50 border border-indigo-200 rounded-xl p-4">
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-indigo-800 font-semibold pb-2 border-b border-indigo-200 mb-3">
+              <div className="mt-3 bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-blue-800 font-semibold pb-2 border-b border-blue-200 mb-3">
                   <span>Réécriture au niveau {nextLevel} :</span>
                   <span className="flex items-center gap-1 font-normal">
-                    <span className="text-[10px] font-semibold text-indigo-600 bg-white border border-indigo-200 px-1 rounded">[procédé]</span>
+                    <span className="text-[10px] font-semibold text-blue-600 bg-white border border-blue-200 px-1 rounded">[procédé]</span>
                     <span className="text-gray-500">= technique utilisée</span>
                   </span>
                 </div>

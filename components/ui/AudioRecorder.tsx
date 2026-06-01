@@ -99,7 +99,7 @@ export default function AudioRecorder({
 
       {state === 'done' && audioUrl && (
         <div className="w-full space-y-2">
-          <p className="text-green-600 font-semibold text-center">✅ Enregistrement terminé ({fmt(elapsed)})</p>
+          <p className="text-blue-600 font-semibold text-center">✅ Enregistrement terminé ({fmt(elapsed)})</p>
           {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
           <audio controls src={audioUrl} className="w-full" />
         </div>

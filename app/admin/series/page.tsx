@@ -231,7 +231,7 @@ export default function SeriesAdminPage() {
                 <p className="text-xs text-gray-500 mt-1">
                   {selectedModuleFreeCount} / 3 série{selectedModuleFreeCount !== 1 ? 's' : ''} gratuite{selectedModuleFreeCount !== 1 ? 's' : ''} pour ce module
                   {selectedModuleFreeCount >= 3 && !isEditingCurrentlyFree && (
-                    <span className="text-orange-600 font-medium"> — limite atteinte</span>
+                    <span className="text-red-600 font-medium"> — limite atteinte</span>
                   )}
                 </p>
               )}
@@ -312,7 +312,7 @@ export default function SeriesAdminPage() {
                     <td className="px-4 py-3 text-gray-600">{s._count.questions}</td>
                     <td className="px-4 py-3">
                       {s.isFree ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
                           Gratuite
                         </span>
                       ) : (

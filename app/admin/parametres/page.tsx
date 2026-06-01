@@ -123,7 +123,7 @@ export default function ParametresPage() {
 
       {/* Feedback banners */}
       {success && (
-        <div className="mb-6 flex items-center gap-2 p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl text-sm font-medium">
+        <div className="mb-6 flex items-center gap-2 p-4 bg-blue-50 border border-blue-200 text-blue-700 rounded-xl text-sm font-medium">
           <span className="text-lg">✅</span>
           Paramètres enregistrés avec succès.
         </div>
@@ -226,7 +226,7 @@ export default function ParametresPage() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
               <span className="inline-flex items-center gap-1.5">
-                <span className="inline-block w-2.5 h-2.5 rounded-full bg-orange-500" />
+                <span className="inline-block w-2.5 h-2.5 rounded-full bg-red-500" />
                 Numéro Orange Money
               </span>
             </label>
@@ -246,7 +246,7 @@ export default function ParametresPage() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
               <span className="inline-flex items-center gap-1.5">
-                <span className="inline-block w-2.5 h-2.5 rounded-full bg-yellow-400" />
+                <span className="inline-block w-2.5 h-2.5 rounded-full bg-blue-300" />
                 Numéro MTN MoMo
               </span>
             </label>
@@ -325,7 +325,7 @@ export default function ParametresPage() {
               Un bandeau promotionnel s&apos;affiche automatiquement sur la page des packs.
             </p>
             {parseFloat(form.discountRate) > 0 && (
-              <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 border border-green-200 rounded-lg text-xs font-semibold text-green-700">
+              <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg text-xs font-semibold text-blue-700">
                 🎉 Remise de {form.discountRate}% active — les prix affichés seront réduits
               </div>
             )}

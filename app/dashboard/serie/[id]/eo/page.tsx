@@ -235,7 +235,7 @@ function EOSectionCard({
         )}
         {score.registreAdapte !== undefined && (
           <p className={`text-xs font-semibold flex items-center gap-1 ${
-            score.registreAdapte ? 'text-emerald-600' : 'text-orange-600'
+            score.registreAdapte ? 'text-blue-600' : 'text-red-600'
           }`}>
             {score.registreAdapte ? '✅ Registre adapté' : '⚠️ Registre à ajuster'}
           </p>
@@ -243,14 +243,14 @@ function EOSectionCard({
         <p className="text-sm text-gray-700 leading-relaxed">{score.feedback}</p>
 
         {score.strengths.length > 0 && (
-          <div className="bg-emerald-50 rounded-xl p-3 border border-emerald-100">
-            <p className="text-xs font-extrabold text-emerald-700 mb-2 flex items-center gap-1">
+          <div className="bg-blue-50 rounded-xl p-3 border border-blue-100">
+            <p className="text-xs font-extrabold text-blue-700 mb-2 flex items-center gap-1">
               <span>✅</span> Points forts
             </p>
             <ul className="space-y-1">
               {score.strengths.map((s, i) => (
-                <li key={i} className="flex items-start gap-2 text-xs text-emerald-800">
-                  <span className="text-emerald-500 mt-0.5 flex-shrink-0">•</span>
+                <li key={i} className="flex items-start gap-2 text-xs text-blue-800">
+                  <span className="text-blue-500 mt-0.5 flex-shrink-0">•</span>
                   {s}
                 </li>
               ))}
@@ -258,14 +258,14 @@ function EOSectionCard({
           </div>
         )}
         {score.improvements.length > 0 && (
-          <div className="bg-orange-50 rounded-xl p-3 border border-orange-100">
-            <p className="text-xs font-extrabold text-orange-700 mb-2 flex items-center gap-1">
+          <div className="bg-red-50 rounded-xl p-3 border border-red-100">
+            <p className="text-xs font-extrabold text-red-700 mb-2 flex items-center gap-1">
               <span>💡</span> À améliorer
             </p>
             <ul className="space-y-1">
               {score.improvements.map((s, i) => (
-                <li key={i} className="flex items-start gap-2 text-xs text-orange-800">
-                  <span className="text-orange-500 mt-0.5 flex-shrink-0">→</span>
+                <li key={i} className="flex items-start gap-2 text-xs text-red-800">
+                  <span className="text-red-500 mt-0.5 flex-shrink-0">→</span>
                   {s}
                 </li>
               ))}
@@ -949,8 +949,8 @@ ${documentContext}`
                     </div>
                   )}
                   {(rtcState === 'connected' || rtcState === 'idle') && (
-                    <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 border border-green-200 rounded-full text-xs text-green-700">
-                      <span className="w-2 h-2 bg-green-500 rounded-full inline-block" />
+                    <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-full text-xs text-blue-700">
+                      <span className="w-2 h-2 bg-blue-500 rounded-full inline-block" />
                       En écoute — parlez naturellement
                     </div>
                   )}
@@ -1062,7 +1062,7 @@ ${documentContext}`
               )
             ) : (
               <div className="text-center py-2">
-                <p className="text-green-700 font-semibold text-xs">✅ Section terminée…</p>
+                <p className="text-blue-700 font-semibold text-xs">✅ Section terminée…</p>
               </div>
             )}
           </div>
@@ -1298,9 +1298,9 @@ export default function EOPage() {
       h.map((t) => `${t.role === 'user' ? 'Vous' : 'Interlocuteur'}: ${t.content}`).join('\n')
 
     const CECRL_GRADIENT: Record<string, string> = {
-      A1: 'from-red-500 to-red-600', A2: 'from-orange-500 to-orange-600',
-      B1: 'from-yellow-500 to-amber-500', B2: 'from-green-500 to-emerald-500',
-      C1: 'from-blue-600 to-tef-blue', C2: 'from-purple-600 to-purple-700',
+      A1: 'from-tef-red to-red-700', A2: 'from-red-500 to-red-600',
+      B1: 'from-blue-400 to-blue-500', B2: 'from-blue-600 to-blue-700',
+      C1: 'from-tef-blue to-blue-800', C2: 'from-blue-900 to-[#001344]',
     }
     const cecrlGrad = result ? (CECRL_GRADIENT[result.globalCecrlLevel] ?? 'from-blue-600 to-tef-blue') : 'from-gray-400 to-gray-500'
 
@@ -1335,7 +1335,7 @@ export default function EOPage() {
 
         <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
           {aiError && (
-            <div className="bg-orange-50 border border-orange-200 text-orange-700 px-4 py-3 rounded-xl text-sm flex items-start gap-2">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm flex items-start gap-2">
               <span className="text-lg flex-shrink-0">⚠️</span>
               {aiError}
             </div>
@@ -1391,8 +1391,8 @@ export default function EOPage() {
                     </div>
                   )}
                   {result.lexique && (
-                    <div className="bg-purple-50 rounded-xl p-3 border border-purple-100">
-                      <p className="text-xs font-extrabold text-purple-700 mb-1">📚 Lexique & Grammaire</p>
+                    <div className="bg-blue-50 rounded-xl p-3 border border-blue-100">
+                      <p className="text-xs font-extrabold text-blue-700 mb-1">📚 Lexique & Grammaire</p>
                       <p className="text-sm text-gray-700">{result.lexique}</p>
                     </div>
                   )}
@@ -1500,14 +1500,14 @@ export default function EOPage() {
           </div>
 
           {/* Tips */}
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-1.5">
-            <p className="text-xs font-extrabold text-amber-800 mb-2">Avant de commencer :</p>
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4 space-y-1.5">
+            <p className="text-xs font-extrabold text-red-800 mb-2">Avant de commencer :</p>
             {[
               '🎙️ Activez votre microphone — la voix est recommandée',
               '🌐 Utilisez Chrome ou Edge pour la reconnaissance vocale',
               '🔇 Placez-vous dans un endroit calme pour de meilleurs résultats',
             ].map((tip) => (
-              <p key={tip} className="text-xs text-amber-800">{tip}</p>
+              <p key={tip} className="text-xs text-red-800">{tip}</p>
             ))}
           </div>
 

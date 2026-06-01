@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState, useEffect } from 'react'
 import PaymentModal from '@/components/ui/PaymentModal'
 
@@ -100,7 +100,7 @@ export default function PacksPage() {
           ) : (
             <>
               {settings.discountRate > 0 && (
-                <div className="mb-10 flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-50 border border-emerald-200 rounded-lg text-sm font-semibold text-emerald-700 max-w-sm mx-auto">
+                <div className="mb-10 flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-50 border border-blue-200 rounded-lg text-sm font-semibold text-blue-700 max-w-sm mx-auto">
                   <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M9 14.25l6-6m4.5-3.493V21.75l-3.75-1.5-3.75 1.5-3.75-1.5-3.75 1.5V4.757c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0c1.1.128 1.907 1.077 1.907 2.185z" />
                   </svg>
@@ -176,7 +176,7 @@ export default function PacksPage() {
                             className={`w-full py-2.5 font-bold rounded-lg text-sm transition-colors ${
                               pack.isRecommended
                                 ? 'bg-tef-blue text-white hover:bg-blue-800'
-                                : 'bg-gray-900 text-white hover:bg-gray-700'
+                                : 'bg-[#001344] text-white hover:bg-gray-700'
                             }`}
                           >
                             Souscrire
@@ -256,3 +256,4 @@ export default function PacksPage() {
     </div>
   )
 }
+
