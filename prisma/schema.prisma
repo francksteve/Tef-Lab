@@ -60,6 +60,7 @@ model User {
   results            Result[]
   aiUsageLogs        AIUsageLog[]
   notifications      Notification[]
+  devices            UserDevice[]
 }
 
 model Pack {
@@ -228,6 +229,17 @@ model AIUsageLog {
 
   @@unique([userId, date])
   @@index([userId])
+}
+
+model UserDevice {
+  id          String   @id @default(cuid())
+  userId      String
+  deviceToken String
+  lastSeenAt  DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, deviceToken])
+  @@index([userId, lastSeenAt])
 }
 
 model Notification {

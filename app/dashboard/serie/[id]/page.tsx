@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Timer from '@/components/ui/Timer'
 import AudioPlayer from '@/components/ui/AudioPlayer'
+import { calculateCecrlLevel } from '@/lib/scoring'
 
 interface Module {
   id: string
@@ -459,14 +460,6 @@ function CEQuestion({
   return wrap(left)
 }
 
-function calculateCecrlLevel(correct: number): string {
-  if (correct <= 6) return 'A1'
-  if (correct <= 15) return 'A2'
-  if (correct <= 21) return 'B1'
-  if (correct <= 28) return 'B2'
-  if (correct <= 34) return 'C1'
-  return 'C2'
-}
 
 function formatTime(seconds: number): string {
   const m = Math.floor(seconds / 60)

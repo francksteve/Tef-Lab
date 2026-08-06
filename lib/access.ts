@@ -90,6 +90,61 @@ export async function checkAndIncrementAIUsage(
   return { allowed: true, remaining: limit - currentCount - 1, limit }
 }
 
+const DEVICE_TTL_MS = 15 * 60 * 1000 // 15 min — slot freed if no heartbeat
+
+/**
+ * Registers (or refreshes) a device for a user and checks if they are within
+ * their pack's maxSessions limit.
+ *
+ * FREE users (no active subscription) are never blocked.
+ * Fails open: if Prisma throws (e.g. table not yet migrated), returns allowed.
+ */
+export async function checkAndRegisterDevice(
+  userId: string,
+  deviceToken: string
+): Promise<{ allowed: boolean; activeCount: number; maxSessions: number }> {
+  try {
+    const subscription = await getActiveSubscription(userId)
+
+    // No paid subscription → unlimited sessions
+    if (!subscription) {
+      await prisma.userDevice.upsert({
+        where: { userId_deviceToken: { userId, deviceToken } },
+        update: { lastSeenAt: new Date() },
+        create: { userId, deviceToken },
+      })
+      return { allowed: true, activeCount: 1, maxSessions: 0 }
+    }
+
+    const maxSessions = subscription.pack.maxSessions
+
+    // Refresh this device first
+    await prisma.userDevice.upsert({
+      where: { userId_deviceToken: { userId, deviceToken } },
+      update: { lastSeenAt: new Date() },
+      create: { userId, deviceToken },
+    })
+
+    // Count active devices (lastSeenAt within TTL)
+    const cutoff = new Date(Date.now() - DEVICE_TTL_MS)
+    const activeCount = await prisma.userDevice.count({
+      where: { userId, lastSeenAt: { gt: cutoff } },
+    })
+
+    // Opportunistic cleanup of stale records (~5 % of calls)
+    if (Math.random() < 0.05) {
+      prisma.userDevice
+        .deleteMany({ where: { lastSeenAt: { lt: new Date(Date.now() - 30 * 60 * 1000) } } })
+        .catch(() => {})
+    }
+
+    return { allowed: activeCount <= maxSessions, activeCount, maxSessions }
+  } catch {
+    // Table not yet migrated or transient DB error — fail open
+    return { allowed: true, activeCount: 1, maxSessions: 0 }
+  }
+}
+
 /** Returns today's AI usage count and limit for a user. */
 export async function getAIUsageToday(
   userId: string
