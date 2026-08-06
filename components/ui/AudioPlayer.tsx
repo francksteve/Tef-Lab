@@ -55,7 +55,7 @@ export default function AudioPlayer({
           played
             ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
             : playing
-            ? 'bg-red-500 text-white cursor-default'
+            ? 'bg-tef-red text-white cursor-default'
             : 'bg-tef-blue text-white hover:bg-tef-blue-hover'
         }`}
       >

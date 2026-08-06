@@ -722,7 +722,7 @@ export default function QuizPage() {
               </div>
               <div className="w-px h-16 bg-gray-200 hidden sm:block" />
               <div className="text-center">
-                <p className="text-5xl font-black text-tef-red">{result.cecrlLevel}</p>
+                <p className="text-5xl font-black text-tef-blue">{result.cecrlLevel}</p>
                 <p className="text-sm text-gray-500 mt-1">Niveau CECRL</p>
               </div>
               <div className="w-px h-16 bg-gray-200 hidden sm:block" />

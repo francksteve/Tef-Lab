@@ -146,7 +146,7 @@ function EvolutionTooltip({ active, payload, label, moduleName }: {
       <p className="text-gray-500 mb-1">{date}</p>
       <p className="font-bold text-tef-blue">{moduleName} : {val ?? 0}%</p>
       {val != null && val >= NCLC7_TARGET && (
-        <p className="text-blue-600 text-xs mt-0.5">✓ Objectif NCLC 7</p>
+        <p className="text-tef-blue text-xs mt-0.5">✓ Objectif NCLC 7</p>
       )}
     </div>
   )
@@ -246,7 +246,7 @@ export default function PerformancePage() {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[
           { label: 'Séries complétées', value: summary.totalAttempts.toString(), sub: 'tous modules', color: 'border-blue-200 bg-blue-50', text: 'text-tef-blue' },
-          { label: 'Score moyen', value: summary.totalAttempts > 0 ? `${summary.avgScorePercent}%` : '—', sub: 'toutes séries', color: 'border-blue-200 bg-blue-50', text: 'text-blue-700' },
+          { label: 'Score moyen', value: summary.totalAttempts > 0 ? `${summary.avgScorePercent}%` : '—', sub: 'toutes séries', color: 'border-blue-200 bg-blue-50', text: 'text-tef-blue' },
           { label: 'Meilleur niveau', value: summary.topLevel || '—', sub: 'CECRL atteint', color: 'border-blue-200 bg-blue-50', text: 'text-tef-blue' },
           {
             label: 'Temps pratiqué',
@@ -254,8 +254,8 @@ export default function PerformancePage() {
               ? `${Math.floor(summary.totalMinutes / 60)}h${summary.totalMinutes % 60 > 0 ? String(summary.totalMinutes % 60).padStart(2, '0') : ''}`
               : `${summary.totalMinutes}min`,
             sub: 'total cumulé',
-            color: 'border-red-200 bg-red-50',
-            text: 'text-red-600',
+            color: 'border-blue-200 bg-blue-50',
+            text: 'text-tef-blue',
           },
         ].map((card) => (
           <div key={card.label} className={`${card.color} border rounded-2xl p-4 space-y-1`}>

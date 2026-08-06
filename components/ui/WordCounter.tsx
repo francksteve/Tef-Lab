@@ -15,7 +15,7 @@ export default function WordCounter({ text, minimum }: WordCounterProps) {
   const remaining = minimum - count
 
   return (
-    <div className={`flex items-center gap-2 text-sm font-medium mt-1 ${reached ? 'text-blue-600' : 'text-red-500'}`}>
+    <div className={`flex items-center gap-2 text-sm font-medium mt-1 ${reached ? 'text-tef-blue' : 'text-tef-red'}`}>
       <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-xs font-bold ${reached ? 'bg-blue-100' : 'bg-red-100'}`}>
         {reached ? '✓' : '!'}
       </span>

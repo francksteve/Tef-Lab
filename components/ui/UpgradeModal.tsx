@@ -182,7 +182,7 @@ export default function UpgradeModal({ isOpen, onClose, reason }: Props) {
                           className={`w-full py-2.5 font-bold rounded-lg text-sm transition-colors ${
                             pack.isRecommended
                               ? 'bg-tef-blue text-white hover:bg-tef-blue-hover'
-                              : 'bg-[#001344] text-white hover:bg-gray-700'
+                              : 'bg-tef-night text-white hover:bg-tef-blue'
                           }`}
                         >
                           Payer →

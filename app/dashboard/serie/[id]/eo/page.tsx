@@ -1029,7 +1029,7 @@ ${documentContext}`
                       disabled={aiTyping}
                       rows={2}
                       placeholder="Écrivez votre réponse… (Entrée pour envoyer)"
-                      className="flex-1 resize-none border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                      className="flex-1 resize-none border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue disabled:bg-gray-100"
                     />
                     <button
                       onClick={() => {

@@ -40,7 +40,7 @@ export default function Timer({ durationSeconds, onTimeUp }: TimerProps) {
         remaining === 0
           ? 'bg-gray-600 text-white'
           : isUrgent
-          ? 'bg-red-600 text-white animate-pulse'
+          ? 'bg-tef-red text-white animate-pulse'
           : 'bg-tef-blue text-white'
       }`}
     >

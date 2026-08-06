@@ -347,7 +347,7 @@ export default function EEPage() {
         </div>
         <div className="flex flex-col gap-2">
           <button onClick={() => router.push('/dashboard')}
-            className="w-full px-4 py-2.5 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-colors">
+            className="w-full px-4 py-2.5 bg-tef-red text-white font-semibold rounded-xl hover:bg-red-700 transition-colors">
             Quitter sans soumettre
           </button>
           <button onClick={() => setShowExitConfirm(false)}
@@ -462,7 +462,7 @@ export default function EEPage() {
           {/* Header */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-tef-red rounded-xl flex items-center justify-center text-white text-xl flex-shrink-0">✉️</div>
+              <div className="w-10 h-10 bg-tef-blue rounded-xl flex items-center justify-center text-white text-xl flex-shrink-0">✉️</div>
               <div>
                 <p className="font-extrabold text-gray-900 text-sm">{series?.title}</p>
                 <p className="text-gray-400 text-xs">Expression Écrite · Tâche 2 sur 2</p>
@@ -479,7 +479,7 @@ export default function EEPage() {
 
           {/* Task badge */}
           <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-tef-red text-white text-xs font-bold rounded-full shadow-sm">
+            <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-tef-blue text-white text-xs font-bold rounded-full shadow-sm">
               ✉️ Tâche 2 — Lettre au journal
             </span>
             <span className="text-xs text-gray-400">35 minutes · 200 mots minimum</span>
@@ -500,9 +500,9 @@ export default function EEPage() {
           )}
 
           {/* Consigne */}
-          <div className="bg-red-50 border border-red-100 rounded-xl px-4 py-3 flex gap-3">
-            <span className="text-red-500 text-lg flex-shrink-0">💡</span>
-            <p className="text-sm text-red-800 leading-relaxed">{task2Q?.question ?? TASK2_CONSIGNE}</p>
+          <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 flex gap-3">
+            <span className="text-blue-500 text-lg flex-shrink-0">💡</span>
+            <p className="text-sm text-blue-800 leading-relaxed">{task2Q?.question ?? TASK2_CONSIGNE}</p>
           </div>
 
           {/* Textarea */}
@@ -665,7 +665,7 @@ function TaskResultCard({ taskNumber, label, score }: { taskNumber: number; labe
         {score.annotatedText && nextLevel && (
           <div className="border-t border-gray-50 pt-3">
             <button onClick={() => setShowImproved((v) => !v)}
-              className="flex items-center gap-2 text-sm font-semibold text-red-600 hover:text-red-800 transition-colors">
+              className="flex items-center gap-2 text-sm font-semibold text-tef-red hover:text-red-700 transition-colors">
               <span>✏️</span>
               {showImproved ? 'Masquer les corrections' : 'Voir les corrections de ton texte'}
               <span className={`transition-transform duration-200 ${showImproved ? 'rotate-180' : ''}`}>▾</span>
