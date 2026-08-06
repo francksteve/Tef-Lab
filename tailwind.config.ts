@@ -13,6 +13,7 @@ const config: Config = {
         foreground: "var(--foreground)",
         "tef-blue": "#003087",
         "tef-blue-hover": "#0055B3",
+        "tef-night": "#001F60",
         "tef-red": "#E30613",
       },
       fontFamily: {

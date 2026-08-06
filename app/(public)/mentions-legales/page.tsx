@@ -348,11 +348,11 @@ export default function MentionsLegalesPage() {
   return (
     <div className="min-h-screen bg-white">
       {/* Hero */}
-      <section className="bg-tef-blue text-white py-12 px-4">
+      <section className="bg-tef-night text-white py-12 px-4">
         <div className="max-w-3xl mx-auto">
-          <p className="text-blue-300 text-sm font-medium mb-2 uppercase tracking-widest">Légal</p>
-          <h1 className="text-3xl sm:text-4xl font-extrabold mb-3">Mentions légales</h1>
-          <p className="text-blue-200 text-sm">
+          <p className="text-white/60 text-xs font-bold mb-2 uppercase tracking-[0.15em]">Légal</p>
+          <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-3">Mentions légales</h1>
+          <p className="text-white/70 text-sm">
             Dernière mise à jour : mars 2026 &nbsp;·&nbsp; Plateforme TEF-LAB, préparation au TEF Canada
           </p>
         </div>
@@ -382,7 +382,7 @@ export default function MentionsLegalesPage() {
         <div className="max-w-3xl mx-auto space-y-12">
 
           {/* Intro */}
-          <div className="bg-blue-50 border border-blue-100 rounded-2xl p-6 text-sm text-gray-700 leading-relaxed">
+          <div className="bg-gray-50 border border-gray-200 rounded-xl p-6 text-sm text-gray-700 leading-relaxed">
             <p>
               Ces mentions légales ont pour objectif de vous informer de manière claire et transparente sur
               les conditions dans lesquelles TEF-LAB vous offre ses services, sur vos droits en tant
@@ -413,13 +413,13 @@ export default function MentionsLegalesPage() {
             <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
               <Link
                 href="/contact"
-                className="inline-block px-6 py-2.5 bg-tef-blue text-white font-semibold rounded-xl text-sm hover:bg-tef-blue-hover transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-tef-blue text-white font-semibold rounded-lg text-sm hover:bg-tef-night transition-colors"
               >
                 Nous contacter →
               </Link>
               <Link
                 href="/"
-                className="inline-block px-6 py-2.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-xl text-sm hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-lg text-sm hover:bg-gray-50 transition-colors"
               >
                 ← Retour à l&apos;accueil
               </Link>

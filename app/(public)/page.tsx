@@ -49,7 +49,7 @@ export default function HomePage() {
     <div className="min-h-screen bg-white">
 
       {/* ── HERO ── */}
-      <section className="relative overflow-hidden bg-[#001344]">
+      <section className="relative overflow-hidden bg-tef-night">
         {/* Bande tricolore verticale décorative */}
         <div className="absolute left-0 top-0 bottom-0 flex w-1.5">
           <div className="flex-1 bg-[#003087]" />
@@ -63,7 +63,7 @@ export default function HomePage() {
 
             {/* Colonne gauche — texte */}
             <div>
-              <p className="text-white/50 text-xs font-semibold uppercase tracking-[0.2em] mb-3">
+              <p className="text-white/70 text-xs font-semibold uppercase tracking-[0.2em] mb-3">
                 Test d&apos;Évaluation de Français · Reconnu IRCC
               </p>
               <h1 className="text-4xl sm:text-5xl font-black leading-[1.1] tracking-tight text-white">
@@ -71,7 +71,7 @@ export default function HomePage() {
                 <span className="text-tef-red">TEF Canada</span><br />
                 avec méthode.
               </h1>
-              <p className="mt-4 text-white/60 text-sm leading-relaxed">
+              <p className="mt-4 text-white/75 text-sm leading-relaxed">
                 Entraînement sur les 4 modules officiels, conditions réelles d&apos;examen,
                 et correction par IA avec score NCLC instantané.
               </p>
@@ -100,7 +100,7 @@ export default function HomePage() {
                 ].map(s => (
                   <div key={s.label}>
                     <p className="text-2xl font-black text-white leading-none">{s.n}</p>
-                    <p className="text-white/40 text-xs mt-0.5">{s.label}</p>
+                    <p className="text-white/60 text-xs mt-0.5">{s.label}</p>
                   </div>
                 ))}
               </div>
@@ -120,7 +120,7 @@ export default function HomePage() {
                   </div>
                   <div>
                     <p className="text-white text-sm font-bold leading-tight">{m.name}</p>
-                    <p className="text-white/40 text-xs mt-0.5">{m.meta}</p>
+                    <p className="text-white/60 text-xs mt-0.5">{m.meta}</p>
                   </div>
                 </div>
               ))}
@@ -362,8 +362,8 @@ export default function HomePage() {
                         onClick={() => openPayment(pack)}
                         className={`w-full py-2.5 font-bold rounded-lg text-sm transition-colors ${
                           pack.isRecommended
-                            ? 'bg-tef-blue hover:bg-[#001F60] text-white'
-                            : 'bg-gray-900 hover:bg-gray-700 text-white'
+                            ? 'bg-tef-blue hover:bg-tef-night text-white'
+                            : 'border border-tef-blue/20 hover:border-tef-blue text-tef-blue hover:bg-tef-blue/5'
                         }`}
                       >
                         S&apos;abonner
@@ -434,7 +434,7 @@ export default function HomePage() {
       </section>
 
       {/* ── CTA ── */}
-      <section className="py-10 px-4 sm:px-6 bg-[#001344]">
+      <section className="py-10 px-4 sm:px-6 bg-tef-night">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
           <div>
             <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
@@ -465,7 +465,7 @@ export default function HomePage() {
       </section>
 
       {/* ── CONTACT ── */}
-      <section className="py-8 px-4 sm:px-6 bg-[#001344] border-t border-white/5">
+      <section className="py-8 px-4 sm:px-6 bg-tef-night border-t border-white/5">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-white/40 text-sm">Une question ? Notre équipe est disponible.</p>
           <div className="flex gap-3">

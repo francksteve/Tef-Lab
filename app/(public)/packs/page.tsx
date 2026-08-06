@@ -80,13 +80,13 @@ export default function PacksPage() {
     <div className="min-h-screen">
 
       {/* Hero */}
-      <section className="bg-gradient-to-br from-tef-blue via-blue-800 to-blue-900 text-white py-20 px-4">
+      <section className="bg-tef-night text-white py-16 px-4">
         <div className="max-w-3xl mx-auto text-center">
-          <p className="text-xs font-semibold uppercase tracking-widest text-blue-300 mb-3">Tarifs</p>
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-4">
+          <p className="text-xs font-bold uppercase tracking-[0.15em] text-white/60 mb-3">Tarifs</p>
+          <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-4">
             Packs de préparation TEF Canada
           </h1>
-          <p className="text-blue-200 text-sm leading-relaxed max-w-xl mx-auto">
+          <p className="text-white/70 text-sm leading-relaxed max-w-xl mx-auto">
             Accès activé instantanément après paiement. Orange Money, MTN MoMo, Visa et Mastercard acceptés.
           </p>
         </div>
@@ -113,7 +113,7 @@ export default function PacksPage() {
                   Aucun pack disponible pour le moment.
                 </div>
               ) : (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                   {packs.map((pack) => {
                     const discounted = finalPrice(pack.price)
                     const hasDiscount = discounted < pack.price
@@ -175,8 +175,8 @@ export default function PacksPage() {
                             onClick={() => openPayment(pack)}
                             className={`w-full py-2.5 font-bold rounded-lg text-sm transition-colors ${
                               pack.isRecommended
-                                ? 'bg-tef-blue text-white hover:bg-blue-800'
-                                : 'bg-[#001344] text-white hover:bg-gray-700'
+                                ? 'bg-tef-blue text-white hover:bg-tef-night'
+                                : 'border border-tef-blue/20 hover:border-tef-blue text-tef-blue hover:bg-tef-blue/5'
                             }`}
                           >
                             Souscrire
@@ -208,7 +208,7 @@ export default function PacksPage() {
           </p>
           <a
             href="/inscription"
-            className="inline-flex items-center gap-2 px-6 py-2.5 bg-tef-blue text-white font-semibold rounded-lg hover:bg-blue-800 transition-colors text-sm"
+            className="inline-flex items-center gap-2 px-6 py-2.5 bg-tef-blue text-white font-semibold rounded-lg hover:bg-tef-night transition-colors text-sm"
           >
             Essayer gratuitement
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
