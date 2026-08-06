@@ -108,7 +108,7 @@ function ScoreBar({ value, showTarget = false }: { value: number | null; showTar
         {/* Score fill */}
         <div
           className="absolute left-0 top-0 h-full rounded-full transition-all duration-500"
-          style={{ width: `${pct}%`, background: reachedTarget ? '#003087' : '#ef4444' }}
+          style={{ width: `${pct}%`, background: reachedTarget ? '#003087' : '#0055B3' }}
         />
         {/* NCLC 7 target marker */}
         {showTarget && (
@@ -120,7 +120,7 @@ function ScoreBar({ value, showTarget = false }: { value: number | null; showTar
         )}
       </div>
       <div className="flex items-center justify-between text-xs">
-        <span className={`font-bold ${reachedTarget ? 'text-tef-blue' : 'text-red-600'}`}>{value}%</span>
+        <span className="font-bold text-tef-blue">{value}%</span>
         {showTarget && (
           <span className="text-gray-400">
             {reachedTarget ? '✓ Objectif NCLC 7 atteint' : `${NCLC7_TARGET - value}% avant NCLC 7`}
@@ -282,7 +282,7 @@ export default function PerformancePage() {
       {hasAnyData && (
         <>
           {/* ── Performance par module ────────────────────────────────────────── */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-2xl border border-blue-100 shadow-sm overflow-hidden">
             <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
               <div>
                 <h2 className="font-extrabold text-gray-900">Performance par module</h2>
@@ -331,7 +331,7 @@ export default function PerformancePage() {
 
           {/* ── Évolution des scores ──────────────────────────────────────────── */}
           {scoreEvolution.length > 0 && (
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <div className="bg-white rounded-2xl border border-blue-100 shadow-sm p-5">
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-5">
                 <div>
                   <h2 className="font-extrabold text-gray-900">Évolution du score</h2>
@@ -425,7 +425,7 @@ export default function PerformancePage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
             {/* Distribution CECRL — barre horizontale lisible */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <div className="bg-white rounded-2xl border border-blue-100 shadow-sm p-5">
               <h2 className="font-extrabold text-gray-900 mb-1">Niveaux CECRL obtenus</h2>
               <p className="text-xs text-gray-400 mb-5">Répartition sur l&apos;ensemble de vos séries</p>
 
@@ -486,7 +486,7 @@ export default function PerformancePage() {
             </div>
 
             {/* Activité par module — barres */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+            <div className="bg-white rounded-2xl border border-blue-100 shadow-sm p-5">
               <h2 className="font-extrabold text-gray-900 mb-1">Activité par module</h2>
               <p className="text-xs text-gray-400 mb-4">Nombre de séries complétées</p>
               <ResponsiveContainer width="100%" height={200}>
@@ -522,11 +522,10 @@ export default function PerformancePage() {
 
           {/* ── Activité récente ──────────────────────────────────────────────── */}
           {recentAttempts.length > 0 && (
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="bg-white rounded-2xl border border-blue-100 shadow-sm overflow-hidden">
               <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                 <div>
                   <h2 className="font-extrabold text-gray-900">Historique récent</h2>
-                  <p className="text-xs text-gray-400 mt-0.5">Vos 8 dernières séries</p>
                 </div>
                 <Link href="/dashboard" className="text-xs text-tef-blue hover:underline font-medium">
                   Voir tout →
