@@ -54,10 +54,12 @@ export async function POST(req: NextRequest) {
       })
 
       const resetUrl = `${config.siteUrl}/reinitialiser-mot-de-passe?token=${token}`
-      // Fire-and-forget — token is saved regardless of email delivery
-      sendPasswordResetEmail({ name: user.name, email, resetUrl }).catch((err) => {
-        console.error('[FORGOT-PASSWORD] Email send failed:', err)
-      })
+      try {
+        await sendPasswordResetEmail({ name: user.name, email, resetUrl })
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err)
+        console.error('[FORGOT-PASSWORD] Email send failed:', message, err)
+      }
     }
 
     // Always return same message (security: don't reveal if email exists)
