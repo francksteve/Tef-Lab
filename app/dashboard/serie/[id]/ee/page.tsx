@@ -117,6 +117,8 @@ export default function EEPage() {
   const [task2Text, setTask2Text] = useState('')
   const [result, setResult] = useState<EEResult | null>(null)
   const [aiError, setAiError] = useState<string | null>(null)
+  const [canRetry, setCanRetry] = useState(false)
+  const [isRetrying, setIsRetrying] = useState(false)
   const [showExitConfirm, setShowExitConfirm] = useState(false)
 
   useEffect(() => {
@@ -158,10 +160,23 @@ export default function EEPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task1Text, task2Text])
 
+  const saveAttempt = useCallback((extra: Record<string, unknown> = {}) =>
+    fetch('/api/attempts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        seriesId, moduleCode: 'EE', answers: {},
+        writtenTask1: task1Text, writtenTask2: task2Text,
+        ...extra,
+      }),
+    }).catch(() => {}),
+  [seriesId, task1Text, task2Text])
+
   const handleFinalSubmit = useCallback(async () => {
     if (phase === 'submitting' || phase === 'results') return
     setPhase('submitting')
     setAiError(null)
+    setCanRetry(false)
     try {
       const scoringRes = await fetch('/api/scoring/ee', {
         method: 'POST',
@@ -171,29 +186,59 @@ export default function EEPage() {
       if (scoringRes.ok) {
         const scoringData = (await scoringRes.json()) as EEResult
         setResult(scoringData)
-        await fetch('/api/attempts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            seriesId, moduleCode: 'EE', answers: {},
-            writtenTask1: task1Text, writtenTask2: task2Text,
-            aiScore: scoringData.globalScore, cecrlLevel: scoringData.globalCecrlLevel,
-          }),
-        }).catch(() => {})
+        await saveAttempt({ aiScore: scoringData.globalScore, cecrlLevel: scoringData.globalCecrlLevel })
       } else {
-        setAiError('La correction par IA a échoué. Veuillez réessayer.')
-        await fetch('/api/attempts', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ seriesId, moduleCode: 'EE', answers: {}, writtenTask1: task1Text, writtenTask2: task2Text }),
-        }).catch(() => {})
+        const isQuota = scoringRes.status === 403
+        setAiError(
+          isQuota
+            ? 'Vous avez atteint votre quota de corrections IA pour aujourd\'hui. Vos textes ont été enregistrés — revenez demain ou passez à un pack supérieur.'
+            : 'La correction par IA a échoué. Vos textes ont été enregistrés — vous pouvez réessayer ci-dessous.'
+        )
+        setCanRetry(!isQuota)
+        await saveAttempt()
       }
     } catch {
-      setAiError('Erreur lors de la soumission. Vérifiez votre connexion.')
+      // Erreur réseau : on sauvegarde quand même les textes
+      setAiError('Erreur de connexion. Vos textes ont été enregistrés — relancez la correction dès que votre réseau est disponible.')
+      setCanRetry(true)
+      await saveAttempt()
     } finally {
       setPhase('results')
     }
-  }, [phase, task1Text, task2Text, seriesId])
+  }, [phase, task1Text, task2Text, seriesId, saveAttempt])
+
+  const handleRetry = useCallback(async () => {
+    setIsRetrying(true)
+    setAiError(null)
+    setPhase('submitting')
+    try {
+      const scoringRes = await fetch('/api/scoring/ee', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task1Text, task2Text, seriesId }),
+      })
+      if (scoringRes.ok) {
+        const scoringData = (await scoringRes.json()) as EEResult
+        setResult(scoringData)
+        setCanRetry(false)
+        await saveAttempt({ aiScore: scoringData.globalScore, cecrlLevel: scoringData.globalCecrlLevel })
+      } else {
+        const isQuota = scoringRes.status === 403
+        setAiError(
+          isQuota
+            ? 'Quota IA atteint. Revenez demain ou changez de pack.'
+            : 'La correction a de nouveau échoué. Réessayez plus tard.'
+        )
+        setCanRetry(!isQuota)
+      }
+    } catch {
+      setAiError('Erreur de connexion. Réessayez quand votre réseau est disponible.')
+      setCanRetry(true)
+    } finally {
+      setPhase('results')
+      setIsRetrying(false)
+    }
+  }, [task1Text, task2Text, seriesId, saveAttempt])
 
   // ── Loading ──
   if (status === 'loading' || loading) {
@@ -277,10 +322,43 @@ export default function EEPage() {
         </div>
 
         <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+
+          {/* Bannière erreur IA — enrichie avec Réessayer et textes soumis */}
           {aiError && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm flex items-start gap-2">
-              <span className="text-lg flex-shrink-0">⚠️</span>
-              {aiError}
+            <div className="bg-amber-50 border border-amber-200 rounded-xl overflow-hidden">
+              <div className="px-4 py-4 flex items-start gap-3">
+                <svg className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+                <div className="flex-1">
+                  <p className="font-bold text-amber-800 text-sm">Correction IA non disponible</p>
+                  <p className="text-amber-700 text-sm mt-1 leading-relaxed">{aiError}</p>
+                </div>
+              </div>
+              {canRetry && (
+                <div className="px-4 pb-4 flex flex-wrap gap-2">
+                  <button
+                    onClick={handleRetry}
+                    disabled={isRetrying}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white text-sm font-bold rounded-lg transition-colors"
+                  >
+                    {isRetrying ? (
+                      <>
+                        <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Relance en cours…
+                      </>
+                    ) : (
+                      'Réessayer la correction IA'
+                    )}
+                  </button>
+                  <a
+                    href="/packs"
+                    className="inline-flex items-center px-4 py-2 border border-amber-300 text-amber-700 text-sm font-semibold rounded-lg hover:bg-amber-100 transition-colors"
+                  >
+                    Voir les packs
+                  </a>
+                </div>
+              )}
             </div>
           )}
 
@@ -315,11 +393,26 @@ export default function EEPage() {
               <TaskResultCard taskNumber={1} label="Suite d'article" score={result.task1} />
               <TaskResultCard taskNumber={2} label="Lettre au journal" score={result.task2} />
             </>
-          ) : !aiError ? (
-            <div className="bg-white rounded-xl border border-gray-100 p-8 text-center text-gray-500">
-              <p>Vos réponses ont été enregistrées.</p>
+          ) : (
+            /* Fallback : afficher les textes soumis pour que l'abonné puisse les copier */
+            <div className="space-y-4">
+              {[
+                { num: 1, label: "Tâche 1 — Suite d'article", text: task1Text },
+                { num: 2, label: 'Tâche 2 — Lettre au journal', text: task2Text },
+              ].map(({ num, label, text }) => (
+                <div key={num} className="bg-white rounded-xl border border-gray-100 overflow-hidden">
+                  <div className="bg-gray-50 px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
+                    <span className="text-sm">{num === 1 ? '📝' : '✉️'}</span>
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">{label}</p>
+                    <span className="ml-auto text-xs text-gray-400">{countWords(text)} mots</span>
+                  </div>
+                  <div className="px-4 py-3">
+                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">{text || '—'}</p>
+                  </div>
+                </div>
+              ))}
             </div>
-          ) : null}
+          )}
 
           <div className="flex justify-center pt-2">
             <button
