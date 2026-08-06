@@ -304,6 +304,7 @@ function DialogueSection({
   const [ended, setEnded] = useState(false)
   const [textInputValue, setTextInputValue] = useState('')
   const [inputMode, setInputMode] = useState<'voice' | 'text'>('voice')
+  const [webRTCFailedAuto, setWebRTCFailedAuto] = useState(false)
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const chatEndRef = useRef<HTMLDivElement>(null)
@@ -523,6 +524,7 @@ function DialogueSection({
     sessionConfiguredRef.current = false
     setRtcState('error')
     setInputMode('text')
+    setWebRTCFailedAuto(true)
     setAiTyping(false)
     sendToAI('[DÉBUT DE LA CONVERSATION]', [])
   }, [sendToAI])
@@ -711,6 +713,17 @@ ${documentContext}`
     }
   }, [sendSessionUpdate, handleDataChannelMessage, handleWebRTCFailure])
 
+  // ── WebRTC: Retry after automatic failure ────────────────
+  const handleRetryWebRTC = useCallback(async () => {
+    setWebRTCFailedAuto(false)
+    setRtcState('idle')
+    setInputMode('voice')
+    setHistory([])
+    historyRef.current = []
+    sessionConfiguredRef.current = false
+    await startWebRTCSession()
+  }, [startWebRTCSession])
+
   // Mount: start WebRTC session
   useEffect(() => {
     if (hasStartedRef.current) return
@@ -879,6 +892,40 @@ ${documentContext}`
         {/* ── Colonne droite : Chat + Contrôles (30%) ── */}
         <div className="flex-1 lg:flex-none lg:w-[30%] flex flex-col bg-gray-50 min-h-0">
 
+          {/* Bannière fallback WebRTC — visible uniquement si échec automatique */}
+          {webRTCFailedAuto && !ended && (
+            <div className="flex-shrink-0 m-3 mb-0 bg-amber-50 border border-amber-200 rounded-xl overflow-hidden">
+              <div className="px-3 py-3 flex items-start gap-2">
+                <svg className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+                <div>
+                  <p className="text-xs font-bold text-amber-800">Mode texte activé</p>
+                  <p className="text-[11px] text-amber-700 mt-0.5 leading-relaxed">
+                    Le microphone n&apos;a pas pu démarrer. Écrivez vos réponses à la place du micro — la conversation a commencé normalement.
+                  </p>
+                </div>
+              </div>
+              <div className="px-3 pb-3 flex gap-2">
+                <button
+                  onClick={handleRetryWebRTC}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-600 hover:bg-amber-700 text-white text-[11px] font-bold rounded-lg transition-colors"
+                >
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                  </svg>
+                  Réessayer le micro
+                </button>
+                <button
+                  onClick={() => setWebRTCFailedAuto(false)}
+                  className="inline-flex items-center px-2.5 py-1 border border-amber-300 text-amber-700 text-[11px] font-semibold rounded-lg hover:bg-amber-100 transition-colors"
+                >
+                  Continuer en texte
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Bulles de chat */}
           <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3 min-h-0">
             {history.length === 0 && !aiTyping && (
@@ -998,7 +1045,7 @@ ${documentContext}`
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center justify-between">
                     <p className="text-[10px] text-gray-500">
-                      {rtcState === 'error' ? '⚠️ Mode texte (vocal indisponible)' : '✏️ Mode texte'}
+                      {webRTCFailedAuto ? '⚠️ Micro indisponible' : '✏️ Mode texte'}
                     </p>
                     {rtcState !== 'error' && (
                       <button
