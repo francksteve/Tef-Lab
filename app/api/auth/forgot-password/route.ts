@@ -15,17 +15,19 @@ const schema = z.object({
 
 export async function POST(req: NextRequest) {
   try {
-    // Rate limiting: 3 attempts per IP per 15 min
-    const ip =
-      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
-      req.headers.get('x-real-ip') ??
-      'unknown'
-    const rl = forgotPasswordLimiter.check(ip)
-    if (!rl.allowed) {
-      // Return same-shape 200 response to avoid enumeration via error differences
-      return NextResponse.json({
-        message: 'Si cet email existe, un lien de réinitialisation a été envoyé.',
-      })
+    // Rate limiting: 3 attempts per IP per 15 min (production only — localhost has no real IP)
+    if (process.env.NODE_ENV === 'production') {
+      const ip =
+        req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+        req.headers.get('x-real-ip') ??
+        'unknown'
+      const rl = forgotPasswordLimiter.check(ip)
+      if (!rl.allowed) {
+        console.warn(`[FORGOT-PASSWORD] Rate limited ip=${ip}`)
+        return NextResponse.json({
+          message: 'Si cet email existe, un lien de réinitialisation a été envoyé.',
+        })
+      }
     }
 
     const body = await req.json()

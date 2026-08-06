@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { prisma } from '@/lib/prisma'
 
 export const metadata = {
   title: 'Mentions légales — TEF-LAB',
@@ -344,7 +345,76 @@ const sections = [
   },
 ]
 
-export default function MentionsLegalesPage() {
+export default async function MentionsLegalesPage() {
+  const settings = await prisma.platformSettings.findUnique({ where: { id: 'default' } }).catch(() => null)
+  const adminEmail = settings?.adminEmail ?? 'tifuzzied@gmail.com'
+  const waDisplay = '+' + (settings?.whatsappNumber ?? '237683008287').replace(/\D/g, '')
+
+  const allSections = sections.map(s => {
+    if (s.id === 'editeur') return {
+      ...s,
+      content: (
+        <>
+          <p>
+            La plateforme <strong>TEF-LAB</strong> est un service en ligne de préparation au Test d&apos;Évaluation
+            de Français Canada (TEF Canada), édité par un particulier établi au Cameroun.
+          </p>
+          <ul className="list-disc pl-5 mt-3 space-y-1">
+            <li><strong>Nom commercial :</strong> TEF-LAB</li>
+            <li><strong>Responsable de publication :</strong> Administrateur TEF-LAB</li>
+            <li><strong>Adresse électronique :</strong> {adminEmail}</li>
+            <li><strong>Téléphone / WhatsApp :</strong> {waDisplay}</li>
+            <li><strong>Site web :</strong> https://tef-lab.com</li>
+          </ul>
+        </>
+      ),
+    }
+    if (s.id === 'remboursement') return {
+      ...s,
+      content: (
+        <>
+          <p>
+            En raison de la nature dématérialisée des services proposés et de l&apos;accès immédiat au contenu après
+            activation, <strong>toute vente est définitive et ne donne pas lieu à remboursement</strong>, sauf dans
+            les cas suivants :
+          </p>
+          <ul className="list-disc pl-5 mt-3 space-y-1">
+            <li>Double facturation avérée pour la même commande</li>
+            <li>Paiement débité mais accès non activé dans un délai de 48 heures (paiement automatique) ou 72 heures (paiement manuel)</li>
+            <li>Dysfonctionnement majeur de la plateforme empêchant tout accès pendant plus de 7 jours consécutifs</li>
+          </ul>
+          <p className="mt-3">
+            Pour toute réclamation, contactez-nous par email à <strong>{adminEmail}</strong> ou sur WhatsApp
+            au <strong>{waDisplay}</strong> en précisant votre référence de commande et la nature du problème.
+            Nous nous engageons à traiter chaque demande dans un délai de 5 jours ouvrables.
+          </p>
+        </>
+      ),
+    }
+    if (s.id === 'contact') return {
+      ...s,
+      content: (
+        <>
+          <p>Pour toute question relative aux présentes mentions légales, à votre compte ou à vos données :</p>
+          <ul className="list-disc pl-5 mt-3 space-y-1">
+            <li><strong>Email :</strong> {adminEmail}</li>
+            <li><strong>WhatsApp :</strong> {waDisplay}</li>
+            <li>
+              <strong>Formulaire de contact :</strong>{' '}
+              <Link href="/contact" className="text-tef-blue hover:underline">
+                tef-lab.com/contact
+              </Link>
+            </li>
+          </ul>
+          <p className="mt-3 text-sm text-gray-500">
+            Nous nous efforçons de répondre à toutes les demandes dans un délai de 48 à 72 heures ouvrables.
+          </p>
+        </>
+      ),
+    }
+    return s
+  })
+
   return (
     <div className="min-h-screen bg-white">
       {/* Hero */}
@@ -363,7 +433,7 @@ export default function MentionsLegalesPage() {
         <div className="max-w-3xl mx-auto">
           <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Sommaire</p>
           <ol className="grid grid-cols-2 gap-x-8 gap-y-1">
-            {sections.map((s) => (
+            {allSections.map((s) => (
               <li key={s.id}>
                 <a
                   href={`#${s.id}`}
@@ -393,7 +463,7 @@ export default function MentionsLegalesPage() {
           </div>
 
           {/* Sections */}
-          {sections.map((section) => (
+          {allSections.map((section) => (
             <div key={section.id} id={section.id} className="scroll-mt-20">
               <h2 className="text-xl font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">
                 {section.title}
