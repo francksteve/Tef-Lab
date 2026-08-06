@@ -4,7 +4,9 @@ export function generateVisitorToAdminLink(data: {
   visitorEmail: string
   reference: string
   price: number
+  adminWhatsapp?: string
 }): string {
+  const phone = (data.adminWhatsapp ?? '237683008287').replace(/\D/g, '')
   const message =
     `Bonjour, je vous contacte depuis TEF-LAB. 🙏\n\n` +
     `Je m'appelle *${data.visitorName}* et je viens d'effectuer une demande d'abonnement sur la plateforme.\n\n` +
@@ -14,7 +16,7 @@ export function generateVisitorToAdminLink(data: {
     `• 💰 Montant : *${data.price.toLocaleString('fr-FR')} FCFA*\n` +
     `• 📧 Email : ${data.visitorEmail}\n\n` +
     `Je reste disponible pour tout renseignement complémentaire. Merci ! 😊`
-  return `https://wa.me/237683008287?text=${encodeURIComponent(message)}`
+  return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
 }
 
 export function generateAdminToClientLink(data: {

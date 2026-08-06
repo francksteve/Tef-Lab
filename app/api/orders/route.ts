@@ -82,12 +82,15 @@ export async function POST(req: NextRequest) {
       })
       .catch(console.error)
 
+    const settings = await prisma.platformSettings.findUnique({ where: { id: 'default' } }).catch(() => null)
+
     const whatsappLink = generateVisitorToAdminLink({
       packName: pack.name,
       visitorName: data.visitorName,
       visitorEmail: data.visitorEmail,
       reference,
       price: pack.price,
+      adminWhatsapp: settings?.whatsappNumber,
     })
 
     return NextResponse.json({ reference, whatsappLink }, { status: 201 })

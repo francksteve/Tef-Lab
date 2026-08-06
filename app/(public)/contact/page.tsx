@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const faqs = [
   {
@@ -40,11 +40,20 @@ export default function ContactPage() {
   const [form, setForm] = useState({ name: '', message: '' })
   const [submitted, setSubmitted] = useState(false)
   const [openFaq, setOpenFaq] = useState<number | null>(null)
+  const [waNum, setWaNum] = useState('237683008287')
+  const [adminEmail, setAdminEmail] = useState('tifuzzied@gmail.com')
+
+  useEffect(() => {
+    fetch('/api/settings').then(r => r.json()).then(s => {
+      if (s?.whatsappNumber) setWaNum(s.whatsappNumber.replace(/\D/g, ''))
+      if (s?.adminEmail) setAdminEmail(s.adminEmail)
+    }).catch(() => {})
+  }, [])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     const text = `Bonjour TEF-LAB,\n\nMon nom : ${form.name}\n\n${form.message}`
-    window.open(`https://wa.me/237683008287?text=${encodeURIComponent(text)}`, '_blank')
+    window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(text)}`, '_blank')
     setSubmitted(true)
   }
 
@@ -78,9 +87,9 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <p className="font-semibold text-gray-900 text-sm">WhatsApp</p>
-                  <a href="https://wa.me/237683008287" target="_blank" rel="noopener noreferrer"
+                  <a href={`https://wa.me/${waNum}`} target="_blank" rel="noopener noreferrer"
                     className="text-tef-blue hover:underline text-sm">
-                    +237 683 008 287
+                    +{waNum}
                   </a>
                   <p className="text-xs text-gray-400 mt-0.5">Disponible 7j/7, réponse rapide</p>
                 </div>
@@ -95,8 +104,8 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <p className="font-semibold text-gray-900 text-sm">Email</p>
-                  <a href="mailto:tifuzzied@gmail.com" className="text-tef-blue hover:underline text-sm">
-                    tifuzzied@gmail.com
+                  <a href={`mailto:${adminEmail}`} className="text-tef-blue hover:underline text-sm">
+                    {adminEmail}
                   </a>
                 </div>
               </div>
@@ -111,13 +120,13 @@ export default function ContactPage() {
                 <div>
                   <p className="font-semibold text-gray-900 text-sm">Paiement</p>
                   <p className="text-sm text-gray-600">Orange Money &amp; MTN MoMo</p>
-                  <p className="text-xs text-gray-400 mt-0.5">+237 683 008 287</p>
+                  <p className="text-xs text-gray-400 mt-0.5">+{waNum}</p>
                 </div>
               </div>
             </div>
 
             <a
-              href="https://wa.me/237683008287"
+              href={`https://wa.me/${waNum}`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 px-6 py-3 bg-tef-blue hover:bg-tef-night text-white font-semibold rounded-lg transition-colors text-sm"
@@ -224,7 +233,7 @@ export default function ContactPage() {
           <p className="text-center text-sm text-gray-500 mt-8">
             Vous ne trouvez pas la réponse ?{' '}
             <a
-              href="https://wa.me/237683008287"
+              href={`https://wa.me/${waNum}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-tef-blue hover:underline font-medium"

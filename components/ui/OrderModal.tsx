@@ -34,6 +34,13 @@ export default function OrderModal({ isOpen, onClose, pack }: OrderModalProps) {
   const [reference, setReference] = useState('')
   const [whatsappLink, setWhatsappLink] = useState('')
   const [loading, setLoading] = useState(false)
+  const [waNum, setWaNum] = useState('237683008287')
+
+  useEffect(() => {
+    fetch('/api/settings').then(r => r.json()).then(s => {
+      if (s?.whatsappNumber) setWaNum(s.whatsappNumber.replace(/\D/g, ''))
+    }).catch(() => {})
+  }, [])
 
   // Reset on open
   useEffect(() => {
@@ -156,7 +163,7 @@ export default function OrderModal({ isOpen, onClose, pack }: OrderModalProps) {
               </div>
 
               <div className="bg-blue-50 rounded-lg p-3 text-xs text-tef-blue">
-                💳 Paiement accepté : <strong>Orange Money</strong> et <strong>MTN MoMo</strong> au +237 683 008 287
+                💳 Paiement accepté : <strong>Orange Money</strong> et <strong>MTN MoMo</strong> au +{waNum}
               </div>
 
               <button
@@ -202,7 +209,7 @@ export default function OrderModal({ isOpen, onClose, pack }: OrderModalProps) {
                 Impossible de traiter ta commande. Contacte-nous directement sur WhatsApp.
               </p>
               <a
-                href="https://wa.me/237683008287"
+                href={`https://wa.me/${waNum}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center justify-center gap-2 w-full py-3 bg-blue-500 text-white rounded-lg font-semibold"

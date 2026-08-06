@@ -1,7 +1,8 @@
-export default function WhatsAppButton() {
+export default function WhatsAppButton({ whatsappNumber = '237683008287' }: { whatsappNumber?: string }) {
+  const num = whatsappNumber.replace(/\D/g, '')
   return (
     <a
-      href="https://wa.me/237683008287"
+      href={`https://wa.me/${num}`}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Nous contacter sur WhatsApp"
