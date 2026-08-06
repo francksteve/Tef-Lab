@@ -97,6 +97,7 @@ function getAccessBadge(accessLevel: AccessLevel): { label: string; color: strin
 
 const moduleOrder = ['CE', 'CO', 'EE', 'EO']
 const SERIES_PAGE_SIZE = 10
+const HISTORY_PAGE_SIZE = 10
 
 function LockIcon({ className = 'w-3 h-3' }: { className?: string }) {
   return (
@@ -121,6 +122,7 @@ function DashboardContent() {
   const [upgradeReason, setUpgradeReason] = useState('')
   const [paymentBanner, setPaymentBanner] = useState<'pending' | 'success' | null>(null)
   const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({})
+  const [historyPage, setHistoryPage] = useState(0)
 
   const isPaymentReturn = useRef(searchParams.get('payment') === 'success')
   const loadedAccessLevel = useRef<AccessLevel>('FREE')
@@ -218,7 +220,14 @@ function DashboardContent() {
     seriesByModule[code].push(s)
   })
 
-  const recentAttempts = attempts.slice(0, 10)
+  const sortedAttempts = [...attempts].sort(
+    (a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime()
+  )
+  const totalHistoryPages = Math.ceil(sortedAttempts.length / HISTORY_PAGE_SIZE)
+  const pagedAttempts = sortedAttempts.slice(
+    historyPage * HISTORY_PAGE_SIZE,
+    (historyPage + 1) * HISTORY_PAGE_SIZE
+  )
   const attemptedSeriesTitles = new Set(attempts.map((a) => a.series.title))
 
   const totalAttempts = attempts.length
@@ -538,15 +547,22 @@ function DashboardContent() {
         {/* ─── Historique ─── */}
         <section>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-gray-900">Historique de vos passages</h2>
-            {recentAttempts.length > 0 && (
+            <div>
+              <h2 className="text-lg font-bold text-gray-900">Historique de vos passages</h2>
+              {sortedAttempts.length > 0 && (
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {sortedAttempts.length} passage{sortedAttempts.length > 1 ? 's' : ''} au total · du plus récent au plus ancien
+                </p>
+              )}
+            </div>
+            {sortedAttempts.length > 0 && (
               <Link href="/dashboard/performance" className="text-xs text-tef-blue hover:underline font-medium">
-                Voir tout →
+                Mes stats →
               </Link>
             )}
           </div>
 
-          {recentAttempts.length === 0 ? (
+          {sortedAttempts.length === 0 ? (
             <div className="bg-white rounded-xl border border-gray-100 p-10 text-center space-y-3">
               <div className="w-14 h-14 bg-gray-100 rounded-xl flex items-center justify-center mx-auto">
                 <svg className="w-7 h-7 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -560,7 +576,7 @@ function DashboardContent() {
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
               {/* Mobile */}
               <div className="divide-y divide-gray-50 sm:hidden">
-                {recentAttempts.map((attempt) => {
+                {pagedAttempts.map((attempt) => {
                   const acc = moduleAccent[attempt.moduleCode] ?? moduleAccent.CE
                   const cecrlColor = CECRL_COLORS[attempt.cecrlLevel ?? ''] ?? 'bg-gray-100 text-gray-600'
                   return (
@@ -603,7 +619,7 @@ function DashboardContent() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50">
-                    {recentAttempts.map((attempt) => {
+                    {pagedAttempts.map((attempt) => {
                       const acc = moduleAccent[attempt.moduleCode] ?? moduleAccent.CE
                       const cecrlColor = CECRL_COLORS[attempt.cecrlLevel ?? ''] ?? 'bg-gray-100 text-gray-600'
                       return (
@@ -642,6 +658,49 @@ function DashboardContent() {
                   </tbody>
                 </table>
               </div>
+
+              {/* Pagination */}
+              {totalHistoryPages > 1 && (
+                <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100 bg-gray-50/60">
+                  <button
+                    disabled={historyPage === 0}
+                    onClick={() => setHistoryPage((p) => p - 1)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-600 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                    </svg>
+                    Précédent
+                  </button>
+
+                  <div className="flex items-center gap-1.5">
+                    {Array.from({ length: totalHistoryPages }).map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setHistoryPage(i)}
+                        className={`w-7 h-7 rounded-lg text-xs font-bold transition-colors ${
+                          i === historyPage
+                            ? 'bg-tef-blue text-white'
+                            : 'text-gray-400 hover:bg-gray-100'
+                        }`}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
+                  </div>
+
+                  <button
+                    disabled={historyPage >= totalHistoryPages - 1}
+                    onClick={() => setHistoryPage((p) => p + 1)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-gray-600 rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Suivant
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                    </svg>
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </section>
