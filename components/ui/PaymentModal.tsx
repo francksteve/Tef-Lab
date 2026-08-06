@@ -316,58 +316,63 @@ export default function PaymentModal({ isOpen, onClose, pack }: Props) {
               )}
 
               {/* Payment methods */}
-              <div>
-                <p className="text-xs font-bold text-gray-700 mb-3 uppercase tracking-wide">Choisissez une méthode de paiement</p>
+              <div className="space-y-3">
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Méthode de paiement</p>
 
-                {/* NotchPay — Primary */}
-                <div className="rounded-xl border-2 border-tef-blue overflow-hidden mb-3">
-                  <div className="bg-tef-blue/5 px-4 py-3 flex items-start gap-3">
-                    <span className="text-2xl flex-shrink-0">⚡</span>
-                    <div className="flex-1">
-                      <p className="font-bold text-gray-900 text-sm">Paiement automatique</p>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        Orange Money · MTN MoMo
-                      </p>
-                      <span className="inline-flex items-center mt-1 gap-1 text-xs font-semibold text-blue-600">
-                        ✓ Accès activé immédiatement
-                      </span>
+                {/* ── AUTOMATIQUE ── */}
+                <div className="rounded-xl border-2 border-tef-blue overflow-hidden">
+                  {/* Header */}
+                  <div className="bg-tef-blue px-4 py-2.5 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <svg className="w-4 h-4 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                      <span className="text-sm font-extrabold text-white">Paiement automatique</span>
                     </div>
+                    <span className="text-xs font-semibold text-green-300 bg-green-900/40 px-2 py-0.5 rounded-full whitespace-nowrap">
+                      ✓ Accès immédiat
+                    </span>
                   </div>
+
                   {payError && (
-                    <div className="px-4 py-2 bg-red-50 text-xs text-red-600">⚠️ {payError}</div>
+                    <div className="px-4 py-2 bg-red-50 text-xs text-red-600 border-b border-red-100">⚠️ {payError}</div>
                   )}
-                  <div className="px-4 pb-4 pt-2">
+
+                  {/* NotchPay */}
+                  <div className="px-4 pt-3 pb-2">
+                    <div className="flex items-center gap-2.5 mb-2.5">
+                      <span className="text-xl flex-shrink-0">⚡</span>
+                      <div>
+                        <p className="text-sm font-bold text-gray-900 leading-none">NotchPay</p>
+                        <p className="text-xs text-gray-500 mt-0.5">Orange Money · MTN MoMo · Visa · Mastercard</p>
+                      </div>
+                    </div>
                     <button
                       onClick={handleNotchPay}
                       disabled={paying}
-                      className="w-full py-3 bg-tef-blue text-white font-bold rounded-xl text-sm hover:bg-tef-blue-hover disabled:opacity-50 transition-colors"
+                      className="w-full py-2.5 bg-tef-blue text-white font-bold rounded-lg text-sm hover:bg-tef-blue-hover disabled:opacity-50 transition-colors"
                     >
                       {paying && selectedMethod === 'notchpay'
                         ? 'Redirection en cours…'
                         : `Payer ${finalPrice.toLocaleString('fr-FR')} FCFA`}
                     </button>
                   </div>
-                </div>
 
-                {/* PayPal */}
-                <div className="rounded-xl border-2 border-[#003087] overflow-hidden mb-3">
-                  <div className="bg-[#003087]/5 px-4 py-3 flex items-start gap-3">
-                    <span className="text-2xl flex-shrink-0">🌐</span>
-                    <div className="flex-1">
-                      <p className="font-bold text-gray-900 text-sm">PayPal</p>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        Carte bancaire internationale · Compte PayPal
-                      </p>
-                      <span className="inline-flex items-center mt-1 gap-1 text-xs font-semibold text-blue-600">
-                        ✓ Accès activé immédiatement
-                      </span>
+                  <div className="mx-4 h-px bg-blue-100" />
+
+                  {/* PayPal */}
+                  <div className="px-4 pt-2 pb-3">
+                    <div className="flex items-center gap-2.5 mb-2.5">
+                      <span className="text-xl flex-shrink-0">🌐</span>
+                      <div>
+                        <p className="text-sm font-bold text-gray-900 leading-none">PayPal</p>
+                        <p className="text-xs text-gray-500 mt-0.5">Carte bancaire internationale · Compte PayPal</p>
+                      </div>
                     </div>
-                  </div>
-                  <div className="px-4 pb-4 pt-2">
                     <button
                       onClick={handlePayPal}
                       disabled={paying}
-                      className="w-full py-3 bg-[#003087] text-white font-bold rounded-xl text-sm hover:bg-[#002060] disabled:opacity-50 transition-colors"
+                      className="w-full py-2.5 bg-[#003087] text-white font-bold rounded-lg text-sm hover:bg-[#002060] disabled:opacity-50 transition-colors"
                     >
                       {paying && selectedMethod === 'paypal'
                         ? 'Redirection en cours…'
@@ -376,59 +381,42 @@ export default function PaymentModal({ isOpen, onClose, pack }: Props) {
                   </div>
                 </div>
 
-                {/* Divider */}
-                <div className="flex items-center gap-3 my-4">
-                  <div className="flex-1 h-px bg-gray-200" />
-                  <span className="text-xs text-gray-400 font-medium">ou paiement manuel</span>
-                  <div className="flex-1 h-px bg-gray-200" />
-                </div>
-
-                {/* Orange Money */}
-                <div className="rounded-xl border-2 border-red-400 overflow-hidden mb-3">
-                  <div className="bg-red-50 px-4 py-3 flex items-start gap-3">
-                    <span className="text-2xl flex-shrink-0">🟠</span>
-                    <div className="flex-1">
-                      <p className="font-bold text-gray-900 text-sm">Orange Money</p>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        Envoi direct sur notre numéro Orange
-                      </p>
-                      <span className="inline-flex items-center mt-1 gap-1 text-xs font-semibold text-red-600">
-                        ⏱ Activation en 5-10 min
-                      </span>
+                {/* ── MANUEL ── */}
+                <div className="rounded-xl border border-gray-200 overflow-hidden">
+                  {/* Header */}
+                  <div className="bg-gray-100 px-4 py-2.5 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <svg className="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span className="text-sm font-bold text-gray-700">Paiement manuel</span>
                     </div>
+                    <span className="text-xs font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full whitespace-nowrap">
+                      ⏱ 5-10 min
+                    </span>
                   </div>
-                  <div className="px-4 pb-4 pt-2">
+
+                  <div className="p-3 grid grid-cols-2 gap-2">
+                    {/* Orange Money */}
                     <button
                       onClick={() => { setSelectedMethod('orange_money'); setStep('manual_form') }}
                       disabled={paying}
-                      className="w-full py-3 bg-red-500 text-white font-bold rounded-xl text-sm hover:bg-red-600 disabled:opacity-50 transition-colors"
+                      className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border-2 border-orange-300 bg-orange-50 hover:bg-orange-100 disabled:opacity-50 transition-colors"
                     >
-                      Payer {finalPrice.toLocaleString('fr-FR')} FCFA — Orange Money
+                      <span className="text-2xl">🟠</span>
+                      <span className="text-xs font-bold text-gray-900">Orange Money</span>
+                      <span className="text-xs text-gray-500">{finalPrice.toLocaleString('fr-FR')} FCFA</span>
                     </button>
-                  </div>
-                </div>
 
-                {/* MTN MoMo */}
-                <div className="rounded-xl border-2 border-blue-300 overflow-hidden mb-3">
-                  <div className="bg-blue-50 px-4 py-3 flex items-start gap-3">
-                    <span className="text-2xl flex-shrink-0">🟡</span>
-                    <div className="flex-1">
-                      <p className="font-bold text-gray-900 text-sm">MTN MoMo</p>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        Envoi direct sur notre numéro MTN
-                      </p>
-                      <span className="inline-flex items-center mt-1 gap-1 text-xs font-semibold text-blue-600">
-                        ⏱ Activation en 5-10 min
-                      </span>
-                    </div>
-                  </div>
-                  <div className="px-4 pb-4 pt-2">
+                    {/* MTN MoMo */}
                     <button
                       onClick={() => { setSelectedMethod('mtn_momo'); setStep('manual_form') }}
                       disabled={paying}
-                      className="w-full py-3 bg-blue-300 text-gray-900 font-bold rounded-xl text-sm hover:bg-blue-400 disabled:opacity-50 transition-colors"
+                      className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border-2 border-yellow-300 bg-yellow-50 hover:bg-yellow-100 disabled:opacity-50 transition-colors"
                     >
-                      Payer {finalPrice.toLocaleString('fr-FR')} FCFA — MTN MoMo
+                      <span className="text-2xl">🟡</span>
+                      <span className="text-xs font-bold text-gray-900">MTN MoMo</span>
+                      <span className="text-xs text-gray-500">{finalPrice.toLocaleString('fr-FR')} FCFA</span>
                     </button>
                   </div>
                 </div>
