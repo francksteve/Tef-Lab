@@ -1151,6 +1151,7 @@ export default function EOPage() {
   const [result, setResult] = useState<EOResult | null>(null)
   const [aiError, setAiError] = useState<string | null>(null)
   const [showExitConfirm, setShowExitConfirm] = useState(false)
+  const [aiQuota, setAiQuota] = useState<{ used: number; limit: number; remaining: number } | null>(null)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -1161,8 +1162,12 @@ export default function EOPage() {
     Promise.all([
       fetch(`/api/series/${seriesId}`).then((r) => r.json()),
       fetch(`/api/series/${seriesId}/questions`).then((r) => r.json()),
+      fetch('/api/ai-usage').then((r) => r.json()),
     ])
-      .then(([seriesData, questionsData]) => {
+      .then(([seriesData, questionsData, quotaData]) => {
+        if (quotaData && typeof quotaData === 'object' && 'remaining' in quotaData) {
+          setAiQuota(quotaData as { used: number; limit: number; remaining: number })
+        }
         if (seriesData && typeof seriesData === 'object' && 'id' in seriesData) {
           setSeries(seriesData as Series)
         } else {
@@ -1557,6 +1562,29 @@ export default function EOPage() {
               <p key={tip} className="text-xs text-red-800">{tip}</p>
             ))}
           </div>
+
+          {/* Quota IA */}
+          {aiQuota && (
+            aiQuota.limit === 0 || aiQuota.remaining === 0 ? (
+              <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm">
+                <span className="flex-shrink-0 text-base mt-0.5">⚠️</span>
+                <div>
+                  <p className="font-semibold text-amber-800">
+                    {aiQuota.limit === 0
+                      ? 'Correction IA non incluse dans votre pack'
+                      : `Quota IA épuisé pour aujourd'hui (${aiQuota.used}/${aiQuota.limit} utilisé)`}
+                  </p>
+                  <p className="text-amber-700 text-xs mt-0.5">
+                    Vous pouvez continuer l&apos;épreuve — la correction automatique ne sera pas disponible. Revenez demain ou passez à un pack supérieur.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-full text-xs text-blue-700 font-semibold self-start mx-auto">
+                🤖 {aiQuota.remaining} correction{aiQuota.remaining > 1 ? 's' : ''} IA disponible{aiQuota.remaining > 1 ? 's' : ''} aujourd&apos;hui
+              </div>
+            )
+          )}
 
           <div className="text-center">
             <button

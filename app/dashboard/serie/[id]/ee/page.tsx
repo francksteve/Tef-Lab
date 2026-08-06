@@ -120,6 +120,7 @@ export default function EEPage() {
   const [canRetry, setCanRetry] = useState(false)
   const [isRetrying, setIsRetrying] = useState(false)
   const [showExitConfirm, setShowExitConfirm] = useState(false)
+  const [aiQuota, setAiQuota] = useState<{ used: number; limit: number; remaining: number } | null>(null)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -127,8 +128,12 @@ export default function EEPage() {
     Promise.all([
       fetch(`/api/series/${seriesId}`).then((r) => r.json()),
       fetch(`/api/series/${seriesId}/questions`).then((r) => r.json()),
+      fetch('/api/ai-usage').then((r) => r.json()),
     ])
-      .then(([seriesData, questionsData]: [unknown, unknown]) => {
+      .then(([seriesData, questionsData, quotaData]: [unknown, unknown, unknown]) => {
+        if (quotaData && typeof quotaData === 'object' && 'remaining' in quotaData) {
+          setAiQuota(quotaData as { used: number; limit: number; remaining: number })
+        }
         if (seriesData && typeof seriesData === 'object' && 'id' in seriesData) {
           setSeries(seriesData as Series)
         } else {
@@ -480,6 +485,31 @@ export default function EEPage() {
               </div>
             </div>
 
+            {/* Quota IA */}
+            {aiQuota && (
+              aiQuota.limit === 0 || aiQuota.remaining === 0 ? (
+                <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm">
+                  <span className="flex-shrink-0 text-base mt-0.5">⚠️</span>
+                  <div>
+                    <p className="font-semibold text-amber-800">
+                      {aiQuota.limit === 0
+                        ? 'Correction IA non incluse dans votre pack'
+                        : `Quota IA épuisé pour aujourd'hui (${aiQuota.used}/${aiQuota.limit} utilisé)`}
+                    </p>
+                    <p className="text-amber-700 text-xs mt-0.5">
+                      {aiQuota.limit === 0
+                        ? 'Vos textes seront enregistrés sans correction automatique. Passez à un pack supérieur pour accéder aux corrections IA.'
+                        : 'Vos textes seront enregistrés mais ne seront pas corrigés par l\'IA. Revenez demain ou passez à un pack supérieur.'}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-full text-xs text-blue-700 font-semibold self-start">
+                  🤖 {aiQuota.remaining} correction{aiQuota.remaining > 1 ? 's' : ''} IA disponible{aiQuota.remaining > 1 ? 's' : ''} aujourd&apos;hui
+                </div>
+              )
+            )}
+
             {/* Task badge */}
             <div className="flex items-center gap-3">
               <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-tef-blue text-white text-xs font-bold rounded-full shadow-sm">
@@ -569,6 +599,31 @@ export default function EEPage() {
               </button>
             </div>
           </div>
+
+          {/* Quota IA */}
+          {aiQuota && (
+            aiQuota.limit === 0 || aiQuota.remaining === 0 ? (
+              <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm">
+                <span className="flex-shrink-0 text-base mt-0.5">⚠️</span>
+                <div>
+                  <p className="font-semibold text-amber-800">
+                    {aiQuota.limit === 0
+                      ? 'Correction IA non incluse dans votre pack'
+                      : `Quota IA épuisé pour aujourd'hui (${aiQuota.used}/${aiQuota.limit} utilisé)`}
+                  </p>
+                  <p className="text-amber-700 text-xs mt-0.5">
+                    {aiQuota.limit === 0
+                      ? 'Vos textes seront enregistrés sans correction automatique.'
+                      : 'Vos textes seront enregistrés mais ne seront pas corrigés par l\'IA.'}
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-full text-xs text-blue-700 font-semibold self-start">
+                🤖 {aiQuota.remaining} correction{aiQuota.remaining > 1 ? 's' : ''} IA disponible{aiQuota.remaining > 1 ? 's' : ''} aujourd&apos;hui
+              </div>
+            )
+          )}
 
           {/* Task badge */}
           <div className="flex items-center gap-3">
