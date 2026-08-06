@@ -18,11 +18,11 @@ interface Order {
 
 type Filter = 'ALL' | 'PENDING' | 'VALIDATED' | 'REJECTED'
 
-const statusLabel: Record<string, string> = { PENDING: '⏳ En attente', VALIDATED: '✅ Validée', REJECTED: '❌ Rejetée' }
+const statusLabel: Record<string, string> = { PENDING: 'En attente', VALIDATED: 'Validée', REJECTED: 'Rejetée' }
 const statusBg: Record<string, string> = {
-  PENDING: 'bg-red-100 text-red-700',
-  VALIDATED: 'bg-blue-100 text-blue-700',
-  REJECTED: 'bg-red-100 text-red-700',
+  PENDING: 'bg-amber-100 text-amber-700',
+  VALIDATED: 'bg-blue-100 text-tef-blue',
+  REJECTED: 'bg-red-100 text-tef-red',
 }
 
 export default function CommandesPage() {
@@ -67,7 +67,7 @@ export default function CommandesPage() {
           <h1 className="text-2xl font-extrabold text-gray-900 flex items-center gap-2">
             Commandes
             {pendingCount > 0 && filter === 'ALL' && (
-              <span className="inline-flex items-center justify-center w-6 h-6 bg-red-500 text-white text-xs rounded-full">
+              <span className="inline-flex items-center justify-center w-6 h-6 bg-tef-red text-white text-xs rounded-full">
                 {pendingCount}
               </span>
             )}
@@ -92,7 +92,7 @@ export default function CommandesPage() {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm border border-blue-100 overflow-hidden">
         {loading ? (
           <div className="p-10 text-center text-gray-400">Chargement…</div>
         ) : orders.length === 0 ? (
@@ -121,7 +121,7 @@ export default function CommandesPage() {
                         href={`https://wa.me/${order.visitorPhone.replace('+', '')}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-xs text-blue-600 hover:underline"
+                        className="text-xs text-tef-blue hover:underline"
                       >
                         {order.visitorPhone}
                       </a>
@@ -144,14 +144,14 @@ export default function CommandesPage() {
                           <button
                             onClick={() => handleValidate(order.id)}
                             disabled={actionLoading === order.id + '-validate'}
-                            className="px-3 py-1 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                            className="px-3 py-1 bg-tef-blue text-white text-xs rounded-lg hover:bg-tef-blue-hover disabled:opacity-50 transition-colors"
                           >
                             {actionLoading === order.id + '-validate' ? '…' : 'Valider'}
                           </button>
                           <button
                             onClick={() => handleReject(order.id)}
                             disabled={actionLoading === order.id + '-reject'}
-                            className="px-3 py-1 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
+                            className="px-3 py-1 bg-tef-red text-white text-xs rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
                           >
                             {actionLoading === order.id + '-reject' ? '…' : 'Rejeter'}
                           </button>

@@ -42,7 +42,7 @@ function SortHeader({ label, col, sortKey, sortDir, onSort, className = '' }: So
   const active = sortKey === col
   return (
     <th
-      className={`px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider cursor-pointer select-none hover:bg-blue-700 transition-colors ${className}`}
+      className={`px-4 py-3 text-left text-xs font-semibold text-white uppercase tracking-wider cursor-pointer select-none hover:bg-tef-blue-hover transition-colors ${className}`}
       onClick={() => onSort(col)}
     >
       <span className="inline-flex items-center gap-1">
@@ -224,7 +224,7 @@ export default function UtilisateursPage() {
       </div>
 
       {/* Tableau */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm border border-blue-100 overflow-hidden">
         {loading ? (
           <div className="p-10 text-center text-gray-400">Chargement…</div>
         ) : sorted.length === 0 ? (
@@ -271,8 +271,8 @@ export default function UtilisateursPage() {
                       <td className="px-4 py-3">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                           user.accountStatus === 'ACTIVE'
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'bg-red-100 text-red-700'
+                            ? 'bg-blue-100 text-tef-blue'
+                            : 'bg-red-100 text-tef-red'
                         }`}>
                           {user.accountStatus === 'ACTIVE' ? 'Actif' : 'Suspendu'}
                         </span>
@@ -283,10 +283,10 @@ export default function UtilisateursPage() {
                         {activePack ? (
                           <div className="flex flex-col gap-0.5">
                             <span className="font-medium text-gray-800 text-xs">{activePack.name}</span>
-                            <span className={`inline-flex items-center gap-0.5 text-[11px] font-semibold ${
-                              activePack.daysLeft > 6 ? 'text-blue-600' : 'text-red-600'
+                            <span className={`inline-flex items-center gap-1 text-[11px] font-semibold ${
+                              activePack.daysLeft > 6 ? 'text-tef-blue' : 'text-tef-red'
                             }`}>
-                              <span>{activePack.daysLeft > 6 ? '🟢' : '🔴'}</span>
+                              <span className={`inline-block w-2 h-2 rounded-full ${activePack.daysLeft > 6 ? 'bg-green-500' : 'bg-tef-red'}`} />
                               {activePack.daysLeft}j restants
                             </span>
                           </div>
@@ -309,19 +309,19 @@ export default function UtilisateursPage() {
                             title={`Envoyer un email de rappel à ${user.name}`}
                             className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 inline-flex items-center gap-1 ${
                               mailStatus[user.id] === 'sent'
-                                ? 'bg-blue-100 text-blue-700'
+                                ? 'bg-blue-100 text-tef-blue'
                                 : mailStatus[user.id] === 'error'
-                                ? 'bg-red-100 text-red-700'
+                                ? 'bg-red-100 text-tef-red'
                                 : 'bg-blue-50 text-tef-blue hover:bg-blue-100'
                             }`}
                           >
                             {mailStatus[user.id] === 'sending'
-                              ? <><span className="animate-spin">⏳</span> Envoi…</>
+                              ? <><svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25"/><path fill="currentColor" className="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Envoi…</>
                               : mailStatus[user.id] === 'sent'
-                              ? <>✅ Envoyé</>
+                              ? <><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg> Envoyé</>
                               : mailStatus[user.id] === 'error'
-                              ? <>❌ Erreur</>
-                              : <>📧 Rappel</>}
+                              ? <><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg> Erreur</>
+                              : <><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg> Rappel</>}
                           </button>
                         ) : (
                           <span className="text-gray-300 text-xs">—</span>
@@ -336,8 +336,8 @@ export default function UtilisateursPage() {
                             disabled={actionLoading === user.id || actionLoading === user.id + '_delete'}
                             className={`px-3 py-1 text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 ${
                               user.accountStatus === 'ACTIVE'
-                                ? 'bg-red-100 text-red-700 hover:bg-red-200'
-                                : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                ? 'bg-red-100 text-tef-red hover:bg-red-200'
+                                : 'bg-blue-100 text-tef-blue hover:bg-blue-200'
                             }`}
                           >
                             {actionLoading === user.id

@@ -35,10 +35,10 @@ interface Attempt {
 
 const PAGE_SIZE = 10
 const MODULE_COLORS: Record<string, string> = {
-  CE: 'bg-blue-100 text-blue-700',
-  CO: 'bg-blue-100 text-blue-700',
-  EE: 'bg-red-100 text-red-700',
-  EO: 'bg-blue-100 text-blue-700',
+  CE: 'bg-blue-100 text-tef-blue',
+  CO: 'bg-blue-100 text-tef-blue',
+  EE: 'bg-blue-100 text-tef-blue',
+  EO: 'bg-blue-100 text-tef-blue',
 }
 
 function formatDuration(seconds: number | null) {
@@ -124,12 +124,12 @@ export default function AdminDashboard() {
       </div>
 
       {/* Pending orders */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+      <div className="bg-white rounded-xl shadow-sm border border-blue-100">
         <div className="flex items-center justify-between p-5 border-b">
           <h2 className="font-bold text-gray-900">
             Commandes en attente
             {stats?.pendingOrders ? (
-              <span className="ml-2 inline-flex items-center justify-center w-5 h-5 bg-red-500 text-white text-xs rounded-full">
+              <span className="ml-2 inline-flex items-center justify-center w-5 h-5 bg-tef-red text-white text-xs rounded-full">
                 {stats.pendingOrders}
               </span>
             ) : null}
@@ -167,7 +167,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* All series attempts */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm border border-blue-100 overflow-hidden">
         <div className="p-5 border-b flex items-center justify-between flex-wrap gap-3">
           <h2 className="font-bold text-gray-900">
             Séries passées par les utilisateurs
@@ -256,7 +256,7 @@ export default function AdminDashboard() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
+              <div className="flex items-center justify-between px-4 py-3 border-t border-blue-100">
                 <p className="text-xs text-gray-500">
                   {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} sur {filtered.length}
                 </p>

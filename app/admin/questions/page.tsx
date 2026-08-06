@@ -623,7 +623,7 @@ export default function QuestionsAdminPage() {
                 handleGenerateSingleAudio(qObj, (audioUrl) => set('audioUrl', audioUrl))
               }}
               disabled={generatingAudioId === editingId || generatingAudio}
-              className="mt-2 w-full px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+              className="mt-2 w-full px-4 py-2.5 bg-tef-blue text-white text-sm font-semibold rounded-lg hover:bg-tef-blue-hover transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {generatingAudioId === editingId ? (
                 <><span className="animate-spin">⏳</span> Génération de l&apos;audio en cours…</>
@@ -911,7 +911,7 @@ export default function QuestionsAdminPage() {
                 <button
                   onClick={() => handleGenerateAudio(false)}
                   disabled={generatingAudio}
-                  className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  className="px-4 py-2 bg-tef-blue text-white text-sm font-semibold rounded-lg hover:bg-tef-blue-hover transition-colors disabled:opacity-50"
                 >
                   {generatingAudio ? '⏳ Génération…' : '🎙️ Générer audios CO'}
                 </button>
@@ -953,7 +953,7 @@ export default function QuestionsAdminPage() {
           )}
 
           {/* List */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="bg-white rounded-xl shadow-sm border border-blue-100 overflow-hidden">
             {loading ? (
               <div className="p-10 text-center text-gray-400">Chargement…</div>
             ) : questions.length === 0 ? (
@@ -1022,11 +1022,11 @@ export default function QuestionsAdminPage() {
                           <span className="inline-flex items-center justify-center w-6 h-6 bg-tef-blue text-white text-xs font-bold rounded-full flex-shrink-0">{q.questionOrder}</span>
                           {q.category && <span className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded">{q.category}</span>}
                           {q.subCategory && <span className="text-xs text-blue-700 bg-blue-100 px-1.5 py-0.5 rounded">{q.subCategory}</span>}
-                          {q.audioUrl && <span className="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded">🎵 Audio</span>}
-                          {q.imageUrl && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">🖼 Image</span>}
-                          {q.consigne && <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">📋 Consigne</span>}
+                          {q.audioUrl && <span className="text-xs bg-blue-100 text-tef-blue px-1.5 py-0.5 rounded">🎵 Audio</span>}
+                          {q.imageUrl && <span className="text-xs bg-blue-100 text-tef-blue px-1.5 py-0.5 rounded">🖼 Image</span>}
+                          {q.consigne && <span className="text-xs bg-blue-100 text-tef-blue px-1.5 py-0.5 rounded">📋 Consigne</span>}
                         </div>
-                        {q.consigne && <p className="text-xs text-blue-700 italic line-clamp-1">{q.consigne}</p>}
+                        {q.consigne && <p className="text-xs text-tef-blue italic line-clamp-1">{q.consigne}</p>}
                         {q.longText && <p className="text-xs text-gray-400 italic line-clamp-1">{q.longText}</p>}
                         <p className="text-sm text-gray-900 font-medium line-clamp-2">{q.question}</p>
                         <div className="flex flex-wrap gap-x-3 text-xs text-gray-500">
@@ -1035,7 +1035,7 @@ export default function QuestionsAdminPage() {
                           {q.optionC && <span>C: {q.optionC}</span>}
                           {q.optionD && <span>D: {q.optionD}</span>}
                         </div>
-                        {q.correctAnswer && <p className="text-xs font-semibold text-blue-600">✓ Réponse : Option {q.correctAnswer}</p>}
+                        {q.correctAnswer && <p className="text-xs font-semibold text-tef-blue">✓ Réponse : Option {q.correctAnswer}</p>}
                       </div>
                       <div className="flex gap-2 flex-shrink-0 flex-wrap justify-end">
                         {moduleCode === 'CO' && q.longText && (
@@ -1048,7 +1048,7 @@ export default function QuestionsAdminPage() {
                                 : `Générer l'audio TTS${isMultiVoiceOrder(q.questionOrder) ? ' — 2 voix (dialogue)' : ''}`
                             }
                             className={`px-3 py-1.5 text-white text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1 ${
-                              q.audioUrl ? 'bg-red-500 hover:bg-red-600' : 'bg-blue-600 hover:bg-blue-700'
+                              q.audioUrl ? 'bg-tef-red hover:bg-red-700' : 'bg-tef-blue hover:bg-tef-blue-hover'
                             }`}
                           >
                             {generatingAudioId === q.id

@@ -280,7 +280,7 @@ export default function SeriesAdminPage() {
       </div>
 
       {/* Liste */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm border border-blue-100 overflow-hidden">
         {loading ? (
           <div className="p-10 text-center text-gray-400">Chargement…</div>
         ) : filtered.length === 0 ? (
@@ -342,7 +342,7 @@ export default function SeriesAdminPage() {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
+              <div className="flex items-center justify-between px-4 py-3 border-t border-blue-100">
                 <p className="text-xs text-gray-500">
                   {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filtered.length)} sur {filtered.length} série{filtered.length !== 1 ? 's' : ''}
                 </p>

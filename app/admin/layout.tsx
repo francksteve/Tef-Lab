@@ -8,13 +8,34 @@ import InactivityWarning from '@/components/ui/InactivityWarning'
 import NotificationBell from '@/components/ui/NotificationBell'
 
 const navItems = [
-  { href: '/admin', label: 'Tableau de bord', icon: '📊', exact: true },
-  { href: '/admin/commandes', label: 'Commandes', icon: '🛒' },
-  { href: '/admin/utilisateurs', label: 'Utilisateurs', icon: '👥' },
-  { href: '/admin/packs', label: 'Packs', icon: '📦' },
-  { href: '/admin/series', label: 'Séries', icon: '📚' },
-  { href: '/admin/questions', label: 'Questions', icon: '❓' },
-  { href: '/admin/parametres', label: 'Paramètres', icon: '⚙️' },
+  {
+    href: '/admin', label: 'Tableau de bord', exact: true,
+    icon: <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>,
+  },
+  {
+    href: '/admin/commandes', label: 'Commandes',
+    icon: <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" /></svg>,
+  },
+  {
+    href: '/admin/utilisateurs', label: 'Utilisateurs',
+    icon: <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>,
+  },
+  {
+    href: '/admin/packs', label: 'Packs',
+    icon: <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>,
+  },
+  {
+    href: '/admin/series', label: 'Séries',
+    icon: <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" /></svg>,
+  },
+  {
+    href: '/admin/questions', label: 'Questions',
+    icon: <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>,
+  },
+  {
+    href: '/admin/parametres', label: 'Paramètres',
+    icon: <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>,
+  },
 ]
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -89,7 +110,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
       {/* Mobile menu drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-tef-blue text-white flex flex-col py-3 px-4 gap-1 border-t border-blue-700">
+        <div className="md:hidden bg-tef-blue text-white flex flex-col py-3 px-4 gap-1 border-t border-white/20">
           {navItems.map((item) => (
             <Link
               key={item.href}
@@ -105,20 +126,20 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               {item.label}
             </Link>
           ))}
-          <div className="border-t border-blue-700 mt-2 pt-2 space-y-1">
+          <div className="border-t border-white/20 mt-2 pt-2 space-y-1">
             <Link
               href="/dashboard"
               onClick={() => setMobileMenuOpen(false)}
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-blue-200 hover:bg-white/10 hover:text-white transition-colors"
             >
-              <span>🎓</span> Mon espace abonné
+              <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 14l9-5-9-5-9 5 9 5z" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" /></svg> Mon espace abonné
             </Link>
             <button
               onClick={handleSignOut}
               disabled={signingOut}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-blue-200 hover:bg-white/10 hover:text-red-300 transition-colors disabled:opacity-50"
             >
-              <span>🚪</span> {signingOut ? 'Déconnexion…' : 'Déconnexion'}
+              <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg> {signingOut ? 'Déconnexion…' : 'Déconnexion'}
             </button>
           </div>
         </div>
@@ -161,7 +182,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             ))}
 
             {/* Separator */}
-            <div className="border-t border-blue-700 my-3" />
+            <div className="border-t border-white/20 my-3" />
 
             {/* Subscriber space link */}
             <Link
@@ -172,13 +193,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   : 'text-blue-200 hover:bg-white/10 hover:text-white'
               }`}
             >
-              <span>🎓</span>
+              <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 14l9-5-9-5-9 5 9 5z" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" /></svg>
               Mon espace abonné
             </Link>
           </nav>
 
           {/* Bottom: user info + logout */}
-          <div className="px-5 py-4 border-t border-blue-700 space-y-2">
+          <div className="px-5 py-4 border-t border-white/20 space-y-2">
             <p className="text-xs text-blue-300 truncate">{session?.user?.email}</p>
             <Link
               href="/admin/changer-mot-de-passe"
@@ -191,7 +212,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               disabled={signingOut}
               className="w-full flex items-center gap-2 text-xs text-blue-300 hover:text-red-300 transition-colors disabled:opacity-50 mt-1"
             >
-              <span>🚪</span>
+              <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
               {signingOut ? 'Déconnexion…' : 'Déconnexion'}
             </button>
           </div>

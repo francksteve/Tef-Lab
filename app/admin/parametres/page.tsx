@@ -124,13 +124,13 @@ export default function ParametresPage() {
       {/* Feedback banners */}
       {success && (
         <div className="mb-6 flex items-center gap-2 p-4 bg-blue-50 border border-blue-200 text-blue-700 rounded-xl text-sm font-medium">
-          <span className="text-lg">✅</span>
+          <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
           Paramètres enregistrés avec succès.
         </div>
       )}
       {error && (
         <div className="mb-6 flex items-center gap-2 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
-          <span className="text-lg">⚠️</span>
+          <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
           {error}
         </div>
       )}
@@ -138,9 +138,9 @@ export default function ParametresPage() {
       <form onSubmit={handleSubmit} className="space-y-8">
 
         {/* Section 1 — Général */}
-        <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
-          <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
-            <span className="text-2xl">🌐</span>
+        <section className="bg-white rounded-2xl border border-blue-100 shadow-sm p-6 space-y-5">
+          <div className="flex items-center gap-3 pb-3 border-b border-blue-100">
+            <svg className="w-5 h-5 text-tef-blue flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             <div>
               <h2 className="font-bold text-gray-900">Informations générales</h2>
               <p className="text-xs text-gray-500">Nom affiché sur le site et dans les emails</p>
@@ -166,9 +166,9 @@ export default function ParametresPage() {
         </section>
 
         {/* Section 2 — Contact */}
-        <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
-          <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
-            <span className="text-2xl">📬</span>
+        <section className="bg-white rounded-2xl border border-blue-100 shadow-sm p-6 space-y-5">
+          <div className="flex items-center gap-3 pb-3 border-b border-blue-100">
+            <svg className="w-5 h-5 text-tef-blue flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
             <div>
               <h2 className="font-bold text-gray-900">Contact</h2>
               <p className="text-xs text-gray-500">Email et WhatsApp de l&apos;administrateur</p>
@@ -214,9 +214,9 @@ export default function ParametresPage() {
         </section>
 
         {/* Section 3 — Paiements mobiles */}
-        <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
-          <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
-            <span className="text-2xl">💳</span>
+        <section className="bg-white rounded-2xl border border-blue-100 shadow-sm p-6 space-y-5">
+          <div className="flex items-center gap-3 pb-3 border-b border-blue-100">
+            <svg className="w-5 h-5 text-tef-blue flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
             <div>
               <h2 className="font-bold text-gray-900">Paiements mobiles (fallback manuel)</h2>
               <p className="text-xs text-gray-500">Numéros communiqués aux clients pour le paiement manuel</p>
@@ -226,7 +226,7 @@ export default function ParametresPage() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
               <span className="inline-flex items-center gap-1.5">
-                <span className="inline-block w-2.5 h-2.5 rounded-full bg-red-500" />
+                <span className="inline-block w-2.5 h-2.5 rounded-full bg-orange-500" />
                 Numéro Orange Money
               </span>
             </label>
@@ -246,7 +246,7 @@ export default function ParametresPage() {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
               <span className="inline-flex items-center gap-1.5">
-                <span className="inline-block w-2.5 h-2.5 rounded-full bg-blue-300" />
+                <span className="inline-block w-2.5 h-2.5 rounded-full bg-yellow-400" />
                 Numéro MTN MoMo
               </span>
             </label>
@@ -265,9 +265,9 @@ export default function ParametresPage() {
         </section>
 
         {/* Section 4 — Tarification */}
-        <section className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
-          <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
-            <span className="text-2xl">💱</span>
+        <section className="bg-white rounded-2xl border border-blue-100 shadow-sm p-6 space-y-5">
+          <div className="flex items-center gap-3 pb-3 border-b border-blue-100">
+            <svg className="w-5 h-5 text-tef-blue flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
             <div>
               <h2 className="font-bold text-gray-900">Tarification</h2>
               <p className="text-xs text-gray-500">Taux de change et remise globale sur les packs</p>
