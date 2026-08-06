@@ -42,11 +42,15 @@ export default function ContactPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null)
   const [waNum, setWaNum] = useState('237683008287')
   const [adminEmail, setAdminEmail] = useState('tifuzzied@gmail.com')
+  const [orangeMoneyNumber, setOrangeMoneyNumber] = useState('237683008287')
+  const [mtnMomoNumber, setMtnMomoNumber] = useState('237683008287')
 
   useEffect(() => {
     fetch('/api/settings').then(r => r.json()).then(s => {
       if (s?.whatsappNumber) setWaNum(s.whatsappNumber.replace(/\D/g, ''))
       if (s?.adminEmail) setAdminEmail(s.adminEmail)
+      if (s?.orangeMoneyNumber) setOrangeMoneyNumber(s.orangeMoneyNumber.replace(/\D/g, ''))
+      if (s?.mtnMomoNumber) setMtnMomoNumber(s.mtnMomoNumber.replace(/\D/g, ''))
     }).catch(() => {})
   }, [])
 
@@ -119,8 +123,12 @@ export default function ContactPage() {
                 </div>
                 <div>
                   <p className="font-semibold text-gray-900 text-sm">Paiement</p>
-                  <p className="text-sm text-gray-600">Orange Money &amp; MTN MoMo</p>
-                  <p className="text-xs text-gray-400 mt-0.5">+{waNum}</p>
+                  <p className="text-sm text-gray-600">
+                    Orange Money : <span className="font-medium text-gray-800">+{orangeMoneyNumber}</span>
+                  </p>
+                  <p className="text-sm text-gray-600 mt-0.5">
+                    MTN MoMo : <span className="font-medium text-gray-800">+{mtnMomoNumber}</span>
+                  </p>
                 </div>
               </div>
             </div>
