@@ -48,6 +48,18 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const data = createSeriesSchema.parse(body)
 
+    if (data.isFree === true) {
+      const freeCount = await prisma.series.count({
+        where: { moduleId: data.moduleId, isFree: true },
+      })
+      if (freeCount >= 3) {
+        return NextResponse.json(
+          { error: 'Ce module a déjà 3 séries gratuites. Désactivez la gratuité d\'une autre série d\'abord.' },
+          { status: 409 }
+        )
+      }
+    }
+
     const series = await prisma.series.create({
       data: {
         title: data.title,

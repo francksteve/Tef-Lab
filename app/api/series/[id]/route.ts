@@ -44,6 +44,23 @@ export async function PATCH(
     const body = await req.json()
     const data = updateSeriesSchema.parse(body)
 
+    if (data.isFree === true) {
+      const current = await prisma.series.findUnique({ where: { id: params.id } })
+      if (!current) {
+        return NextResponse.json({ error: 'Série introuvable' }, { status: 404 })
+      }
+      const targetModuleId = data.moduleId ?? current.moduleId
+      const freeCount = await prisma.series.count({
+        where: { moduleId: targetModuleId, isFree: true, id: { not: params.id } },
+      })
+      if (freeCount >= 3) {
+        return NextResponse.json(
+          { error: 'Ce module a déjà 3 séries gratuites. Désactivez la gratuité d\'une autre série d\'abord.' },
+          { status: 409 }
+        )
+      }
+    }
+
     const series = await prisma.series.update({
       where: { id: params.id },
       data,

@@ -145,10 +145,11 @@ export default function PacksAdminPage() {
       if (res.ok) {
         setPacks((prev) => prev.filter((p) => p.id !== pack.id))
       } else {
-        setError('Erreur lors de la suppression.')
+        const data = await res.json().catch(() => ({}))
+        setError(data?.error ?? 'Erreur lors de la suppression.')
       }
     } catch {
-      setError('Erreur lors de la suppression.')
+      setError('Erreur réseau. Vérifiez votre connexion.')
     }
   }
 
