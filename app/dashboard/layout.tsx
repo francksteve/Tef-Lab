@@ -109,15 +109,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <main className="flex-1">{children}</main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-100 py-4">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-400">
+      <footer className="bg-tef-night py-4">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-white/50">
           <p className="flex flex-wrap justify-center gap-x-4 gap-y-1">
-            <Link href="/" className="hover:text-tef-blue transition-colors">Accueil</Link>
-            <Link href="/packs" className="hover:text-tef-blue transition-colors">Packs</Link>
-            <Link href="/contact" className="hover:text-tef-blue transition-colors">Contact</Link>
-            <Link href="/mentions-legales" className="hover:text-tef-blue transition-colors">Mentions légales</Link>
+            <Link href="/" className="hover:text-white transition-colors">Accueil</Link>
+            <Link href="/packs" className="hover:text-white transition-colors">Packs</Link>
+            <Link href="/contact" className="hover:text-white transition-colors">Contact</Link>
+            <Link href="/mentions-legales" className="hover:text-white transition-colors">Mentions légales</Link>
           </p>
-          <p className="text-gray-300">© 2025 TEF-LAB</p>
+          <p className="text-white/30">© 2025 TEF-LAB</p>
         </div>
       </footer>
     </div>

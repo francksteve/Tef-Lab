@@ -43,15 +43,15 @@ interface Attempt {
 const moduleGradients: Record<string, string> = {
   CE: 'from-tef-blue to-tef-night',
   CO: 'from-tef-blue to-tef-night',
-  EE: 'from-tef-red to-red-800',
-  EO: 'from-tef-red to-red-800',
+  EE: 'from-tef-blue to-tef-night',
+  EO: 'from-tef-blue to-tef-night',
 }
 
 const moduleAccent: Record<string, { ring: string; pillBg: string; pillText: string; chipHover: string }> = {
   CE: { ring: 'ring-blue-100', pillBg: 'bg-tef-blue/10', pillText: 'text-tef-blue', chipHover: 'hover:border-tef-blue hover:text-tef-blue' },
   CO: { ring: 'ring-blue-100', pillBg: 'bg-tef-blue/10', pillText: 'text-tef-blue', chipHover: 'hover:border-tef-blue hover:text-tef-blue' },
-  EE: { ring: 'ring-red-100',  pillBg: 'bg-red-50',      pillText: 'text-red-600',  chipHover: 'hover:border-tef-red hover:text-tef-red'   },
-  EO: { ring: 'ring-red-100',  pillBg: 'bg-red-50',      pillText: 'text-red-600',  chipHover: 'hover:border-tef-red hover:text-tef-red'   },
+  EE: { ring: 'ring-blue-100', pillBg: 'bg-tef-blue/10', pillText: 'text-tef-blue', chipHover: 'hover:border-tef-blue hover:text-tef-blue' },
+  EO: { ring: 'ring-blue-100', pillBg: 'bg-tef-blue/10', pillText: 'text-tef-blue', chipHover: 'hover:border-tef-blue hover:text-tef-blue' },
 }
 
 const moduleDescriptions: Record<string, string> = {
