@@ -237,43 +237,159 @@ export default function HomePage() {
       </section>
 
       {/* ── COMMENT ÇA MARCHE ── */}
-      <section className="py-12 px-4 sm:px-6 bg-white">
+      <section className="py-14 px-4 sm:px-6 bg-white">
         <div className="max-w-6xl mx-auto">
-          <div className="mb-7">
-            <p className="text-tef-red text-xs font-bold uppercase tracking-[0.15em] mb-2">Démarrage</p>
-            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">Trois étapes pour commencer</h2>
+
+          <div className="mb-10">
+            <p className="text-tef-red text-xs font-bold uppercase tracking-[0.15em] mb-2">Comment ça marche</p>
+            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">
+              De l&apos;inscription à votre score NCLC
+            </h2>
+            <p className="text-gray-500 mt-3 text-sm max-w-lg leading-relaxed">
+              Trois étapes. Le premier résultat arrive en moins de 15 minutes.
+            </p>
           </div>
-          <div className="grid sm:grid-cols-3 gap-6">
-            {[
-              {
-                n: '01',
-                title: 'Créez votre compte',
-                desc: 'Inscription gratuite en 30 secondes. Accès immédiat aux séries CE et CO. Aucune carte bancaire.',
-              },
-              {
-                n: '02',
-                title: 'Passez une série',
-                desc: 'Conditions réelles : minuterie, audio unique pour CO, compteur de mots pour EE. 40 questions par module.',
-              },
-              {
-                n: '03',
-                title: 'Lisez votre score',
-                desc: 'Niveau CECRL et NCLC instantané. Pour EE et EO, feedback IA détaillé avec texte corrigé et axes d\'amélioration.',
-              },
-            ].map(step => (
-              <div key={step.n} className="flex gap-5">
-                <div className="flex-shrink-0">
-                  <div className="w-10 h-10 rounded-full border-2 border-tef-blue text-tef-blue flex items-center justify-center text-xs font-black">
-                    {step.n}
-                  </div>
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-900 mb-2 text-sm">{step.title}</h3>
-                  <p className="text-sm text-gray-500 leading-relaxed">{step.desc}</p>
+
+          {/* Progression visible sur desktop */}
+          <div className="hidden sm:flex items-center mb-8">
+            <div className="w-10 h-10 rounded-full bg-tef-blue text-white flex items-center justify-center text-xs font-black flex-shrink-0 shadow-sm">01</div>
+            <div className="flex-1 flex items-center mx-2">
+              <div className="flex-1 h-px bg-gray-200" />
+              <svg className="w-4 h-4 text-gray-300 flex-shrink-0 -ml-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-tef-blue text-white flex items-center justify-center text-xs font-black flex-shrink-0 shadow-sm">02</div>
+            <div className="flex-1 flex items-center mx-2">
+              <div className="flex-1 h-px bg-gray-200" />
+              <svg className="w-4 h-4 text-gray-300 flex-shrink-0 -ml-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-tef-blue text-white flex items-center justify-center text-xs font-black flex-shrink-0 shadow-sm">03</div>
+          </div>
+
+          {/* Cartes */}
+          <div className="grid sm:grid-cols-3 gap-5">
+
+            {/* Étape 01 */}
+            <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5 flex flex-col gap-4 hover:border-tef-blue/30 hover:shadow-sm transition-all">
+              <div className="flex items-center gap-3 sm:hidden">
+                <div className="w-8 h-8 rounded-full bg-tef-blue text-white flex items-center justify-center text-xs font-black flex-shrink-0">01</div>
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900 text-sm mb-1.5">Créez votre compte</h3>
+                <p className="text-sm text-gray-500 leading-relaxed">
+                  Inscription gratuite en 30 secondes. Pas de carte bancaire. Accès immédiat aux modules CE et CO.
+                </p>
+              </div>
+              {/* Preview : modules débloqués */}
+              <div className="mt-auto bg-white border border-gray-100 rounded-xl p-3.5 space-y-2.5">
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wide">Accès inclus gratuitement</p>
+                <div className="space-y-1.5">
+                  {[
+                    { code: 'CE', label: 'Compréhension Écrite', locked: false },
+                    { code: 'CO', label: 'Compréhension Orale', locked: false },
+                    { code: 'EE', label: 'Expression Écrite', locked: true },
+                    { code: 'EO', label: 'Expression Orale', locked: true },
+                  ].map(m => (
+                    <div key={m.code} className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium ${m.locked ? 'bg-gray-50 text-gray-400' : 'bg-tef-blue/8 text-tef-blue'}`}>
+                      {m.locked ? (
+                        <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                        </svg>
+                      ) : (
+                        <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                      )}
+                      <span className="font-bold">{m.code}</span>
+                      <span className="text-[11px]">{m.label}</span>
+                      {m.locked && <span className="ml-auto text-[10px]">Pack</span>}
+                    </div>
+                  ))}
                 </div>
               </div>
-            ))}
+            </div>
+
+            {/* Étape 02 */}
+            <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5 flex flex-col gap-4 hover:border-tef-blue/30 hover:shadow-sm transition-all">
+              <div className="flex items-center gap-3 sm:hidden">
+                <div className="w-8 h-8 rounded-full bg-tef-blue text-white flex items-center justify-center text-xs font-black flex-shrink-0">02</div>
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900 text-sm mb-1.5">Passez une série</h3>
+                <p className="text-sm text-gray-500 leading-relaxed">
+                  Conditions réelles : minuterie active, audio unique en CO, compteur de mots en EE. 40 questions par module.
+                </p>
+              </div>
+              {/* Preview : interface quiz */}
+              <div className="mt-auto bg-white border border-gray-100 rounded-xl p-3.5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-tef-blue bg-tef-blue/8 px-2 py-0.5 rounded-md">
+                    <span className="w-1.5 h-1.5 rounded-full bg-tef-blue" />
+                    CE · Série 1
+                  </span>
+                  <span className="font-mono text-xs font-black text-tef-red bg-red-50 px-2 py-0.5 rounded-md">47:23</span>
+                </div>
+                <div>
+                  <div className="flex justify-between mb-1.5">
+                    <span className="text-[10px] text-gray-400 font-medium">Question 12 / 40</span>
+                    <span className="text-[10px] text-gray-400">11 répondues</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-full bg-tef-blue rounded-full transition-all" style={{ width: '28%' }} />
+                  </div>
+                </div>
+                <div className="flex gap-1">
+                  {Array.from({ length: 10 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className={`h-2.5 flex-1 rounded-sm ${i < 11 ? 'bg-tef-blue/60' : i === 11 ? 'bg-tef-blue ring-1 ring-tef-blue ring-offset-1' : 'bg-gray-100'}`}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Étape 03 */}
+            <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5 flex flex-col gap-4 hover:border-tef-blue/30 hover:shadow-sm transition-all">
+              <div className="flex items-center gap-3 sm:hidden">
+                <div className="w-8 h-8 rounded-full bg-tef-blue text-white flex items-center justify-center text-xs font-black flex-shrink-0">03</div>
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900 text-sm mb-1.5">Consultez votre score</h3>
+                <p className="text-sm text-gray-500 leading-relaxed">
+                  Niveau CECRL et équivalent NCLC instantané. Pour EE et EO, feedback IA avec texte corrigé et axes d&apos;amélioration.
+                </p>
+              </div>
+              {/* Preview : résultat */}
+              <div className="mt-auto bg-white border border-gray-100 rounded-xl p-3.5 space-y-3">
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wide">Résultat · EE Expression Écrite</p>
+                <div className="flex items-center gap-3">
+                  <div className="text-center flex-1">
+                    <div className="text-2xl font-black text-tef-blue leading-none">B2</div>
+                    <div className="text-[9px] text-gray-400 mt-0.5 font-semibold uppercase tracking-wide">CECRL</div>
+                  </div>
+                  <div className="h-8 w-px bg-gray-100" />
+                  <div className="text-center flex-1">
+                    <div className="text-2xl font-black text-tef-blue leading-none">7</div>
+                    <div className="text-[9px] text-gray-400 mt-0.5 font-semibold uppercase tracking-wide">NCLC</div>
+                  </div>
+                  <div className="h-8 w-px bg-gray-100" />
+                  <div className="text-center flex-1">
+                    <div className="text-lg font-black text-gray-800 leading-none">312</div>
+                    <div className="text-[9px] text-gray-400 mt-0.5 font-semibold uppercase tracking-wide">/ 450 pts</div>
+                  </div>
+                </div>
+                <div className="bg-tef-blue/5 border border-tef-blue/10 rounded-lg px-3 py-2 text-[11px] text-gray-600 leading-snug italic">
+                  &ldquo;Registre formel maîtrisé. Enrichissez le lexique pour atteindre C1.&rdquo;
+                </div>
+              </div>
+            </div>
+
           </div>
+
           <div className="mt-8 pt-6 border-t border-gray-100">
             <Link
               href="/inscription"
