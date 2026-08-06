@@ -21,7 +21,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const navLinks = [
     { href: '/dashboard', label: 'Mon espace', exact: true },
-    { href: '/dashboard/performance', label: '📊 Performance', exact: false },
+    { href: '/dashboard/performance', label: 'Performance', exact: false },
   ]
 
   const isActive = (href: string, exact: boolean) =>
