@@ -50,14 +50,10 @@ export async function POST(req: NextRequest) {
     } else {
       quota = await checkAndIncrementAIUsage(userId)
       if (!quota.allowed) {
-        return NextResponse.json(
-          {
-            error: `Quota de corrections IA atteint pour aujourd'hui (${quota.limit}/jour). Revenez demain ou passez à un pack supérieur.`,
-            remaining: 0,
-            limit: quota.limit,
-          },
-          { status: 429 }
-        )
+        const msg = quota.isMonthly
+          ? `Quota de corrections IA mensuel atteint (${quota.limit}/mois). Passez à un pack payant pour plus de corrections.`
+          : `Quota de corrections IA atteint pour aujourd'hui (${quota.limit}/jour). Revenez demain ou passez à un pack supérieur.`
+        return NextResponse.json({ error: msg, remaining: 0, limit: quota.limit }, { status: 429 })
       }
     }
 

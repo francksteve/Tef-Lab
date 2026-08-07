@@ -27,10 +27,10 @@ export async function POST() {
     }
     const result = await checkAndIncrementAIUsage(session.user.id)
     if (!result.allowed) {
-      return NextResponse.json(
-        { error: `Quota IA journalier atteint (${result.limit}/jour).`, ...result },
-        { status: 429 }
-      )
+      const msg = result.isMonthly
+        ? `Quota IA mensuel atteint (${result.limit}/mois). Passez à un pack payant pour plus de corrections.`
+        : `Quota IA journalier atteint (${result.limit}/jour).`
+      return NextResponse.json({ error: msg, ...result }, { status: 429 })
     }
     return NextResponse.json(result)
   } catch (error) {

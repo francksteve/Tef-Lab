@@ -1237,7 +1237,7 @@ export default function EOPage() {
   const [result, setResult] = useState<EOResult | null>(null)
   const [aiError, setAiError] = useState<string | null>(null)
   const [showExitConfirm, setShowExitConfirm] = useState(false)
-  const [aiQuota, setAiQuota] = useState<{ used: number; limit: number; remaining: number } | null>(null)
+  const [aiQuota, setAiQuota] = useState<{ used: number; limit: number; remaining: number; isMonthly?: boolean } | null>(null)
   const [quotaConsumedAtStart, setQuotaConsumedAtStart] = useState(false)
   const [quotaStartError, setQuotaStartError] = useState<string | null>(null)
   const [audioUrlA, setAudioUrlA] = useState<string | null>(null)
@@ -1259,7 +1259,7 @@ export default function EOPage() {
     ])
       .then(([seriesData, questionsData, quotaData]) => {
         if (quotaData && typeof quotaData === 'object' && 'remaining' in quotaData) {
-          setAiQuota(quotaData as { used: number; limit: number; remaining: number })
+          setAiQuota(quotaData as { used: number; limit: number; remaining: number; isMonthly?: boolean })
         }
         if (seriesData && typeof seriesData === 'object' && 'id' in seriesData) {
           setSeries(seriesData as Series)
@@ -1755,16 +1755,18 @@ export default function EOPage() {
                   <p className="font-semibold text-amber-800">
                     {aiQuota.limit === 0
                       ? 'Correction IA non incluse dans votre pack'
-                      : `Quota IA épuisé pour aujourd'hui (${aiQuota.used}/${aiQuota.limit} utilisé)`}
+                      : `Quota IA épuisé (${aiQuota.used}/${aiQuota.limit} ${aiQuota.isMonthly ? 'ce mois' : "aujourd'hui"})`}
                   </p>
                   <p className="text-amber-700 text-xs mt-0.5">
-                    Vous pouvez continuer l&apos;épreuve — la correction automatique ne sera pas disponible. Revenez demain ou passez à un pack supérieur.
+                    {aiQuota.isMonthly
+                      ? 'Vous pouvez continuer — la correction ne sera pas disponible. Passez à un pack payant pour plus de corrections IA.'
+                      : "Vous pouvez continuer l'épreuve — la correction automatique ne sera pas disponible. Revenez demain ou passez à un pack supérieur."}
                   </p>
                 </div>
               </div>
             ) : (
               <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-tef-blue/5 border border-tef-blue/15 rounded-full text-xs text-tef-blue font-semibold self-start mx-auto">
-                🤖 {aiQuota.remaining} correction{aiQuota.remaining > 1 ? 's' : ''} IA disponible{aiQuota.remaining > 1 ? 's' : ''} aujourd&apos;hui
+                🤖 {aiQuota.remaining} correction{aiQuota.remaining > 1 ? 's' : ''} IA disponible{aiQuota.remaining > 1 ? 's' : ''} {aiQuota.isMonthly ? 'ce mois' : "aujourd'hui"}
               </div>
             )
           )}

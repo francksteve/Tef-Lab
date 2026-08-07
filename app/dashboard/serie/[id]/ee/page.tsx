@@ -161,7 +161,7 @@ export default function EEPage() {
   const [canRetry, setCanRetry] = useState(false)
   const [isRetrying, setIsRetrying] = useState(false)
   const [showExitConfirm, setShowExitConfirm] = useState(false)
-  const [aiQuota, setAiQuota] = useState<{ used: number; limit: number; remaining: number } | null>(null)
+  const [aiQuota, setAiQuota] = useState<{ used: number; limit: number; remaining: number; isMonthly?: boolean } | null>(null)
   const [draftBanner, setDraftBanner] = useState(false)
 
   useEffect(() => {
@@ -561,18 +561,20 @@ export default function EEPage() {
                     <p className="font-semibold text-amber-800">
                       {aiQuota.limit === 0
                         ? 'Correction IA non incluse dans votre pack'
-                        : `Quota IA épuisé pour aujourd'hui (${aiQuota.used}/${aiQuota.limit} utilisé)`}
+                        : `Quota IA épuisé (${aiQuota.used}/${aiQuota.limit} ${aiQuota.isMonthly ? 'ce mois' : "aujourd'hui"})`}
                     </p>
                     <p className="text-amber-700 text-xs mt-0.5">
                       {aiQuota.limit === 0
                         ? 'Vos textes seront enregistrés sans correction automatique. Passez à un pack supérieur pour accéder aux corrections IA.'
-                        : 'Vos textes seront enregistrés mais ne seront pas corrigés par l\'IA. Revenez demain ou passez à un pack supérieur.'}
+                        : aiQuota.isMonthly
+                          ? 'Vos textes seront enregistrés mais ne seront pas corrigés. Passez à un pack payant pour plus de corrections IA.'
+                          : "Vos textes seront enregistrés mais ne seront pas corrigés par l'IA. Revenez demain ou passez à un pack supérieur."}
                     </p>
                   </div>
                 </div>
               ) : (
                 <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-full text-xs text-blue-700 font-semibold self-start">
-                  🤖 {aiQuota.remaining} correction{aiQuota.remaining > 1 ? 's' : ''} IA disponible{aiQuota.remaining > 1 ? 's' : ''} aujourd&apos;hui
+                  🤖 {aiQuota.remaining} correction{aiQuota.remaining > 1 ? 's' : ''} IA disponible{aiQuota.remaining > 1 ? 's' : ''} {aiQuota.isMonthly ? 'ce mois' : "aujourd'hui"}
                 </div>
               )
             )}
@@ -697,7 +699,7 @@ export default function EEPage() {
               </div>
             ) : (
               <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-full text-xs text-blue-700 font-semibold self-start">
-                🤖 {aiQuota.remaining} correction{aiQuota.remaining > 1 ? 's' : ''} IA disponible{aiQuota.remaining > 1 ? 's' : ''} aujourd&apos;hui
+                🤖 {aiQuota.remaining} correction{aiQuota.remaining > 1 ? 's' : ''} IA disponible{aiQuota.remaining > 1 ? 's' : ''} {aiQuota.isMonthly ? 'ce mois' : "aujourd'hui"}
               </div>
             )
           )}
