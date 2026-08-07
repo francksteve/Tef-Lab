@@ -487,6 +487,8 @@ export default function QuizPage() {
   const [timerExpired, setTimerExpired] = useState(false)
   /** Tracks which audioUrls have been played — persists across question navigation */
   const [playedAudios, setPlayedAudios] = useState<Record<string, boolean>>({})
+  /** item 06 — grille questions collapsible */
+  const [showGrid, setShowGrid] = useState(true)
   /** CO audio sequencer — runs independently from view navigation */
   const [audioSeqIdx, setAudioSeqIdx] = useState(0)
   const [audioPhase, setAudioPhase] = useState<'idle' | 'pre' | 'playing' | 'post' | 'done'>('idle')
@@ -1115,27 +1117,45 @@ export default function QuizPage() {
           />
         )}
 
-        {/* Question overview grid */}
-        <div className="flex flex-wrap gap-1.5">
-          {questions.map((q, i) => {
-            const snapIdx = isCO ? getCOSnapIdx(questions, i) : i
-            const isActive = snapIdx === currentIndex
-            return (
-              <button
-                key={q.id}
-                onClick={() => setCurrentIndex(snapIdx)}
-                className={`w-8 h-8 rounded-lg text-xs font-semibold transition-all ${
-                  isActive
-                    ? 'bg-tef-blue text-white ring-2 ring-tef-blue ring-offset-1'
-                    : answers[q.id]
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'bg-white border border-gray-200 text-gray-400 hover:border-tef-blue'
-                }`}
-              >
-                {i + 1}
-              </button>
-            )
-          })}
+        {/* Question overview grid — item 06 : collapsible + mobile-friendly touch targets */}
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <button
+            onClick={() => setShowGrid((v) => !v)}
+            className="w-full flex items-center justify-between px-4 py-2.5 hover:bg-gray-50 transition-colors"
+          >
+            <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+              Vue d&apos;ensemble
+            </span>
+            <span className="flex items-center gap-2 text-xs text-gray-400">
+              <span className="font-medium text-tef-blue">{answeredCount}/{questions.length}</span>
+              <svg className={`w-4 h-4 transition-transform ${showGrid ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </span>
+          </button>
+          {showGrid && (
+            <div className="px-3 pb-3 grid grid-cols-8 sm:grid-cols-10 gap-1">
+              {questions.map((q, i) => {
+                const snapIdx = isCO ? getCOSnapIdx(questions, i) : i
+                const isActive = snapIdx === currentIndex
+                return (
+                  <button
+                    key={q.id}
+                    onClick={() => setCurrentIndex(snapIdx)}
+                    className={`w-full aspect-square rounded-md text-xs font-semibold transition-all ${
+                      isActive
+                        ? 'bg-tef-blue text-white ring-2 ring-tef-blue ring-offset-1'
+                        : answers[q.id]
+                        ? 'bg-blue-100 text-blue-700'
+                        : 'bg-gray-50 border border-gray-200 text-gray-400 hover:border-tef-blue'
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                )
+              })}
+            </div>
+          )}
         </div>
 
         {/* Submit button at bottom */}
