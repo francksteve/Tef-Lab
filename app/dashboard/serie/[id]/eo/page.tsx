@@ -1768,36 +1768,72 @@ export default function EOPage() {
   /* ─── Prep A ─── */
 
   if (step === 'prepA') {
+    const startA = () => setStep('dialogueA')
     return (
       <>
         <div className="min-h-screen bg-gray-50">
-          <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <span className="inline-block px-3 py-1 bg-tef-blue text-white text-xs font-semibold rounded-full mb-3">
-                  Section A — Préparation
-                </span>
-                <h1 className="text-xl font-bold text-gray-900">Lisez l&apos;annonce suivante</h1>
+          {/* Gradient header — même registre que l'intro */}
+          <div className="bg-gradient-to-br from-tef-blue via-blue-700 to-blue-600 text-white">
+            <div className="max-w-3xl mx-auto px-4 py-6">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <span className="inline-block px-3 py-1 bg-white/20 text-white text-xs font-bold rounded-full mb-2">Section A</span>
+                  <h1 className="text-xl font-extrabold">Temps de préparation</h1>
+                  <p className="text-white/70 text-sm mt-0.5">Lisez l&apos;annonce et préparez vos questions</p>
+                </div>
+                <div className="flex-shrink-0">
+                  <Countdown seconds={30} onDone={startA} label="secondes" />
+                </div>
               </div>
+            </div>
+          </div>
+
+          <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">
+            {/* Consigne */}
+            <div className="bg-tef-blue/5 border border-tef-blue/20 rounded-xl px-4 py-3 flex gap-3">
+              <span className="text-tef-blue text-lg flex-shrink-0">💡</span>
+              <p className="text-sm text-tef-blue/90 font-medium leading-relaxed">{sectionA.consigne}</p>
+            </div>
+
+            {/* Document support */}
+            {(sectionA.imageUrl || sectionA.longText) && (
+              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                <div className="bg-gray-50 px-4 py-2.5 border-b border-gray-100">
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">📄 Document support</span>
+                </div>
+                <div className="p-4">
+                  {sectionA.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={sectionA.imageUrl} alt="Annonce" className="w-full object-contain rounded-lg border border-gray-100 bg-gray-50 max-h-96" />
+                  ) : (
+                    <div className="rounded-xl border-2 border-tef-blue/20 bg-tef-blue/5 p-4 flex flex-col items-center">
+                      {sectionA.taskTitle && (
+                        <>
+                          <h2 className="text-center font-bold text-lg mb-3 text-tef-blue">{sectionA.taskTitle}</h2>
+                          <hr className="w-full mb-4 border-tef-blue/20" />
+                        </>
+                      )}
+                      <pre className="whitespace-pre-wrap font-sans leading-normal text-center w-full text-sm text-gray-800">{sectionA.longText}</pre>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex items-center justify-between gap-4 pt-2">
               <button
                 onClick={() => setShowExitConfirm(true)}
-                className="flex-shrink-0 px-3 py-1.5 text-xs font-medium text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-red-600 hover:border-red-200 transition-colors"
+                className="px-3 py-1.5 text-xs text-gray-400 border border-gray-200 rounded-lg hover:text-red-600 hover:border-red-200 hover:bg-gray-50 transition-colors"
               >
                 ✕ Abandonner
               </button>
-            </div>
-
-            <div className="flex flex-col lg:flex-row gap-6 items-start">
-              <div className="flex-1 min-w-0">
-                <SectionDocument
-                  section={sectionA}
-                  consigne={sectionA.consigne}
-                  consigneColor="blue"
-                />
-              </div>
-              <div className="flex-shrink-0 flex flex-col items-center justify-center lg:pt-4">
-                <Countdown seconds={30} onDone={() => setStep('dialogueA')} label="Temps de préparation" />
-              </div>
+              <button
+                onClick={startA}
+                className="px-6 py-3 bg-tef-blue text-white font-bold rounded-xl hover:bg-tef-blue-hover transition-colors shadow-sm"
+              >
+                Commencer maintenant →
+              </button>
             </div>
           </div>
         </div>
@@ -1935,36 +1971,72 @@ export default function EOPage() {
   /* ─── Prep B ─── */
 
   if (step === 'prepB') {
+    const startB = () => setStep('dialogueB')
     return (
       <>
         <div className="min-h-screen bg-gray-50">
-          <div className="max-w-5xl mx-auto px-4 py-8 space-y-6">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <span className="inline-block px-3 py-1 bg-tef-blue text-white text-xs font-semibold rounded-full mb-3">
-                  Section B — Préparation
-                </span>
-                <h1 className="text-xl font-bold text-gray-900">Lisez l&apos;annonce suivante</h1>
+          {/* Gradient header */}
+          <div className="bg-gradient-to-br from-tef-blue via-blue-700 to-blue-600 text-white">
+            <div className="max-w-3xl mx-auto px-4 py-6">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <span className="inline-block px-3 py-1 bg-white/20 text-white text-xs font-bold rounded-full mb-2">Section B</span>
+                  <h1 className="text-xl font-extrabold">Temps de préparation</h1>
+                  <p className="text-white/70 text-sm mt-0.5">Lisez l&apos;annonce et préparez votre présentation</p>
+                </div>
+                <div className="flex-shrink-0">
+                  <Countdown seconds={60} onDone={startB} label="secondes" />
+                </div>
               </div>
+            </div>
+          </div>
+
+          <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">
+            {/* Consigne */}
+            <div className="bg-tef-blue/5 border border-tef-blue/20 rounded-xl px-4 py-3 flex gap-3">
+              <span className="text-tef-blue text-lg flex-shrink-0">💡</span>
+              <p className="text-sm text-tef-blue/90 font-medium leading-relaxed">{sectionB.consigne}</p>
+            </div>
+
+            {/* Document support */}
+            {(sectionB.imageUrl || sectionB.longText) && (
+              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                <div className="bg-gray-50 px-4 py-2.5 border-b border-gray-100">
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">📄 Document support</span>
+                </div>
+                <div className="p-4">
+                  {sectionB.imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={sectionB.imageUrl} alt="Annonce" className="w-full object-contain rounded-lg border border-gray-100 bg-gray-50 max-h-96" />
+                  ) : (
+                    <div className="rounded-xl border-2 border-tef-blue/20 bg-tef-blue/5 p-4 flex flex-col items-center">
+                      {sectionB.taskTitle && (
+                        <>
+                          <h2 className="text-center font-bold text-lg mb-3 text-tef-blue">{sectionB.taskTitle}</h2>
+                          <hr className="w-full mb-4 border-tef-blue/20" />
+                        </>
+                      )}
+                      <pre className="whitespace-pre-wrap font-sans leading-normal text-center w-full text-sm text-gray-800">{sectionB.longText}</pre>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex items-center justify-between gap-4 pt-2">
               <button
                 onClick={() => setShowExitConfirm(true)}
-                className="flex-shrink-0 px-3 py-1.5 text-xs font-medium text-gray-500 border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-red-600 hover:border-red-200 transition-colors"
+                className="px-3 py-1.5 text-xs text-gray-400 border border-gray-200 rounded-lg hover:text-red-600 hover:border-red-200 hover:bg-gray-50 transition-colors"
               >
                 ✕ Abandonner
               </button>
-            </div>
-
-            <div className="flex flex-col lg:flex-row gap-6 items-start">
-              <div className="flex-1 min-w-0">
-                <SectionDocument
-                  section={sectionB}
-                  consigne={sectionB.consigne}
-                  consigneColor="blue"
-                />
-              </div>
-              <div className="flex-shrink-0 flex flex-col items-center justify-center lg:pt-4">
-                <Countdown seconds={60} onDone={() => setStep('dialogueB')} label="Temps de préparation" />
-              </div>
+              <button
+                onClick={startB}
+                className="px-6 py-3 bg-tef-blue text-white font-bold rounded-xl hover:bg-tef-blue-hover transition-colors shadow-sm"
+              >
+                Commencer maintenant →
+              </button>
             </div>
           </div>
         </div>
