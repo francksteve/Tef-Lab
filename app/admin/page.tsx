@@ -70,8 +70,11 @@ export default function AdminDashboard() {
       fetch('/api/orders?status=PENDING').then((r) => r.json()),
     ]).then(([users, orders, pending]) => {
       setPendingOrders(Array.isArray(pending) ? pending.slice(0, 5) : [])
+      const totalUsers = Array.isArray(users)
+        ? users.length
+        : (users as { total?: number }).total ?? 0
       setStats({
-        totalUsers: Array.isArray(users) ? users.length : 0,
+        totalUsers,
         totalOrders: Array.isArray(orders) ? orders.length : 0,
         pendingOrders: Array.isArray(pending) ? pending.length : 0,
         totalAttempts: 0,
