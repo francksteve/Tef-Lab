@@ -1313,12 +1313,13 @@ export default function EOPage() {
   const handleDialogueAComplete = useCallback((hist: DialogueTurn[], audioBlob: Blob | null) => {
     setHistoryA(hist)
     setStep('pause')
-    // Upload section A audio in background — section B gives plenty of time
-    if (audioBlob) {
-      uploadAudioBlob(audioBlob, 'A').then((url) => {
-        if (url) { audioUrlARef.current = url; setAudioUrlA(url) }
-      })
-    }
+    // TODO: re-enable when Supabase storage upgraded (1 GB limit reached)
+    // if (audioBlob) {
+    //   uploadAudioBlob(audioBlob, 'A').then((url) => {
+    //     if (url) { audioUrlARef.current = url; setAudioUrlA(url) }
+    //   })
+    // }
+    void audioBlob // évite le warning unused
   }, [])
 
   const handleDialogueBComplete = useCallback(
@@ -1327,8 +1328,9 @@ export default function EOPage() {
       setStep('scoring')
       setAiError(null)
 
-      // Upload section B audio in parallel with AI scoring
-      const audioUrlBPromise = audioBlob ? uploadAudioBlob(audioBlob, 'B') : Promise.resolve(null)
+      // TODO: re-enable when Supabase storage upgraded (1 GB limit reached)
+      // const audioUrlBPromise = audioBlob ? uploadAudioBlob(audioBlob, 'B') : Promise.resolve(null)
+      void audioBlob // évite le warning unused
 
       // Build transcripts from dialogue history
       const buildTranscript = (h: DialogueTurn[]) =>
@@ -1367,11 +1369,11 @@ export default function EOPage() {
         setAiError('Erreur réseau lors de la correction IA.')
       }
 
-      // Wait for section B audio upload (scoring took ~5–15s, upload should be done)
-      const audioUrlBLocal = await audioUrlBPromise
-      if (audioUrlBLocal) setAudioUrlB(audioUrlBLocal)
+      // TODO: re-enable when Supabase storage upgraded (1 GB limit reached)
+      // const audioUrlBLocal = await audioUrlBPromise
+      // if (audioUrlBLocal) setAudioUrlB(audioUrlBLocal)
 
-      // Save attempt with audio URLs and AI results
+      // Save attempt (without audio URLs until storage upgraded)
       await fetch('/api/attempts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1379,8 +1381,9 @@ export default function EOPage() {
           seriesId,
           moduleCode: 'EO',
           answers: {},
-          audioTask1: audioUrlARef.current ?? undefined,
-          audioTask2: audioUrlBLocal ?? undefined,
+          // TODO: re-enable when Supabase storage upgraded
+          // audioTask1: audioUrlARef.current ?? undefined,
+          // audioTask2: audioUrlBLocal ?? undefined,
           ...(eoResult && {
             aiScore: eoResult.globalScore,
             cecrlLevel: eoResult.globalCecrlLevel,
