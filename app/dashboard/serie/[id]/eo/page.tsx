@@ -292,7 +292,7 @@ function DialogueSection({
   section: 'A' | 'B'
   sectionData: SectionData
   durationSeconds: number
-  onComplete: (history: DialogueTurn[]) => void
+  onComplete: (history: DialogueTurn[], audioBlob: Blob | null) => void
   userName?: string
   onRequestExit?: () => void
 }) {
@@ -315,6 +315,8 @@ function DialogueSection({
   const sessionConfiguredRef = useRef(false)
   // openingInstructionRef removed — opening messages sent directly in dc.onopen
   const pcRef = useRef<RTCPeerConnection | null>(null)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const audioChunksRef = useRef<Blob[]>([])
   const dcRef = useRef<RTCDataChannel | null>(null)
   const remoteAudioRef = useRef<HTMLAudioElement | null>(null)
   const iceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -631,6 +633,18 @@ ${documentContext}`
         handleWebRTCFailure(); return
       }
 
+      // Start recording mic audio for post-session playback
+      try {
+        audioChunksRef.current = []
+        const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+          ? 'audio/webm;codecs=opus'
+          : 'audio/webm'
+        const mr = new MediaRecorder(micStream, { mimeType })
+        mr.ondataavailable = (e) => { if (e.data.size > 0) audioChunksRef.current.push(e.data) }
+        mr.start(1000)
+        mediaRecorderRef.current = mr
+      } catch { /* recording optional */ }
+
       // Fetch Inworld ICE servers (STUN/TURN) from our proxy
       let iceServers: RTCIceServer[] = [{ urls: 'stun:stun.l.google.com:19302' }]
       try {
@@ -754,7 +768,7 @@ ${documentContext}`
     }
   }, [timeLeft, section, appendTurn])
 
-  const handleEndSection = useCallback(() => {
+  const handleEndSection = useCallback(async () => {
     if (endedRef.current) return
     endedRef.current = true
     setEnded(true)
@@ -771,7 +785,22 @@ ${documentContext}`
       remoteAudioRef.current = null
     }
     if (timerRef.current) clearInterval(timerRef.current)
-    onComplete(historyRef.current)
+
+    // Stop MediaRecorder and collect audio blob
+    let audioBlob: Blob | null = null
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      try {
+        await new Promise<void>((resolve) => {
+          mediaRecorderRef.current!.onstop = () => resolve()
+          mediaRecorderRef.current!.stop()
+        })
+        if (audioChunksRef.current.length > 0) {
+          audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' })
+        }
+      } catch { /* ignore */ }
+    }
+
+    onComplete(historyRef.current, audioBlob)
   }, [onComplete])
 
   const mm = String(Math.floor(timeLeft / 60)).padStart(2, '0')
@@ -1119,6 +1148,24 @@ ${documentContext}`
   )
 }
 
+/* ─────────────────────── Helpers ───────────────────── */
+
+async function uploadAudioBlob(blob: Blob, section: 'A' | 'B'): Promise<string | null> {
+  try {
+    const formData = new FormData()
+    formData.append(
+      'file',
+      new File([blob], `eo-section-${section}-${Date.now()}.webm`, { type: 'audio/webm' })
+    )
+    const res = await fetch('/api/upload/audio', { method: 'POST', body: formData })
+    if (!res.ok) return null
+    const data = (await res.json()) as { url?: string }
+    return data.url ?? null
+  } catch {
+    return null
+  }
+}
+
 /* ─────────────────────── Main Page ─────────────────── */
 
 export default function EOPage() {
@@ -1152,6 +1199,9 @@ export default function EOPage() {
   const [aiError, setAiError] = useState<string | null>(null)
   const [showExitConfirm, setShowExitConfirm] = useState(false)
   const [aiQuota, setAiQuota] = useState<{ used: number; limit: number; remaining: number } | null>(null)
+  const [audioUrlA, setAudioUrlA] = useState<string | null>(null)
+  const [audioUrlB, setAudioUrlB] = useState<string | null>(null)
+  const audioUrlARef = useRef<string | null>(null)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -1222,16 +1272,25 @@ export default function EOPage() {
     return () => window.removeEventListener('beforeunload', handler)
   }, [step])
 
-  const handleDialogueAComplete = useCallback((hist: DialogueTurn[]) => {
+  const handleDialogueAComplete = useCallback((hist: DialogueTurn[], audioBlob: Blob | null) => {
     setHistoryA(hist)
     setStep('pause')
+    // Upload section A audio in background — section B gives plenty of time
+    if (audioBlob) {
+      uploadAudioBlob(audioBlob, 'A').then((url) => {
+        if (url) { audioUrlARef.current = url; setAudioUrlA(url) }
+      })
+    }
   }, [])
 
   const handleDialogueBComplete = useCallback(
-    async (hist: DialogueTurn[]) => {
+    async (hist: DialogueTurn[], audioBlob: Blob | null) => {
       setHistoryB(hist)
       setStep('scoring')
       setAiError(null)
+
+      // Upload section B audio in parallel with AI scoring
+      const audioUrlBPromise = audioBlob ? uploadAudioBlob(audioBlob, 'B') : Promise.resolve(null)
 
       // Build transcripts from dialogue history
       const buildTranscript = (h: DialogueTurn[]) =>
@@ -1245,7 +1304,7 @@ export default function EOPage() {
       const transcriptA = buildTranscript(historyA)
       const transcriptB = buildTranscript(hist)
 
-      // AI scoring first — then save attempt with the result
+      // AI scoring
       let eoResult: EOResult | null = null
       try {
         const res = await fetch('/api/scoring/eo', {
@@ -1270,7 +1329,11 @@ export default function EOPage() {
         setAiError('Erreur réseau lors de la correction IA.')
       }
 
-      // Save attempt — includes AI score and CECRL level if scoring succeeded
+      // Wait for section B audio upload (scoring took ~5–15s, upload should be done)
+      const audioUrlBLocal = await audioUrlBPromise
+      if (audioUrlBLocal) setAudioUrlB(audioUrlBLocal)
+
+      // Save attempt with audio URLs and AI results
       await fetch('/api/attempts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1278,6 +1341,8 @@ export default function EOPage() {
           seriesId,
           moduleCode: 'EO',
           answers: {},
+          audioTask1: audioUrlARef.current ?? undefined,
+          audioTask2: audioUrlBLocal ?? undefined,
           ...(eoResult && {
             aiScore: eoResult.globalScore,
             cecrlLevel: eoResult.globalCecrlLevel,
@@ -1451,6 +1516,27 @@ export default function EOPage() {
                 </div>
               )}
             </>
+          )}
+
+          {/* Audio playback */}
+          {(audioUrlA || audioUrlB) && (
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
+              <h3 className="font-extrabold text-gray-900">🔊 Réécoute de vos productions</h3>
+              {audioUrlA && (
+                <div className="space-y-1.5">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Section A — Obtenir des informations</p>
+                  {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                  <audio controls src={audioUrlA} className="w-full rounded-lg" />
+                </div>
+              )}
+              {audioUrlB && (
+                <div className="space-y-1.5">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Section B — Présenter et convaincre</p>
+                  {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                  <audio controls src={audioUrlB} className="w-full rounded-lg" />
+                </div>
+              )}
+            </div>
           )}
 
           {/* Transcripts */}
