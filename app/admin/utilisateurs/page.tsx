@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 
 interface UserOrder {
   pack: { name: string } | null
@@ -15,6 +15,14 @@ interface User {
   mustChangePassword: boolean
   createdAt: string
   orders: UserOrder[]
+}
+
+interface ApiResponse {
+  users: User[]
+  total: number
+  page: number
+  totalPages: number
+  pageSize: number
 }
 
 type FilterType = 'Tous' | 'Abonnés' | 'Admins'
@@ -57,22 +65,38 @@ function SortHeader({ label, col, sortKey, sortDir, onSort, className = '' }: So
 
 export default function UtilisateursPage() {
   const [users, setUsers] = useState<User[]>([])
+  const [total, setTotal] = useState(0)
+  const [totalPages, setTotalPages] = useState(1)
+  const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<FilterType>('Tous')
+  const [search, setSearch] = useState('')
+  const [searchInput, setSearchInput] = useState('')
   const [sortKey, setSortKey] = useState<SortKey>('createdAt')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [mailStatus, setMailStatus] = useState<Record<string, 'sending' | 'sent' | 'error'>>({})
 
-  const loadUsers = () => {
+  const loadUsers = useCallback(() => {
     setLoading(true)
     setError(null)
-    fetch('/api/users')
+    // pack sort is client-side only — send createdAt to API as fallback
+    const apiSort = sortKey === 'pack' ? 'createdAt' : sortKey
+    const params = new URLSearchParams({
+      page: String(page),
+      filter,
+      sort: apiSort,
+      dir: sortDir,
+      ...(search && { search }),
+    })
+    fetch(`/api/users?${params}`)
       .then((r) => r.json())
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setUsers(data)
+      .then((data: ApiResponse) => {
+        if (data && Array.isArray(data.users)) {
+          setUsers(data.users)
+          setTotal(data.total)
+          setTotalPages(data.totalPages)
         } else {
           setError('Erreur lors du chargement des utilisateurs.')
         }
@@ -82,11 +106,16 @@ export default function UtilisateursPage() {
         setError('Erreur lors du chargement des utilisateurs.')
         setLoading(false)
       })
-  }
+  }, [page, filter, search, sortKey, sortDir])
 
   useEffect(() => {
     loadUsers()
-  }, [])
+  }, [loadUsers])
+
+  // Reset to page 1 when filter/search/sort changes
+  useEffect(() => {
+    setPage(1)
+  }, [filter, search, sortKey, sortDir])
 
   const handleSort = (col: SortKey) => {
     if (col === sortKey) {
@@ -97,6 +126,22 @@ export default function UtilisateursPage() {
     }
   }
 
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    setSearch(searchInput.trim())
+  }
+
+  // Client-side sort for pack column (within the current page)
+  const sorted =
+    sortKey === 'pack'
+      ? [...users].sort((a, b) => {
+          const pa = getActivePack(a)?.name ?? ''
+          const pb = getActivePack(b)?.name ?? ''
+          const cmp = pa.localeCompare(pb, 'fr')
+          return sortDir === 'asc' ? cmp : -cmp
+        })
+      : users
+
   const sendReminder = async (user: User) => {
     setMailStatus((prev) => ({ ...prev, [user.id]: 'sending' }))
     try {
@@ -104,11 +149,10 @@ export default function UtilisateursPage() {
       const data = await res.json()
       if (res.ok) {
         setMailStatus((prev) => ({ ...prev, [user.id]: 'sent' }))
-        // Réinitialiser après 4s
         setTimeout(() => setMailStatus((prev) => { const n = { ...prev }; delete n[user.id]; return n }), 4000)
       } else {
         setMailStatus((prev) => ({ ...prev, [user.id]: 'error' }))
-        setError(data?.error ?? 'Erreur lors de l\'envoi de l\'email.')
+        setError(data?.error ?? "Erreur lors de l'envoi de l'email.")
         setTimeout(() => setMailStatus((prev) => { const n = { ...prev }; delete n[user.id]; return n }), 4000)
       }
     } catch {
@@ -123,7 +167,7 @@ export default function UtilisateursPage() {
     try {
       const res = await fetch(`/api/users/${user.id}`, { method: 'DELETE' })
       if (res.ok) {
-        setUsers((prev) => prev.filter((u) => u.id !== user.id))
+        loadUsers()
       } else {
         const data = await res.json()
         setError(data?.error ?? 'Erreur lors de la suppression.')
@@ -160,35 +204,10 @@ export default function UtilisateursPage() {
     }
   }
 
-  const filtered = users.filter((u) => {
-    if (filter === 'Abonnés') return u.role === 'SUBSCRIBER'
-    if (filter === 'Admins') return u.role === 'ADMIN'
-    return true
-  })
-
-  const sorted = [...filtered].sort((a, b) => {
-    let cmp = 0
-    switch (sortKey) {
-      case 'name':
-        cmp = a.name.localeCompare(b.name, 'fr')
-        break
-      case 'status':
-        cmp = a.accountStatus.localeCompare(b.accountStatus)
-        break
-      case 'pack': {
-        const pa = getActivePack(a)?.name ?? ''
-        const pb = getActivePack(b)?.name ?? ''
-        cmp = pa.localeCompare(pb, 'fr')
-        break
-      }
-      case 'createdAt':
-        cmp = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        break
-    }
-    return sortDir === 'asc' ? cmp : -cmp
-  })
-
   const filters: FilterType[] = ['Tous', 'Abonnés', 'Admins']
+
+  const pageStart = total === 0 ? 0 : (page - 1) * 25 + 1
+  const pageEnd = Math.min(page * 25, total)
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
@@ -198,30 +217,70 @@ export default function UtilisateursPage() {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-          {error}
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm flex items-center justify-between gap-2">
+          <span>{error}</span>
+          <button onClick={() => setError(null)} className="text-red-400 hover:text-red-600 flex-shrink-0">✕</button>
         </div>
       )}
 
-      {/* Filtres */}
-      <div className="flex gap-2 flex-wrap">
-        {filters.map((f) => (
+      {/* Barre de recherche + filtres */}
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+        <form onSubmit={handleSearchSubmit} className="flex gap-2 flex-1 min-w-0">
+          <div className="relative flex-1 min-w-0">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Rechercher par nom ou email…"
+              className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue focus:border-transparent"
+            />
+          </div>
           <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              filter === f
-                ? 'bg-tef-blue text-white'
-                : 'bg-white text-gray-600 border border-gray-200 hover:border-tef-blue'
-            }`}
+            type="submit"
+            className="px-4 py-2 bg-tef-blue text-white text-sm font-semibold rounded-lg hover:bg-tef-blue-hover transition-colors flex-shrink-0"
           >
-            {f}
+            Chercher
           </button>
-        ))}
-        <span className="ml-auto text-sm text-gray-400 self-center">
-          {sorted.length} utilisateur{sorted.length !== 1 ? 's' : ''}
-        </span>
+          {search && (
+            <button
+              type="button"
+              onClick={() => { setSearch(''); setSearchInput('') }}
+              className="px-3 py-2 bg-gray-100 text-gray-600 text-sm rounded-lg hover:bg-gray-200 transition-colors flex-shrink-0"
+            >
+              ✕
+            </button>
+          )}
+        </form>
+
+        <div className="flex gap-2 flex-shrink-0">
+          {filters.map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                filter === f
+                  ? 'bg-tef-blue text-white'
+                  : 'bg-white text-gray-600 border border-gray-200 hover:border-tef-blue'
+              }`}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
       </div>
+
+      {/* Compteur */}
+      {!loading && (
+        <p className="text-sm text-gray-400">
+          {total === 0
+            ? 'Aucun utilisateur trouvé'
+            : `${pageStart}–${pageEnd} sur ${total} utilisateur${total !== 1 ? 's' : ''}`}
+          {search && <span className="ml-1 text-tef-blue font-medium">· Recherche : « {search} »</span>}
+        </p>
+      )}
 
       {/* Tableau */}
       <div className="bg-white rounded-xl shadow-sm border border-blue-100 overflow-hidden">
@@ -246,6 +305,7 @@ export default function UtilisateursPage() {
               <tbody>
                 {sorted.map((user, index) => {
                   const activePack = getActivePack(user)
+                  const rowNum = (page - 1) * 25 + index + 1
                   const isEven = index % 2 === 0
                   return (
                     <tr
@@ -254,20 +314,18 @@ export default function UtilisateursPage() {
                         isEven ? 'bg-white' : 'bg-blue-50'
                       }`}
                     >
-                      {/* N° */}
                       <td className="px-3 py-3 text-xs font-semibold text-tef-blue text-center">
-                        {index + 1}
+                        {rowNum}
                       </td>
 
-                      {/* Nom */}
                       <td className="px-4 py-3">
                         <p className="font-medium text-gray-900">{user.name}</p>
+                        <p className="text-xs text-gray-400">{user.email}</p>
                         {user.mustChangePassword && (
                           <p className="text-xs text-red-500">Doit changer son mdp</p>
                         )}
                       </td>
 
-                      {/* Statut */}
                       <td className="px-4 py-3">
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
                           user.accountStatus === 'ACTIVE'
@@ -278,7 +336,6 @@ export default function UtilisateursPage() {
                         </span>
                       </td>
 
-                      {/* Pack en cours */}
                       <td className="px-4 py-3 hidden md:table-cell">
                         {activePack ? (
                           <div className="flex flex-col gap-0.5">
@@ -295,12 +352,10 @@ export default function UtilisateursPage() {
                         )}
                       </td>
 
-                      {/* Créé le */}
                       <td className="px-4 py-3 text-xs text-gray-500 hidden sm:table-cell">
                         {new Date(user.createdAt).toLocaleDateString('fr-FR')}
                       </td>
 
-                      {/* Mailing */}
                       <td className="px-4 py-3 hidden sm:table-cell">
                         {user.role === 'SUBSCRIBER' ? (
                           <button
@@ -328,7 +383,6 @@ export default function UtilisateursPage() {
                         )}
                       </td>
 
-                      {/* Actions */}
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2 flex-wrap">
                           <button
@@ -371,6 +425,61 @@ export default function UtilisateursPage() {
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between gap-4">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1 || loading}
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:border-tef-blue hover:text-tef-blue transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            Précédent
+          </button>
+
+          <div className="flex items-center gap-1">
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter((p) => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+              .reduce<(number | '…')[]>((acc, p, i, arr) => {
+                if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push('…')
+                acc.push(p)
+                return acc
+              }, [])
+              .map((p, i) =>
+                p === '…' ? (
+                  <span key={`ellipsis-${i}`} className="px-2 text-gray-400 text-sm">…</span>
+                ) : (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p as number)}
+                    disabled={loading}
+                    className={`w-9 h-9 text-sm font-semibold rounded-lg transition-colors ${
+                      p === page
+                        ? 'bg-tef-blue text-white'
+                        : 'bg-white text-gray-600 border border-gray-200 hover:border-tef-blue hover:text-tef-blue'
+                    }`}
+                  >
+                    {p}
+                  </button>
+                )
+              )}
+          </div>
+
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages || loading}
+            className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:border-tef-blue hover:text-tef-blue transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            Suivant
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      )}
     </div>
   )
 }
