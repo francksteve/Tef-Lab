@@ -1166,6 +1166,44 @@ async function uploadAudioBlob(blob: Blob, section: 'A' | 'B'): Promise<string |
   }
 }
 
+/* ─── Scoring progressif (item 05) ──────────────────── */
+function ScoringScreen({ steps, delaysMs }: { steps: string[]; delaysMs: number[] }) {
+  const [current, setCurrent] = useState(0)
+
+  useEffect(() => {
+    if (current >= steps.length - 1) return
+    const t = setTimeout(() => setCurrent((s) => s + 1), delaysMs[current] ?? 5000)
+    return () => clearTimeout(t)
+  }, [current, steps.length, delaysMs])
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 max-w-sm w-full space-y-6">
+        <div className="w-14 h-14 bg-tef-blue/10 rounded-2xl flex items-center justify-center mx-auto">
+          <div className="w-7 h-7 border-4 border-tef-blue border-t-transparent rounded-full animate-spin" />
+        </div>
+        <p className="font-extrabold text-gray-800 text-lg text-center">Correction en cours…</p>
+        <div className="space-y-3">
+          {steps.map((label, i) => {
+            const done = i < current
+            const active = i === current
+            return (
+              <div key={i} className={`flex items-center gap-3 text-sm transition-colors duration-300 ${done ? 'text-tef-blue' : active ? 'text-gray-700' : 'text-gray-300'}`}>
+                <span className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center text-[10px] font-bold transition-colors ${done ? 'border-tef-blue bg-tef-blue text-white' : active ? 'border-tef-blue text-tef-blue' : 'border-gray-200 text-gray-300'}`}>
+                  {done ? '✓' : i + 1}
+                </span>
+                <span className={active ? 'font-semibold' : ''}>{label}</span>
+                {active && <div className="w-3 h-3 border-2 border-tef-blue border-t-transparent rounded-full animate-spin ml-auto flex-shrink-0" />}
+              </div>
+            )
+          })}
+        </div>
+        <p className="text-xs text-gray-400 text-center">Étape {current + 1}/{steps.length}</p>
+      </div>
+    </div>
+  )
+}
+
 /* ─────────────────────── Main Page ─────────────────── */
 
 export default function EOPage() {
@@ -1388,24 +1426,7 @@ export default function EOPage() {
   /* ─── Scoring spinner ─── */
 
   if (step === 'scoring') {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-gray-50 px-4">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-10 text-center max-w-sm w-full space-y-5">
-          <div className="w-16 h-16 bg-tef-blue/10 rounded-2xl flex items-center justify-center mx-auto">
-            <div className="w-8 h-8 border-4 border-tef-blue border-t-transparent rounded-full animate-spin" />
-          </div>
-          <div>
-            <p className="font-extrabold text-gray-800 text-lg">Correction en cours…</p>
-            <p className="text-gray-400 text-sm mt-1">L&apos;IA analyse vos deux sections.</p>
-          </div>
-          <div className="flex gap-1 justify-center">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="w-2 h-2 rounded-full bg-tef-blue animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
-            ))}
-          </div>
-        </div>
-      </div>
-    )
+    return <ScoringScreen steps={['Transcription de vos deux sections…', 'Analyse de votre expression orale…', 'Génération des corrections et conseils…']} delaysMs={[4000, 7000]} />
   }
 
   /* ─── Results ─── */

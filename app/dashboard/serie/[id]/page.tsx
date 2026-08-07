@@ -492,6 +492,8 @@ export default function QuizPage() {
   const [audioPhase, setAudioPhase] = useState<'idle' | 'pre' | 'playing' | 'post' | 'done'>('idle')
   const [audioCountdown, setAudioCountdown] = useState(0)
   const audioInitializedRef = useRef(false)
+  /** item 04 — écran d'intro CO (affiché avant le démarrage du minuteur audio) */
+  const [showCoIntro, setShowCoIntro] = useState(true)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -540,13 +542,13 @@ export default function QuizPage() {
     return pages
   }, [series, questions])
 
-  /** Initialize audio sequencer once audio pages are ready */
+  /** Initialize audio sequencer once audio pages are ready (gated on CO intro dismissal) */
   useEffect(() => {
-    if (!isCO || audioPages.length === 0 || audioInitializedRef.current) return
+    if (!isCO || audioPages.length === 0 || audioInitializedRef.current || showCoIntro) return
     audioInitializedRef.current = true
     setAudioPhase('pre')
     setAudioCountdown(audioPages[0].preDelay)
-  }, [isCO, audioPages])
+  }, [isCO, audioPages, showCoIntro])
 
   /** Tick pre/post countdown; transition phases and advance sequencer */
   useEffect(() => {
@@ -802,6 +804,59 @@ export default function QuizPage() {
               Retour au tableau de bord
             </button>
           </div>
+        </div>
+      </div>
+    )
+  }
+
+  // ── Intro CO (item 04) ───────────────────────────────────────────────────────
+  if (isCO && showCoIntro) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 max-w-md w-full space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-tef-blue/10 rounded-xl flex items-center justify-center text-2xl flex-shrink-0">🎧</div>
+            <div>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Compréhension Orale</p>
+              <h1 className="font-extrabold text-gray-900 text-lg leading-tight">{series?.title}</h1>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <p className="font-bold text-gray-800 text-sm">Avant de commencer, lisez ces consignes :</p>
+            <ul className="space-y-2.5">
+              {[
+                { icon: '🔊', text: 'Chaque document audio ne se joue qu\'une seule fois — vous ne pourrez pas le réécouter.' },
+                { icon: '⏱️', text: 'Le minuteur démarre dès que vous cliquez sur « Commencer ».' },
+                { icon: '🎵', text: 'Branchez vos écouteurs pour une meilleure compréhension.' },
+                { icon: '📵', text: 'Ne quittez pas cette page pendant l\'épreuve — votre progression sera perdue.' },
+              ].map(({ icon, text }, i) => (
+                <li key={i} className="flex items-start gap-2.5 text-sm text-gray-700">
+                  <span className="flex-shrink-0 mt-0.5">{icon}</span>
+                  <span>{text}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-start gap-2.5 text-sm">
+            <span className="flex-shrink-0 text-base mt-0.5">⚠️</span>
+            <p className="text-amber-800 font-medium">L&apos;audio commence automatiquement — assurez-vous que le volume de votre appareil est suffisant.</p>
+          </div>
+
+          <button
+            onClick={() => setShowCoIntro(false)}
+            className="w-full py-3.5 bg-tef-blue hover:bg-tef-blue-hover text-white font-extrabold rounded-xl transition-colors text-base"
+          >
+            Je suis prêt(e) — Commencer
+          </button>
+
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="w-full py-2 text-sm text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            ← Retour au tableau de bord
+          </button>
         </div>
       </div>
     )

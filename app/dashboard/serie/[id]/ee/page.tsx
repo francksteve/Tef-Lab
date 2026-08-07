@@ -63,6 +63,47 @@ const CECRL_GRADIENT: Record<string, string> = {
   C2: 'from-blue-900 to-[#001344]',
 }
 
+/* ─── Scoring progressif (item 05) ─── */
+function ScoringScreen() {
+  const [current, setCurrent] = useState(0)
+  const steps = ['Lecture de vos productions…', 'Évaluation grammaticale et lexicale…', 'Génération des corrections personnalisées…']
+  const delays = [3500, 6000]
+
+  useEffect(() => {
+    if (current >= steps.length - 1) return
+    const t = setTimeout(() => setCurrent((s) => s + 1), delays[current] ?? 5000)
+    return () => clearTimeout(t)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [current])
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 max-w-sm w-full space-y-6">
+        <div className="w-14 h-14 bg-tef-blue/10 rounded-2xl flex items-center justify-center mx-auto">
+          <div className="w-7 h-7 border-4 border-tef-blue border-t-transparent rounded-full animate-spin" />
+        </div>
+        <p className="font-extrabold text-gray-800 text-lg text-center">Correction en cours…</p>
+        <div className="space-y-3">
+          {steps.map((label, i) => {
+            const done = i < current
+            const active = i === current
+            return (
+              <div key={i} className={`flex items-center gap-3 text-sm transition-colors duration-300 ${done ? 'text-tef-blue' : active ? 'text-gray-700' : 'text-gray-300'}`}>
+                <span className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center text-[10px] font-bold transition-colors ${done ? 'border-tef-blue bg-tef-blue text-white' : active ? 'border-tef-blue text-tef-blue' : 'border-gray-200 text-gray-300'}`}>
+                  {done ? '✓' : i + 1}
+                </span>
+                <span className={active ? 'font-semibold' : ''}>{label}</span>
+                {active && <div className="w-3 h-3 border-2 border-tef-blue border-t-transparent rounded-full animate-spin ml-auto flex-shrink-0" />}
+              </div>
+            )
+          })}
+        </div>
+        <p className="text-xs text-gray-400 text-center">Étape {current + 1}/{steps.length}</p>
+      </div>
+    </div>
+  )
+}
+
 /* ─── Progress stepper ─── */
 function ProgressStepper({ phase }: { phase: PagePhase }) {
   const steps = [
@@ -121,6 +162,7 @@ export default function EEPage() {
   const [isRetrying, setIsRetrying] = useState(false)
   const [showExitConfirm, setShowExitConfirm] = useState(false)
   const [aiQuota, setAiQuota] = useState<{ used: number; limit: number; remaining: number } | null>(null)
+  const [draftBanner, setDraftBanner] = useState(false)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -159,6 +201,28 @@ export default function EEPage() {
     return () => window.removeEventListener('beforeunload', handler)
   }, [phase])
 
+  // item 02 — restaurer le brouillon au chargement
+  useEffect(() => {
+    if (loading || !seriesId) return
+    try {
+      const saved = localStorage.getItem(`ee-draft-${seriesId}`)
+      if (saved) {
+        const { t1, t2 } = JSON.parse(saved) as { t1?: string; t2?: string }
+        if (t1) { setTask1Text(t1); setDraftBanner(true) }
+        if (t2) setTask2Text(t2)
+      }
+    } catch { /* ignore */ }
+  }, [loading, seriesId])
+
+  // item 02 — sauvegarde automatique toutes les 30s
+  useEffect(() => {
+    if (phase === 'submitting' || phase === 'results') return
+    const id = setInterval(() => {
+      try { localStorage.setItem(`ee-draft-${seriesId}`, JSON.stringify({ t1: task1Text, t2: task2Text })) } catch { /* ignore */ }
+    }, 30_000)
+    return () => clearInterval(id)
+  }, [seriesId, task1Text, task2Text, phase])
+
   const handleTask1TimeUp = useCallback(() => { setPhase('task2') }, [])
   const handleTask2TimeUp = useCallback(() => {
     handleFinalSubmit()
@@ -179,6 +243,7 @@ export default function EEPage() {
 
   const handleFinalSubmit = useCallback(async () => {
     if (phase === 'submitting' || phase === 'results') return
+    try { localStorage.removeItem(`ee-draft-${seriesId}`) } catch { /* ignore */ }
     setPhase('submitting')
     setAiError(null)
     setCanRetry(false)
@@ -273,26 +338,7 @@ export default function EEPage() {
   }
 
   // ── Submitting ──
-  if (phase === 'submitting') {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-gray-50 px-4">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-10 text-center max-w-sm w-full space-y-5">
-          <div className="w-16 h-16 bg-tef-blue/10 rounded-2xl flex items-center justify-center mx-auto">
-            <div className="w-8 h-8 border-4 border-tef-blue border-t-transparent rounded-full animate-spin" />
-          </div>
-          <div>
-            <p className="font-extrabold text-gray-800 text-lg">Correction en cours…</p>
-            <p className="text-gray-400 text-sm mt-1">L&apos;IA analyse vos deux tâches.</p>
-          </div>
-          <div className="flex gap-1 justify-center">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="w-2 h-2 rounded-full bg-tef-blue animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
-            ))}
-          </div>
-        </div>
-      </div>
-    )
-  }
+  if (phase === 'submitting') return <ScoringScreen />
 
   // ── Results ──
   if (phase === 'results') {
@@ -484,6 +530,15 @@ export default function EEPage() {
                 </button>
               </div>
             </div>
+
+            {/* Bannière brouillon restauré (item 02) */}
+            {draftBanner && (
+              <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 text-sm">
+                <span className="flex-shrink-0 text-base">💾</span>
+                <p className="flex-1 text-blue-800 font-medium">Brouillon restauré — vos textes précédents ont été rechargés.</p>
+                <button onClick={() => setDraftBanner(false)} className="text-blue-400 hover:text-blue-600 flex-shrink-0 text-lg leading-none">✕</button>
+              </div>
+            )}
 
             {/* Quota IA */}
             {aiQuota && (
