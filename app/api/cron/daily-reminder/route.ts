@@ -31,6 +31,20 @@ export async function GET(req: NextRequest) {
   const today = new Date().toISOString().slice(0, 10) // YYYY-MM-DD
   console.log(`[CRON] daily-reminder démarré — ${today}`)
 
+  // ── Récupérer packs actifs + remise (une seule fois pour tous les emails) ──
+  const [activePacks, settings] = await Promise.all([
+    prisma.pack.findMany({
+      where: { isActive: true },
+      select: { name: true, price: true, durationDays: true, isRecommended: true },
+      orderBy: { price: 'asc' },
+    }),
+    prisma.platformSettings.findUnique({
+      where: { id: 'default' },
+      select: { discountRate: true },
+    }),
+  ])
+  const discountRate = settings?.discountRate ?? 0
+
   // ── Récupérer tous les utilisateurs actifs (hors ADMIN) ─────────────────
   const users = await prisma.user.findMany({
     where: {
@@ -83,6 +97,8 @@ export async function GET(req: NextRequest) {
         await sendDailyUpgradeReminder({
           clientName: user.name,
           clientEmail: user.email,
+          packs: activePacks,
+          discountRate,
         })
         sentUpgrade++
       }

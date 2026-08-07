@@ -810,14 +810,43 @@ export async function sendDailyPracticeReminder(data: DailyPracticeReminderData)
 
 // ─── Template 10 : Rappel upgrade → Utilisateurs gratuits ──────────────────
 
+export interface PackSummary {
+  name: string
+  price: number
+  durationDays: number
+  isRecommended: boolean
+}
+
 export interface DailyUpgradeReminderData {
   clientName: string
   clientEmail: string
+  packs: PackSummary[]
+  discountRate?: number
 }
 
 export async function sendDailyUpgradeReminder(data: DailyUpgradeReminderData): Promise<void> {
   const firstName = data.clientName.split(' ')[0]
   const siteUrl = config.siteUrl
+  const discount = data.discountRate ?? 0
+
+  const packsRows = data.packs.map((pack) => {
+    const finalPrice = discount > 0
+      ? Math.round(pack.price * (1 - discount / 100))
+      : pack.price
+    const discountBadge = discount > 0
+      ? ` <span style="color:#E30613; font-size:11px; font-weight:bold;">-${discount}%</span>`
+      : ''
+    const rec = pack.isRecommended
+    return `
+          <tr>
+            <td style="padding:6px 0; font-weight:bold;${rec ? ' color:#003087;' : ''}">
+              ${pack.name}${rec ? ' ⭐' : ''}
+            </td>
+            <td style="padding:6px 0; text-align:right;${rec ? ' color:#003087; font-weight:bold;' : ''}">
+              ${finalPrice.toLocaleString('fr-FR')} FCFA / ${pack.durationDays} j${discountBadge}
+            </td>
+          </tr>`
+  }).join('')
 
   const html = `
 <!DOCTYPE html>
@@ -849,23 +878,13 @@ export async function sendDailyUpgradeReminder(data: DailyUpgradeReminderData): 
         </ul>
       </div>
 
+      ${data.packs.length > 0 ? `
       <div style="background:#f0f4ff; border:1px solid #c3d3f0; border-radius:6px; padding:16px 20px; margin-bottom:24px;">
-        <p style="margin:0 0 10px; font-size:13px; font-weight:bold; color:#003087;">Quelques tarifs</p>
+        <p style="margin:0 0 10px; font-size:13px; font-weight:bold; color:#003087;">Tarifs disponibles</p>
         <table style="width:100%; border-collapse:collapse; font-size:13px; color:#444;">
-          <tr>
-            <td style="padding:5px 0; font-weight:bold;">Pack Essai</td>
-            <td style="padding:5px 0; text-align:right;">5 000 FCFA / 30 jours</td>
-          </tr>
-          <tr>
-            <td style="padding:5px 0; font-weight:bold; color:#003087;">Pack Silver (recommandé)</td>
-            <td style="padding:5px 0; text-align:right; color:#003087; font-weight:bold;">25 000 FCFA / 30 jours</td>
-          </tr>
-          <tr>
-            <td style="padding:5px 0; font-weight:bold;">Pack Gold</td>
-            <td style="padding:5px 0; text-align:right;">35 000 FCFA / 30 jours</td>
-          </tr>
+          ${packsRows}
         </table>
-      </div>
+      </div>` : ''}
 
       <div style="text-align:center; margin:24px 0;">
         <a href="${siteUrl}/packs"

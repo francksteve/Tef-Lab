@@ -45,6 +45,19 @@ export async function POST(
     orderBy: { expiresAt: 'desc' },
   })
 
+  // Packs actifs + remise (pour l'email upgrade)
+  const [activePacks, settings] = await Promise.all([
+    prisma.pack.findMany({
+      where: { isActive: true },
+      select: { name: true, price: true, durationDays: true, isRecommended: true },
+      orderBy: { price: 'asc' },
+    }),
+    prisma.platformSettings.findUnique({
+      where: { id: 'default' },
+      select: { discountRate: true },
+    }),
+  ])
+
   if (activeOrder) {
     const daysLeft = Math.ceil(
       (activeOrder.expiresAt!.getTime() - Date.now()) / (1000 * 60 * 60 * 24)
@@ -61,6 +74,8 @@ export async function POST(
     await sendDailyUpgradeReminder({
       clientName: user.name,
       clientEmail: user.email,
+      packs: activePacks,
+      discountRate: settings?.discountRate ?? 0,
     })
     return NextResponse.json({ sent: 'upgrade', to: user.email })
   }
