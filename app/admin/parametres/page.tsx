@@ -21,12 +21,30 @@ const defaultForm: FormState = {
   discountRate: '0',
 }
 
+interface CleanupPreview {
+  dryRun: true
+  wouldDelete: number
+  users: { id: string; name: string; email: string; createdAt: string }[]
+}
+
+interface CleanupResult {
+  deleted: number
+  users: { name: string; email: string }[]
+}
+
 export default function ParametresPage() {
   const [form, setForm] = useState<FormState>(defaultForm)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
+
+  // Maintenance — nettoyage abonnés inactifs
+  const [cleanupPreview, setCleanupPreview] = useState<CleanupPreview | null>(null)
+  const [cleanupResult, setCleanupResult] = useState<CleanupResult | null>(null)
+  const [cleanupLoading, setCleanupLoading] = useState(false)
+  const [cleanupError, setCleanupError] = useState('')
+  const [showConfirm, setShowConfirm] = useState(false)
 
   useEffect(() => {
     fetch('/api/settings')
@@ -53,6 +71,44 @@ export default function ParametresPage() {
     setForm((prev) => ({ ...prev, [field]: value }))
     setSuccess(false)
     setError('')
+  }
+
+  const handleDryRun = async () => {
+    setCleanupLoading(true)
+    setCleanupError('')
+    setCleanupPreview(null)
+    setCleanupResult(null)
+    setShowConfirm(false)
+    try {
+      const res = await fetch('/api/cron/cleanup-inactive?dryRun=true', { method: 'POST' })
+      const data = await res.json()
+      if (res.ok) setCleanupPreview(data as CleanupPreview)
+      else setCleanupError(data?.error ?? 'Erreur lors de la prévisualisation.')
+    } catch {
+      setCleanupError('Erreur réseau.')
+    } finally {
+      setCleanupLoading(false)
+    }
+  }
+
+  const handleCleanup = async () => {
+    setCleanupLoading(true)
+    setCleanupError('')
+    setShowConfirm(false)
+    try {
+      const res = await fetch('/api/cron/cleanup-inactive', { method: 'POST' })
+      const data = await res.json()
+      if (res.ok) {
+        setCleanupResult(data as CleanupResult)
+        setCleanupPreview(null)
+      } else {
+        setCleanupError(data?.error ?? 'Erreur lors du nettoyage.')
+      }
+    } catch {
+      setCleanupError('Erreur réseau.')
+    } finally {
+      setCleanupLoading(false)
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -332,6 +388,107 @@ export default function ParametresPage() {
           </div>
         </section>
 
+      </form>
+
+      {/* Section 5 — Maintenance (hors formulaire) */}
+      <section className="bg-white rounded-2xl border border-red-100 shadow-sm p-6 space-y-5 mt-8">
+        <div className="flex items-center gap-3 pb-3 border-b border-red-100">
+          <svg className="w-5 h-5 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <div>
+            <h2 className="font-bold text-gray-900">Maintenance</h2>
+            <p className="text-xs text-gray-500">Actions irréversibles — à utiliser avec précaution</p>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <div>
+            <p className="text-sm font-medium text-gray-700">Supprimer les abonnés inactifs depuis 90 jours</p>
+            <p className="text-xs text-gray-400 mt-0.5">
+              Supprime les comptes SUBSCRIBER sans passage de série depuis 90 jours et sans abonnement actif.
+              Les comptes ADMIN et les abonnés avec un pack en cours ne sont jamais supprimés.
+              Cette opération est aussi déclenchée automatiquement chaque dimanche à 2h.
+            </p>
+          </div>
+
+          {cleanupError && (
+            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+              <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              {cleanupError}
+            </div>
+          )}
+
+          {cleanupResult && (
+            <div className="p-4 bg-green-50 border border-green-200 rounded-xl space-y-2">
+              <p className="text-sm font-bold text-green-800">
+                ✅ {cleanupResult.deleted} compte{cleanupResult.deleted !== 1 ? 's' : ''} supprimé{cleanupResult.deleted !== 1 ? 's' : ''}
+              </p>
+              {cleanupResult.users.length > 0 && (
+                <ul className="text-xs text-green-700 space-y-0.5">
+                  {cleanupResult.users.map((u) => (
+                    <li key={u.email}>· {u.name} ({u.email})</li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+
+          {cleanupPreview && (
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-3">
+              <p className="text-sm font-bold text-amber-800">
+                ⚠️ {cleanupPreview.wouldDelete} compte{cleanupPreview.wouldDelete !== 1 ? 's' : ''} serai{cleanupPreview.wouldDelete !== 1 ? 'ent' : 't'} supprimé{cleanupPreview.wouldDelete !== 1 ? 's' : ''}
+              </p>
+              {cleanupPreview.wouldDelete > 0 ? (
+                <>
+                  <ul className="text-xs text-amber-700 space-y-0.5 max-h-40 overflow-y-auto">
+                    {cleanupPreview.users.map((u) => (
+                      <li key={u.id}>· {u.name} ({u.email}) — inscrit le {new Date(u.createdAt).toLocaleDateString('fr-FR')}</li>
+                    ))}
+                  </ul>
+                  {!showConfirm ? (
+                    <button
+                      onClick={() => setShowConfirm(true)}
+                      className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-lg transition-colors"
+                    >
+                      Confirmer la suppression définitive
+                    </button>
+                  ) : (
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={handleCleanup}
+                        disabled={cleanupLoading}
+                        className="px-4 py-2 bg-red-700 hover:bg-red-800 text-white text-sm font-bold rounded-lg transition-colors disabled:opacity-60"
+                      >
+                        {cleanupLoading ? 'Suppression…' : 'Oui, supprimer définitivement'}
+                      </button>
+                      <button
+                        onClick={() => setShowConfirm(false)}
+                        className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-lg transition-colors"
+                      >
+                        Annuler
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="text-xs text-amber-700">Aucun compte à supprimer — tous les abonnés sont actifs.</p>
+              )}
+            </div>
+          )}
+
+          <button
+            onClick={handleDryRun}
+            disabled={cleanupLoading}
+            className="px-5 py-2.5 border border-red-200 text-red-600 hover:bg-red-50 text-sm font-semibold rounded-xl transition-colors disabled:opacity-60"
+          >
+            {cleanupLoading ? 'Analyse en cours…' : 'Prévisualiser les comptes à supprimer'}
+          </button>
+        </div>
+      </section>
+
+      {/* Submit (réouverture du formulaire) */}
+      <form onSubmit={handleSubmit}>
         {/* Submit */}
         <div className="flex items-center justify-between pt-2">
           <p className="text-xs text-gray-400">
