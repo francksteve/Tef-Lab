@@ -1166,6 +1166,19 @@ async function uploadAudioBlob(blob: Blob, section: 'A' | 'B'): Promise<string |
   }
 }
 
+function slugifyTitle(text: string): string {
+  return text
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-zA-Z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+function blobExt(mimeType: string): string {
+  if (mimeType.includes('mp4') || mimeType.includes('m4a')) return 'mp4'
+  if (mimeType.includes('ogg')) return 'ogg'
+  return 'webm'
+}
+
 /* ─── Scoring progressif (item 05) ──────────────────── */
 function ScoringScreen({ steps, delaysMs }: { steps: string[]; delaysMs: number[] }) {
   const [current, setCurrent] = useState(0)
@@ -1240,6 +1253,8 @@ export default function EOPage() {
   const [audioUrlA, setAudioUrlA] = useState<string | null>(null)
   const [audioUrlB, setAudioUrlB] = useState<string | null>(null)
   const audioUrlARef = useRef<string | null>(null)
+  const blobTypeARef = useRef<string>('audio/webm')
+  const blobTypeBRef = useRef<string>('audio/webm')
 
   useEffect(() => {
     if (status === 'loading') return
@@ -1313,13 +1328,14 @@ export default function EOPage() {
   const handleDialogueAComplete = useCallback((hist: DialogueTurn[], audioBlob: Blob | null) => {
     setHistoryA(hist)
     setStep('pause')
-    // TODO: re-enable when Supabase storage upgraded (1 GB limit reached)
-    // if (audioBlob) {
-    //   uploadAudioBlob(audioBlob, 'A').then((url) => {
-    //     if (url) { audioUrlARef.current = url; setAudioUrlA(url) }
-    //   })
-    // }
-    void audioBlob // évite le warning unused
+    if (audioBlob) {
+      blobTypeARef.current = audioBlob.type || 'audio/webm'
+      const url = URL.createObjectURL(audioBlob)
+      audioUrlARef.current = url
+      setAudioUrlA(url)
+    }
+    // TODO: re-enable Supabase upload when storage upgraded
+    // uploadAudioBlob(audioBlob, 'A').then((url) => { ... })
   }, [])
 
   const handleDialogueBComplete = useCallback(
@@ -1328,9 +1344,12 @@ export default function EOPage() {
       setStep('scoring')
       setAiError(null)
 
-      // TODO: re-enable when Supabase storage upgraded (1 GB limit reached)
+      if (audioBlob) {
+        blobTypeBRef.current = audioBlob.type || 'audio/webm'
+        setAudioUrlB(URL.createObjectURL(audioBlob))
+      }
+      // TODO: re-enable Supabase upload when storage upgraded
       // const audioUrlBPromise = audioBlob ? uploadAudioBlob(audioBlob, 'B') : Promise.resolve(null)
-      void audioBlob // évite le warning unused
 
       // Build transcripts from dialogue history
       const buildTranscript = (h: DialogueTurn[]) =>
@@ -1479,6 +1498,43 @@ export default function EOPage() {
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm flex items-start gap-2">
               <span className="text-lg flex-shrink-0">⚠️</span>
               {aiError}
+            </div>
+          )}
+
+          {/* ─── Réécoute des productions (disponible cette session) ─── */}
+          {(audioUrlA || audioUrlB) && (
+            <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
+                <span className="text-base">🎙</span>
+                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Vos enregistrements</p>
+                <span className="ml-auto text-[11px] text-gray-400 italic">Disponibles cette session uniquement</span>
+              </div>
+              <div className="px-4 py-4 space-y-4">
+                {([
+                  { label: 'Section A — Obtenir des informations', url: audioUrlA, section: 'A', blobType: blobTypeARef.current },
+                  { label: 'Section B — Présenter et convaincre',  url: audioUrlB, section: 'B', blobType: blobTypeBRef.current },
+                ] as const).filter(({ url }) => !!url).map(({ label, url, section, blobType }) => {
+                  const ext = blobExt(blobType)
+                  const serieSlug = slugifyTitle(series?.title ?? 'Serie')
+                  const filename = `TEF-EO-Section-${section}-${serieSlug}.${ext}`
+                  return (
+                    <div key={section} className="space-y-2">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</p>
+                      <audio controls src={url!} className="w-full h-10 rounded-lg" />
+                      <a
+                        href={url!}
+                        download={filename}
+                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-tef-blue hover:text-tef-blue-hover transition-colors"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
+                        </svg>
+                        Télécharger ({filename})
+                      </a>
+                    </div>
+                  )
+                })}
+              </div>
             </div>
           )}
 
