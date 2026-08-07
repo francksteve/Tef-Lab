@@ -107,32 +107,32 @@ function ScoringScreen() {
 /* ─── Progress stepper ─── */
 function ProgressStepper({ phase }: { phase: PagePhase }) {
   const steps = [
-    { key: 'task1', label: 'Tâche 1', sub: '25 min' },
-    { key: 'task2', label: 'Tâche 2', sub: '35 min' },
-    { key: 'results', label: 'Résultats', sub: 'IA' },
+    { key: 'task1', label: 'Tâche 1' },
+    { key: 'task2', label: 'Tâche 2' },
+    { key: 'results', label: 'Résultats' },
   ]
   const activeIdx = phase === 'task1' ? 0 : phase === 'task2' ? 1 : 2
   return (
-    <div className="flex items-center gap-0">
+    <div className="flex items-center flex-shrink-0">
       {steps.map((step, i) => {
         const done = i < activeIdx
         const active = i === activeIdx
         return (
           <div key={step.key} className="flex items-center">
             <div className="flex flex-col items-center">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-extrabold border-2 transition-all ${
-                done ? 'bg-blue-500 border-blue-500 text-white' :
-                active ? 'bg-tef-blue border-tef-blue text-white shadow-md' :
+              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-extrabold border-2 transition-all ${
+                done ? 'bg-tef-blue border-tef-blue text-white' :
+                active ? 'bg-tef-blue border-tef-blue text-white' :
                 'bg-white border-gray-200 text-gray-400'
               }`}>
                 {done ? '✓' : i + 1}
               </div>
-              <div className={`text-[10px] font-semibold mt-0.5 ${active ? 'text-tef-blue' : done ? 'text-blue-600' : 'text-gray-400'}`}>
-                {step.label}
-              </div>
+              <span className={`text-[9px] font-semibold mt-0.5 leading-none whitespace-nowrap ${
+                active ? 'text-tef-blue' : done ? 'text-tef-blue/60' : 'text-gray-300'
+              }`}>{step.label}</span>
             </div>
             {i < steps.length - 1 && (
-              <div className={`w-12 h-0.5 mb-4 mx-1 ${i < activeIdx ? 'bg-blue-400' : 'bg-gray-200'}`} />
+              <div className={`w-6 h-px mb-3 mx-1 ${i < activeIdx ? 'bg-tef-blue/40' : 'bg-gray-200'}`} />
             )}
           </div>
         )
@@ -513,14 +513,19 @@ export default function EEPage() {
         <div className="min-h-screen bg-gray-50">
           <Timer durationSeconds={25 * 60} onTimeUp={handleTask1TimeUp} />
 
-          {/* Sous-header sticky — fixed at top-[40px] comme CE/CO */}
+          {/* Sous-header sticky */}
           <div className="fixed top-[40px] left-0 right-0 z-40 bg-white border-b border-gray-200">
-            <div className="h-[30px] max-w-3xl mx-auto px-4 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 min-w-0 flex-1">
-                <span className="text-sm font-bold text-gray-800 truncate">{series?.title}</span>
-                <span className="text-xs text-gray-400 whitespace-nowrap flex-shrink-0 hidden sm:inline">· EE</span>
+            <div className="h-[46px] max-w-3xl mx-auto px-4 flex items-center gap-3">
+              {/* Gauche : module · titre + stepper */}
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wide hidden sm:block">Expr. Écrite</span>
+                  <span className="text-gray-300 text-xs hidden sm:block">·</span>
+                  <span className="text-xs font-bold text-gray-700 truncate max-w-[90px]">{series?.title}</span>
+                </div>
+                <ProgressStepper phase={phase} />
               </div>
-              <ProgressStepper phase={phase} />
+              {/* Droite : compteur + ✕ */}
               <div className="flex items-center gap-2 flex-shrink-0">
                 <span className={`text-xs font-semibold tabular-nums ${task1OK ? 'text-green-600' : 'text-gray-400'}`}>
                   {task1Count}<span className="text-gray-300">/{TASK1_MIN}</span>
@@ -536,7 +541,7 @@ export default function EEPage() {
             </div>
           </div>
 
-          <div className="max-w-3xl mx-auto px-4 pt-[calc(73px_-_3.5rem)] pb-10 space-y-5">
+          <div className="max-w-3xl mx-auto px-4 pt-[calc(89px_-_3.5rem)] pb-10 space-y-5">
 
             {/* Bannière brouillon restauré (item 02) */}
             {draftBanner && (
@@ -642,14 +647,19 @@ export default function EEPage() {
       <div className="min-h-screen bg-gray-50">
         <Timer durationSeconds={35 * 60} onTimeUp={handleTask2TimeUp} />
 
-        {/* Sous-header sticky — fixed at top-[40px] comme CE/CO */}
+        {/* Sous-header sticky */}
         <div className="fixed top-[40px] left-0 right-0 z-40 bg-white border-b border-gray-200">
-          <div className="h-[30px] max-w-3xl mx-auto px-4 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              <span className="text-sm font-bold text-gray-800 truncate">{series?.title}</span>
-              <span className="text-xs text-gray-400 whitespace-nowrap flex-shrink-0 hidden sm:inline">· EE</span>
+          <div className="h-[46px] max-w-3xl mx-auto px-4 flex items-center gap-3">
+            {/* Gauche : module · titre + stepper */}
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wide hidden sm:block">Expr. Écrite</span>
+                <span className="text-gray-300 text-xs hidden sm:block">·</span>
+                <span className="text-xs font-bold text-gray-700 truncate max-w-[90px]">{series?.title}</span>
+              </div>
+              <ProgressStepper phase={phase} />
             </div>
-            <ProgressStepper phase={phase} />
+            {/* Droite : compteur + ✕ */}
             <div className="flex items-center gap-2 flex-shrink-0">
               <span className={`text-xs font-semibold tabular-nums ${task2OK ? 'text-green-600' : 'text-gray-400'}`}>
                 {task2Count}<span className="text-gray-300">/{TASK2_MIN}</span>
@@ -665,7 +675,7 @@ export default function EEPage() {
           </div>
         </div>
 
-        <div className="max-w-3xl mx-auto px-4 pt-[calc(73px_-_3.5rem)] pb-10 space-y-5">
+        <div className="max-w-3xl mx-auto px-4 pt-[calc(89px_-_3.5rem)] pb-10 space-y-5">
 
           {/* Quota IA */}
           {aiQuota && (
