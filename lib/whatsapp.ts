@@ -25,7 +25,7 @@ export function generateAdminToClientLink(data: {
   packName: string
   price: number
 }): string {
-  const phone = data.clientPhone.replace(/\+/g, '').replace(/\s/g, '')
+  const phone = data.clientPhone.replace(/\D/g, '')
   const message = `Bonjour ${data.clientFirstName}, nous avons bien reçu votre commande pour le pack ${data.packName} sur TEF-LAB. Veuillez nous envoyer la preuve de paiement de ${data.price} FCFA. Merci !`
   return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`
 }
