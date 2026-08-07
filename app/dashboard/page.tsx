@@ -117,6 +117,7 @@ function DashboardContent() {
   const [accessLevel, setAccessLevel] = useState<AccessLevel>('FREE')
   const [expiresAt, setExpiresAt] = useState<string | null>(null)
   const [packName, setPackName] = useState<string | null>(null)
+  const [aiQuota, setAiQuota] = useState<{ used: number; limit: number; remaining: number } | null>(null)
   const [loading, setLoading] = useState(true)
   const [upgradeOpen, setUpgradeOpen] = useState(false)
   const [upgradeReason, setUpgradeReason] = useState('')
@@ -142,8 +143,9 @@ function DashboardContent() {
       fetch('/api/series').then((r) => r.json()),
       fetch('/api/attempts').then((r) => r.json()),
       fetch('/api/subscription').then((r) => r.json()),
+      fetch('/api/ai-usage').then((r) => r.json()),
     ])
-      .then(([s, a, sub]) => {
+      .then(([s, a, sub, quota]) => {
         if (Array.isArray(s)) setSeries(s)
         if (Array.isArray(a)) setAttempts(a)
         const level: AccessLevel = sub?.accessLevel ?? 'FREE'
@@ -151,6 +153,9 @@ function DashboardContent() {
         setAccessLevel(level)
         setExpiresAt(sub?.subscription?.expiresAt ?? null)
         setPackName(sub?.subscription?.pack?.name ?? null)
+        if (quota && typeof quota === 'object' && 'remaining' in quota) {
+          setAiQuota(quota as { used: number; limit: number; remaining: number })
+        }
         setLoading(false)
       })
       .catch(() => setLoading(false))
@@ -484,7 +489,7 @@ function DashboardContent() {
 
                   {/* Footer stats */}
                   <div className="px-4 pb-3 pt-1 flex items-center justify-between gap-2 border-t border-gray-50">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full ${acc.pillBg} ${acc.pillText}`}>
                         {unlockedCount} accessible{unlockedCount !== 1 ? 's' : ''}
                       </span>
@@ -502,11 +507,25 @@ function DashboardContent() {
                           {passedCount}
                         </span>
                       )}
+                      {/* Badge quota IA — affiché sur les cartes EE et EO uniquement */}
+                      {(code === 'EE' || code === 'EO') && aiQuota && aiQuota.limit > 0 && (
+                        aiQuota.remaining === 0 ? (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-600">
+                            🤖 Quota IA épuisé
+                          </span>
+                        ) : (
+                          <span className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                            aiQuota.remaining <= 2 ? 'bg-amber-50 text-amber-700' : 'bg-green-50 text-green-700'
+                          }`}>
+                            🤖 {aiQuota.remaining} correction{aiQuota.remaining > 1 ? 's' : ''} IA restante{aiQuota.remaining > 1 ? 's' : ''}
+                          </span>
+                        )
+                      )}
                     </div>
                     {lockedCount > 0 && (
                       <button
                         onClick={() => openUpgrade(`Accédez à toutes les séries ${sampleModule?.name ?? code} avec un abonnement.`)}
-                        className={`text-[11px] font-bold ${acc.pillText} hover:underline`}
+                        className={`text-[11px] font-bold ${acc.pillText} hover:underline flex-shrink-0`}
                       >
                         Débloquer →
                       </button>
