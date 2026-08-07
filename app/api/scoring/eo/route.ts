@@ -12,7 +12,8 @@ const eoScoringSchema = z.object({
   transcriptionB: z.string().min(1, 'La transcription de la section B est requise'),
   announcementA: z.string().min(1, "L'annonce de la section A est requise"),
   announcementB: z.string().min(1, "L'annonce de la section B est requise"),
-  seriesId: z.string().optional(), // used for access control
+  seriesId: z.string().optional(),
+  quotaAlreadyConsumed: z.boolean().optional(), // true = quota debited at exam start, skip recheck
 })
 
 const anthropic = new Anthropic({ apiKey: config.anthropicApiKey })
@@ -39,17 +40,25 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // ── 2. Check and consume AI quota
-    const quota = await checkAndIncrementAIUsage(userId)
-    if (!quota.allowed) {
-      return NextResponse.json(
-        {
-          error: `Quota de corrections IA atteint pour aujourd'hui (${quota.limit}/jour). Revenez demain ou passez à un pack supérieur.`,
-          remaining: 0,
-          limit: quota.limit,
-        },
-        { status: 429 }
-      )
+    // ── 2. Check and consume AI quota (skip if already consumed at exam start)
+    let quota: { allowed: boolean; remaining: number; limit: number }
+    if (data.quotaAlreadyConsumed) {
+      // Quota was debited when user clicked "Commencer l'épreuve" — just read current state
+      const { getAIUsageToday } = await import('@/lib/access')
+      const usage = await getAIUsageToday(userId)
+      quota = { allowed: true, remaining: usage.remaining, limit: usage.limit }
+    } else {
+      quota = await checkAndIncrementAIUsage(userId)
+      if (!quota.allowed) {
+        return NextResponse.json(
+          {
+            error: `Quota de corrections IA atteint pour aujourd'hui (${quota.limit}/jour). Revenez demain ou passez à un pack supérieur.`,
+            remaining: 0,
+            limit: quota.limit,
+          },
+          { status: 429 }
+        )
+      }
     }
 
     // ── 3. Call Anthropic

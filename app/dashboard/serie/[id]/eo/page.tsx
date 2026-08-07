@@ -822,11 +822,11 @@ ${documentContext}`
           </span>
           {/* Counter badge */}
           {section === 'A' ? (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-tef-blue text-xs font-semibold rounded-full">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-tef-blue/10 text-tef-blue text-xs font-semibold rounded-full">
               ❓ {questionCount}/10
             </span>
           ) : (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-tef-blue/10 text-tef-blue text-xs font-semibold rounded-full">
               💬 {argCount} arg.
             </span>
           )}
@@ -871,19 +871,13 @@ ${documentContext}`
           {/* Annonce / Publicité — carte formatée affichée quand pas d'image */}
           {!sectionData.imageUrl && sectionData.longText && (
             <div className="w-full max-w-xl">
-              <div
-                className={`rounded-xl border-2 p-4 lg:p-6 shadow-sm flex flex-col items-center ${
-                  section === 'A'
-                    ? 'border-blue-200 bg-blue-50'
-                    : 'border-blue-200 bg-blue-50'
-                }`}
-              >
+              <div className="rounded-xl border-2 border-tef-blue/20 bg-tef-blue/5 p-4 lg:p-6 shadow-sm flex flex-col items-center">
                 {sectionData.taskTitle && (
                   <>
                     <h2 className="text-center font-bold text-lg lg:text-xl mb-3 text-tef-blue">
                       {sectionData.taskTitle}
                     </h2>
-                    <hr className="w-full mb-4 border-blue-300" />
+                    <hr className="w-full mb-4 border-tef-blue/20" />
                   </>
                 )}
                 <p className="text-gray-800 text-sm leading-normal whitespace-pre-wrap text-center w-full">
@@ -904,13 +898,7 @@ ${documentContext}`
 
           {/* Consigne — toujours visible sous le document */}
           {sectionData.consigne && (
-            <div
-              className={`w-full max-w-xl rounded-lg px-3 py-2 text-xs ${
-                section === 'A'
-                  ? 'bg-blue-50 text-blue-800 border border-blue-200'
-                  : 'bg-blue-50 text-blue-800 border border-blue-200'
-              }`}
-            >
+            <div className="w-full max-w-xl rounded-lg px-3 py-2 text-xs bg-tef-blue/5 text-tef-blue/90 border border-tef-blue/15">
               <span className="font-semibold">Consigne : </span>
               {sectionData.consigne}
             </div>
@@ -1250,6 +1238,8 @@ export default function EOPage() {
   const [aiError, setAiError] = useState<string | null>(null)
   const [showExitConfirm, setShowExitConfirm] = useState(false)
   const [aiQuota, setAiQuota] = useState<{ used: number; limit: number; remaining: number } | null>(null)
+  const [quotaConsumedAtStart, setQuotaConsumedAtStart] = useState(false)
+  const [quotaStartError, setQuotaStartError] = useState<string | null>(null)
   const [audioUrlA, setAudioUrlA] = useState<string | null>(null)
   const [audioUrlB, setAudioUrlB] = useState<string | null>(null)
   const audioUrlARef = useRef<string | null>(null)
@@ -1376,6 +1366,7 @@ export default function EOPage() {
               transcriptB || '[Aucune réplique enregistrée pour la Section B]',
             announcementA: sectionA.longText ?? '[Document non disponible]',
             announcementB: sectionB.longText ?? '[Document non disponible]',
+            quotaAlreadyConsumed: quotaConsumedAtStart,
           }),
         })
         if (res.ok) {
@@ -1412,7 +1403,7 @@ export default function EOPage() {
 
       setStep('results')
     },
-    [historyA, seriesId, sectionA.longText, sectionB.longText]
+    [historyA, seriesId, sectionA.longText, sectionB.longText, quotaConsumedAtStart]
   )
 
   /* ─── Loading / Error ─── */
@@ -1662,10 +1653,36 @@ export default function EOPage() {
   /* ─── Intro ─── */
 
   if (step === 'intro') {
+    const hasAiQuota = aiQuota && aiQuota.limit > 0 && aiQuota.remaining > 0
+
+    const handleStartEpreuve = async () => {
+      setQuotaStartError(null)
+      // Pas de quota IA dans ce pack → démarre directement
+      if (!aiQuota || aiQuota.limit === 0) {
+        setStep('prepA')
+        return
+      }
+      // Réserve le quota IA dès le début de l'épreuve
+      try {
+        const res = await fetch('/api/ai-usage', { method: 'POST' })
+        if (!res.ok) {
+          const data = (await res.json()) as { error?: string }
+          setQuotaStartError(data.error ?? 'Quota IA insuffisant pour démarrer.')
+          return
+        }
+        const data = (await res.json()) as { remaining: number; limit: number }
+        setQuotaConsumedAtStart(true)
+        setAiQuota((q) => q ? { ...q, remaining: data.remaining, used: q.limit - data.remaining } : q)
+      } catch {
+        // Erreur réseau : on démarre quand même, le scoring gèrera le quota
+      }
+      setStep('prepA')
+    }
+
     return (
       <div className="min-h-screen bg-gray-50">
         {/* Header */}
-        <div className="bg-gradient-to-br from-tef-blue via-blue-700 to-blue-600 text-white">
+        <div className="bg-gradient-to-br from-tef-blue via-[#002070] to-[#001a5c] text-white">
           <div className="max-w-2xl mx-auto px-4 py-8 text-center">
             <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-3">🎤</div>
             <h1 className="text-2xl font-extrabold">Expression Orale</h1>
@@ -1676,41 +1693,41 @@ export default function EOPage() {
         <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
           {/* Sections */}
           <div className="grid sm:grid-cols-2 gap-4">
-            <div className="bg-white rounded-2xl border border-blue-100 shadow-sm overflow-hidden">
-              <div className="bg-gradient-to-r from-blue-600 to-tef-blue px-4 py-3">
+            <div className="bg-white rounded-2xl border border-tef-blue/10 shadow-sm overflow-hidden">
+              <div className="bg-tef-blue px-4 py-3">
                 <p className="text-white font-extrabold text-sm">Section A</p>
                 <p className="text-white/70 text-xs">Obtenir des informations</p>
               </div>
               <div className="p-4 space-y-2">
                 <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <span className="w-5 h-5 rounded-full bg-blue-100 text-tef-blue flex items-center justify-center font-bold text-[10px] flex-shrink-0">A</span>
+                  <span className="w-5 h-5 rounded-full bg-tef-blue/10 text-tef-blue flex items-center justify-center font-bold text-[10px] flex-shrink-0">A</span>
                   Préparez votre appel téléphonique (30 s)
                 </div>
                 <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <span className="w-5 h-5 rounded-full bg-blue-100 text-tef-blue flex items-center justify-center font-bold text-[10px] flex-shrink-0">5'</span>
+                  <span className="w-5 h-5 rounded-full bg-tef-blue/10 text-tef-blue flex items-center justify-center font-bold text-[10px] flex-shrink-0">5&apos;</span>
                   Dialogue en direct avec l&apos;interlocuteur IA
                 </div>
-                <p className="text-xs text-blue-600 font-semibold mt-1">
+                <p className="text-xs text-tef-blue font-semibold mt-1">
                   🎩 Registre formel · vouvoiement · ~10 questions
                 </p>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl border border-blue-100 shadow-sm overflow-hidden">
-              <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-3">
+            <div className="bg-white rounded-2xl border border-tef-blue/10 shadow-sm overflow-hidden">
+              <div className="bg-tef-blue px-4 py-3">
                 <p className="text-white font-extrabold text-sm">Section B</p>
                 <p className="text-white/70 text-xs">Présenter et convaincre</p>
               </div>
               <div className="p-4 space-y-2">
                 <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-[10px] flex-shrink-0">B</span>
+                  <span className="w-5 h-5 rounded-full bg-tef-blue/10 text-tef-blue flex items-center justify-center font-bold text-[10px] flex-shrink-0">B</span>
                   Lisez l&apos;annonce et préparez-vous (60 s)
                 </div>
                 <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-[10px] flex-shrink-0">10'</span>
+                  <span className="w-5 h-5 rounded-full bg-tef-blue/10 text-tef-blue flex items-center justify-center font-bold text-[10px] flex-shrink-0">10&apos;</span>
                   Présentez et convainquez un(e) ami(e) IA
                 </div>
-                <p className="text-xs text-blue-600 font-semibold mt-1">
+                <p className="text-xs text-tef-blue font-semibold mt-1">
                   👕 Registre informel · tutoiement · 3+ arguments
                 </p>
               </div>
@@ -1731,7 +1748,7 @@ export default function EOPage() {
 
           {/* Quota IA */}
           {aiQuota && (
-            aiQuota.limit === 0 || aiQuota.remaining === 0 ? (
+            !hasAiQuota ? (
               <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm">
                 <span className="flex-shrink-0 text-base mt-0.5">⚠️</span>
                 <div>
@@ -1746,16 +1763,24 @@ export default function EOPage() {
                 </div>
               </div>
             ) : (
-              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-100 rounded-full text-xs text-blue-700 font-semibold self-start mx-auto">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-tef-blue/5 border border-tef-blue/15 rounded-full text-xs text-tef-blue font-semibold self-start mx-auto">
                 🤖 {aiQuota.remaining} correction{aiQuota.remaining > 1 ? 's' : ''} IA disponible{aiQuota.remaining > 1 ? 's' : ''} aujourd&apos;hui
               </div>
             )
           )}
 
+          {/* Erreur réservation quota */}
+          {quotaStartError && (
+            <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm">
+              <span className="flex-shrink-0 text-base mt-0.5">❌</span>
+              <p className="text-red-700 font-medium">{quotaStartError}</p>
+            </div>
+          )}
+
           <div className="text-center">
             <button
-              onClick={() => setStep('prepA')}
-              className="px-8 py-3 bg-gradient-to-r from-tef-blue to-blue-600 text-white font-extrabold rounded-xl hover:opacity-90 transition-opacity shadow-sm"
+              onClick={handleStartEpreuve}
+              className="px-8 py-3 bg-tef-blue text-white font-extrabold rounded-xl hover:bg-tef-blue-hover transition-colors shadow-sm"
             >
               Commencer l&apos;épreuve →
             </button>
@@ -1847,6 +1872,11 @@ export default function EOPage() {
                   Vos réponses ne seront pas enregistrées et votre progression sera perdue.
                 </p>
               </div>
+              {quotaConsumedAtStart && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 text-xs text-amber-800 leading-relaxed">
+                  <span className="font-bold">Attention :</span> votre quota de correction IA a déjà été consommé pour cette session. Quitter maintenant ne le restitue pas.
+                </div>
+              )}
               <div className="flex flex-col gap-2">
                 <button
                   onClick={() => router.push('/dashboard')}
@@ -1891,6 +1921,11 @@ export default function EOPage() {
                   Vos réponses ne seront pas enregistrées et votre progression sera perdue.
                 </p>
               </div>
+              {quotaConsumedAtStart && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 text-xs text-amber-800 leading-relaxed">
+                  <span className="font-bold">Attention :</span> votre quota de correction IA a déjà été consommé pour cette session. Quitter maintenant ne le restitue pas.
+                </div>
+              )}
               <div className="flex flex-col gap-2">
                 <button
                   onClick={() => router.push('/dashboard')}
@@ -1947,6 +1982,11 @@ export default function EOPage() {
                   Vos réponses ne seront pas enregistrées et votre progression sera perdue.
                 </p>
               </div>
+              {quotaConsumedAtStart && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 text-xs text-amber-800 leading-relaxed">
+                  <span className="font-bold">Attention :</span> votre quota de correction IA a déjà été consommé pour cette session. Quitter maintenant ne le restitue pas.
+                </div>
+              )}
               <div className="flex flex-col gap-2">
                 <button
                   onClick={() => router.push('/dashboard')}
@@ -2050,6 +2090,11 @@ export default function EOPage() {
                   Vos réponses ne seront pas enregistrées et votre progression sera perdue.
                 </p>
               </div>
+              {quotaConsumedAtStart && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 text-xs text-amber-800 leading-relaxed">
+                  <span className="font-bold">Attention :</span> votre quota de correction IA a déjà été consommé pour cette session. Quitter maintenant ne le restitue pas.
+                </div>
+              )}
               <div className="flex flex-col gap-2">
                 <button
                   onClick={() => router.push('/dashboard')}
@@ -2094,6 +2139,11 @@ export default function EOPage() {
                   Vos réponses ne seront pas enregistrées et votre progression sera perdue.
                 </p>
               </div>
+              {quotaConsumedAtStart && (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 text-xs text-amber-800 leading-relaxed">
+                  <span className="font-bold">Attention :</span> votre quota de correction IA a déjà été consommé pour cette session. Quitter maintenant ne le restitue pas.
+                </div>
+              )}
               <div className="flex flex-col gap-2">
                 <button
                   onClick={() => router.push('/dashboard')}
