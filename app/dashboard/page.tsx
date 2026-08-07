@@ -81,7 +81,8 @@ function isSeriesLocked(series: Series, accessLevel: AccessLevel): boolean {
   if (accessLevel === 'EE_EO') {
     return series.module.code !== 'EE' && series.module.code !== 'EO'
   }
-  return !(series.isFree && (series.module.code === 'CE' || series.module.code === 'CO'))
+  // FREE : séries isFree (CE/CO) + toutes les séries EE et EO (quota IA 2/mois)
+  return !(series.isFree || series.module.code === 'EE' || series.module.code === 'EO')
 }
 
 function getAccessBadge(accessLevel: AccessLevel): { label: string; color: string } {
