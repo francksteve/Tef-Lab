@@ -48,7 +48,7 @@ export default function HomePage() {
   const waNum = (settings.whatsappNumber ?? '237683008287').replace(/\D/g, '')
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
 
       {/* ── HERO ── */}
       <section className="relative overflow-hidden bg-tef-night">
