@@ -1718,14 +1718,14 @@ export default function EOPage() {
           </div>
 
           {/* Tips */}
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4 space-y-1.5">
-            <p className="text-xs font-extrabold text-red-800 mb-2">Avant de commencer :</p>
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-1.5">
+            <p className="text-xs font-extrabold text-amber-800 mb-2">Avant de commencer :</p>
             {[
               '🎙️ Activez votre microphone — la voix est recommandée',
               '🌐 Utilisez Chrome ou Edge pour la reconnaissance vocale',
               '🔇 Placez-vous dans un endroit calme pour de meilleurs résultats',
             ].map((tip) => (
-              <p key={tip} className="text-xs text-red-800">{tip}</p>
+              <p key={tip} className="text-xs text-amber-800">{tip}</p>
             ))}
           </div>
 
@@ -1881,17 +1881,21 @@ export default function EOPage() {
   if (step === 'pause') {
     return (
       <>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-          <div className="max-w-sm mx-auto text-center space-y-6 p-8">
-            <div className="text-5xl">⏸</div>
-            <h2 className="text-xl font-bold text-gray-900">Pause entre les sections</h2>
-            <p className="text-sm text-gray-500">
-              La Section B commence dans quelques instants. Préparez-vous.
-            </p>
-            <Countdown seconds={10} onDone={() => setStep('prepB')} label="Pause" />
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+          <div className="bg-white rounded-2xl border border-gray-200 shadow-sm max-w-sm w-full p-8 text-center space-y-6">
+            <div className="w-14 h-14 bg-tef-blue/10 rounded-2xl flex items-center justify-center text-2xl mx-auto">⏸</div>
+            <div>
+              <h2 className="text-xl font-extrabold text-gray-900">Section A terminée</h2>
+              <p className="text-sm text-gray-500 mt-1">Préparez-vous pour la Section B.</p>
+            </div>
+            <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-left space-y-1">
+              <p className="text-xs font-bold text-amber-800">Section B — Présenter et convaincre</p>
+              <p className="text-xs text-amber-700">Vous allez parler avec un(e) ami(e) IA. Présentez l&apos;annonce et convainquez-le/la d&apos;y participer. Tutoiement requis.</p>
+            </div>
+            <Countdown seconds={10} onDone={() => setStep('prepB')} label="Passage automatique dans" />
             <button
               onClick={() => setShowExitConfirm(true)}
-              className="mt-4 px-3 py-1.5 text-xs font-medium text-gray-400 border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-red-600 hover:border-red-200 transition-colors"
+              className="px-3 py-1.5 text-xs font-medium text-gray-400 border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-red-600 hover:border-red-200 transition-colors"
             >
               ✕ Abandonner le test
             </button>

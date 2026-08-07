@@ -507,29 +507,36 @@ export default function EEPage() {
   if (phase === 'task1') {
     const task1Count = countWords(task1Text)
     const task1OK = task1Count >= TASK1_MIN
+    const wordPct = Math.min(100, (task1Count / TASK1_MIN) * 100)
     return (
       <>
         <div className="min-h-screen bg-gray-50">
           <Timer durationSeconds={25 * 60} onTimeUp={handleTask1TimeUp} />
-          <div className="max-w-3xl mx-auto px-4 pt-16 pb-10 space-y-5">
 
-            {/* Header */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-tef-blue rounded-xl flex items-center justify-center text-white text-xl flex-shrink-0">✍️</div>
-                <div>
-                  <p className="font-extrabold text-gray-900 text-sm">{series?.title}</p>
-                  <p className="text-gray-400 text-xs">Expression Écrite · Tâche 1 sur 2</p>
-                </div>
+          {/* Sous-header sticky — fixed at top-[40px] comme CE/CO */}
+          <div className="fixed top-[40px] left-0 right-0 z-40 bg-white border-b border-gray-200">
+            <div className="h-[30px] max-w-3xl mx-auto px-4 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <span className="text-sm font-bold text-gray-800 truncate">{series?.title}</span>
+                <span className="text-xs text-gray-400 whitespace-nowrap flex-shrink-0 hidden sm:inline">· EE</span>
               </div>
-              <div className="flex items-center gap-3">
-                <ProgressStepper phase={phase} />
+              <ProgressStepper phase={phase} />
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <span className={`text-xs font-semibold tabular-nums ${task1OK ? 'text-green-600' : 'text-gray-400'}`}>
+                  {task1Count}<span className="text-gray-300">/{TASK1_MIN}</span>
+                </span>
                 <button onClick={() => setShowExitConfirm(true)}
-                  className="flex-shrink-0 px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-gray-100">
+                  className="px-2 py-0.5 text-xs font-medium text-gray-400 border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-red-600 hover:border-red-200 transition-colors">
                   ✕
                 </button>
               </div>
             </div>
+            <div className="w-full h-[3px] bg-gray-200">
+              <div className={`h-[3px] transition-all ${task1OK ? 'bg-green-500' : 'bg-tef-blue'}`} style={{ width: `${wordPct}%` }} />
+            </div>
+          </div>
+
+          <div className="max-w-3xl mx-auto px-4 pt-[calc(73px_-_3.5rem)] pb-10 space-y-5">
 
             {/* Bannière brouillon restauré (item 02) */}
             {draftBanner && (
@@ -570,14 +577,21 @@ export default function EEPage() {
               <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-tef-blue text-white text-xs font-bold rounded-full shadow-sm">
                 📝 Tâche 1 — Suite d&apos;article
               </span>
-              <span className="text-xs text-gray-400">25 minutes · 80 mots minimum</span>
+              <span className="text-xs text-gray-400">25 min · 80 mots min.</span>
             </div>
 
-            {/* Document support */}
+            {/* Consigne — avant le document (ordre pédagogique) */}
+            <div className="bg-tef-blue/5 border border-tef-blue/20 rounded-xl px-4 py-3 flex gap-3">
+              <span className="text-tef-blue text-lg flex-shrink-0">💡</span>
+              <p className="text-sm text-tef-blue/90 leading-relaxed font-medium">{task1Q?.question ?? TASK1_CONSIGNE}</p>
+            </div>
+
+            {/* Document support — début de l'article à compléter */}
             {(task1Q?.taskTitle || task1Q?.longText) && (
               <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                <div className="bg-gray-50 px-4 py-2.5 border-b border-gray-100">
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">📄 Document support — Début de l'article</p>
+                <div className="bg-gray-50 px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">📄 Début de l&apos;article</span>
+                  <span className="text-[10px] text-gray-400 italic">— à compléter ci-dessous</span>
                 </div>
                 <div className="p-4 space-y-2">
                   {task1Q?.taskTitle && <p className="font-bold text-gray-900 text-base">{task1Q.taskTitle}</p>}
@@ -586,16 +600,10 @@ export default function EEPage() {
               </div>
             )}
 
-            {/* Consigne */}
-            <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 flex gap-3">
-              <span className="text-blue-500 text-lg flex-shrink-0">💡</span>
-              <p className="text-sm text-blue-800 leading-relaxed">{task1Q?.question ?? TASK1_CONSIGNE}</p>
-            </div>
-
             {/* Textarea */}
-            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
               <div className="bg-gray-50 px-4 py-2.5 border-b border-gray-100 flex items-center justify-between">
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">✏️ Votre texte</p>
+                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">✏️ Votre suite</p>
                 <WordCounter text={task1Text} minimum={TASK1_MIN} />
               </div>
               <textarea
@@ -608,10 +616,7 @@ export default function EEPage() {
             </div>
 
             {/* Actions */}
-            <div className="flex items-center justify-between gap-4">
-              <p className={`text-xs font-medium transition-colors ${task1OK ? 'text-blue-600' : 'text-red-500'}`}>
-                {task1Count}/{TASK1_MIN} mots minimum
-              </p>
+            <div className="flex items-center justify-end gap-4 pb-2">
               <button
                 onClick={() => setPhase('task2')}
                 disabled={!task1OK}
@@ -630,30 +635,37 @@ export default function EEPage() {
   // ── Task 2 ──
   const task2Count = countWords(task2Text)
   const task2OK = task2Count >= TASK2_MIN
+  const word2Pct = Math.min(100, (task2Count / TASK2_MIN) * 100)
 
   return (
     <>
       <div className="min-h-screen bg-gray-50">
         <Timer durationSeconds={35 * 60} onTimeUp={handleTask2TimeUp} />
-        <div className="max-w-3xl mx-auto px-4 pt-16 pb-10 space-y-5">
 
-          {/* Header */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-tef-blue rounded-xl flex items-center justify-center text-white text-xl flex-shrink-0">✉️</div>
-              <div>
-                <p className="font-extrabold text-gray-900 text-sm">{series?.title}</p>
-                <p className="text-gray-400 text-xs">Expression Écrite · Tâche 2 sur 2</p>
-              </div>
+        {/* Sous-header sticky — fixed at top-[40px] comme CE/CO */}
+        <div className="fixed top-[40px] left-0 right-0 z-40 bg-white border-b border-gray-200">
+          <div className="h-[30px] max-w-3xl mx-auto px-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <span className="text-sm font-bold text-gray-800 truncate">{series?.title}</span>
+              <span className="text-xs text-gray-400 whitespace-nowrap flex-shrink-0 hidden sm:inline">· EE</span>
             </div>
-            <div className="flex items-center gap-3">
-              <ProgressStepper phase={phase} />
+            <ProgressStepper phase={phase} />
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <span className={`text-xs font-semibold tabular-nums ${task2OK ? 'text-green-600' : 'text-gray-400'}`}>
+                {task2Count}<span className="text-gray-300">/{TASK2_MIN}</span>
+              </span>
               <button onClick={() => setShowExitConfirm(true)}
-                className="flex-shrink-0 px-3 py-1.5 text-xs font-medium text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-gray-100">
+                className="px-2 py-0.5 text-xs font-medium text-gray-400 border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-red-600 hover:border-red-200 transition-colors">
                 ✕
               </button>
             </div>
           </div>
+          <div className="w-full h-[3px] bg-gray-200">
+            <div className={`h-[3px] transition-all ${task2OK ? 'bg-green-500' : 'bg-tef-blue'}`} style={{ width: `${word2Pct}%` }} />
+          </div>
+        </div>
+
+        <div className="max-w-3xl mx-auto px-4 pt-[calc(73px_-_3.5rem)] pb-10 space-y-5">
 
           {/* Quota IA */}
           {aiQuota && (
@@ -685,31 +697,32 @@ export default function EEPage() {
             <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-tef-blue text-white text-xs font-bold rounded-full shadow-sm">
               ✉️ Tâche 2 — Lettre au journal
             </span>
-            <span className="text-xs text-gray-400">35 minutes · 200 mots minimum</span>
+            <span className="text-xs text-gray-400">35 min · 200 mots min.</span>
           </div>
 
-          {/* Document support */}
+          {/* Consigne — avant le document (ordre pédagogique) */}
+          <div className="bg-tef-blue/5 border border-tef-blue/20 rounded-xl px-4 py-3 flex gap-3">
+            <span className="text-tef-blue text-lg flex-shrink-0">💡</span>
+            <p className="text-sm text-tef-blue/90 leading-relaxed font-medium">{task2Q?.question ?? TASK2_CONSIGNE}</p>
+          </div>
+
+          {/* Document support — extrait de journal à réagir */}
           {task2Q?.longText && (
             <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-              <div className="bg-gray-50 px-4 py-2.5 border-b border-gray-100">
-                <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">📰 Extrait de journal</p>
+              <div className="bg-gray-50 px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">📰 Extrait de journal</span>
+                <span className="text-[10px] text-gray-400 italic">— réagissez par une lettre</span>
               </div>
               <div className="p-4">
-                <p className="text-sm text-gray-700 leading-relaxed italic border-l-4 border-gray-300 pl-4">
+                <p className="text-sm text-gray-700 leading-relaxed italic border-l-4 border-tef-blue/30 pl-4">
                   {task2Q.longText}
                 </p>
               </div>
             </div>
           )}
 
-          {/* Consigne */}
-          <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 flex gap-3">
-            <span className="text-blue-500 text-lg flex-shrink-0">💡</span>
-            <p className="text-sm text-blue-800 leading-relaxed">{task2Q?.question ?? TASK2_CONSIGNE}</p>
-          </div>
-
           {/* Textarea */}
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
             <div className="bg-gray-50 px-4 py-2.5 border-b border-gray-100 flex items-center justify-between">
               <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">✏️ Votre lettre</p>
               <WordCounter text={task2Text} minimum={TASK2_MIN} />
@@ -724,7 +737,7 @@ export default function EEPage() {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center justify-between gap-4 pb-2">
             <button
               onClick={() => setPhase('task1')}
               className="px-4 py-2.5 bg-white border border-gray-200 text-gray-600 text-sm font-semibold rounded-xl hover:bg-gray-50 transition-colors"
