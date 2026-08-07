@@ -51,8 +51,8 @@ export async function canAccessSeries(
     return series.module.code === 'EE' || series.module.code === 'EO'
   }
 
-  // FREE: toutes les séries marquées isFree, tous modules confondus (CE, CO, EE, EO)
-  return series.isFree
+  // FREE: séries isFree en CE/CO + toutes les séries EE et EO (quota IA limité à 2/mois)
+  return series.isFree || series.module.code === 'EE' || series.module.code === 'EO'
 }
 
 // Quota mensuel offert aux abonnés gratuits (sans pack actif)

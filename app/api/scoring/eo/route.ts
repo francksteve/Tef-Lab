@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
     }
 
     // ── 2. Check and consume AI quota (skip if already consumed at exam start)
-    let quota: { allowed: boolean; remaining: number; limit: number }
+    let quota: { allowed: boolean; remaining: number; limit: number; isMonthly?: boolean }
     if (data.quotaAlreadyConsumed) {
       // Quota was debited when user clicked "Commencer l'épreuve" — just read current state
       const { getAIUsageToday } = await import('@/lib/access')
