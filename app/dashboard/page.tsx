@@ -609,7 +609,7 @@ function DashboardContent() {
                           <span className={`text-xs font-bold ${acc.pillText}`}>{attempt.score}/40</span>
                         )}
                         {attempt.aiScore != null && attempt.score == null && (
-                          <span className="text-xs font-bold text-blue-700">{Math.round(attempt.aiScore)}/100</span>
+                          <span className="text-xs font-bold text-blue-700">{Math.round(attempt.aiScore)}/{['EE', 'EO'].includes(attempt.moduleCode) ? 450 : 100}</span>
                         )}
                         {attempt.cecrlLevel && (
                           <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${cecrlColor}`}>{attempt.cecrlLevel}</span>
@@ -648,7 +648,7 @@ function DashboardContent() {
                             {attempt.score != null ? (
                               <span className={`font-bold ${acc.pillText}`}>{attempt.score}/40</span>
                             ) : attempt.aiScore != null ? (
-                              <span className="font-bold text-blue-600">{Math.round(attempt.aiScore)}/100</span>
+                              <span className="font-bold text-blue-600">{Math.round(attempt.aiScore)}/{['EE', 'EO'].includes(attempt.moduleCode) ? 450 : 100}</span>
                             ) : (
                               <span className="text-gray-300">—</span>
                             )}
