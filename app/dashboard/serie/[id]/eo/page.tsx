@@ -1156,7 +1156,7 @@ async function uploadAudioBlob(blob: Blob, section: 'A' | 'B'): Promise<string |
 
 function slugifyTitle(text: string): string {
   return text
-    .normalize('NFD').replace(/[Ì€-Í¯]/g, '')
+    .normalize('NFD').replace(/[\u0300-\u036F]/g, '')
     .replace(/[^a-zA-Z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
 }
