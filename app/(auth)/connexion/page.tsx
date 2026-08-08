@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
@@ -22,20 +22,20 @@ export default function ConnexionPage() {
         password: form.password,
       })
       if (result?.error) {
-        setError('Email ou mot de passe incorrect. Vérifiez vos informations.')
+        setError('Email ou mot de passe incorrect. VÃ©rifiez vos informations.')
       } else {
         router.push('/dashboard')
         router.refresh()
       }
     } catch {
-      setError('Une erreur est survenue. Réessayez.')
+      setError('Une erreur est survenue. RÃ©essayez.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -48,12 +48,12 @@ export default function ConnexionPage() {
                 TEF<span className="text-tef-red">-</span>LAB
               </span>
               <span className="text-[11px] font-semibold tracking-widest uppercase text-gray-400 mt-1">
-                Prépa TEF Canada
+                PrÃ©pa TEF Canada
               </span>
             </div>
           </Link>
           <h1 className="text-2xl font-extrabold text-gray-900">Connexion</h1>
-          <p className="text-gray-500 text-sm mt-1">Accède à ton espace de préparation</p>
+          <p className="text-gray-500 text-sm mt-1">AccÃ¨de Ã  ton espace de prÃ©paration</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
@@ -81,7 +81,7 @@ export default function ConnexionPage() {
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-sm font-medium text-gray-700">Mot de passe</label>
                 <Link href="/mot-de-passe-oublie" className="text-xs text-tef-blue hover:underline">
-                  Mot de passe oublié ?
+                  Mot de passe oubliÃ© ?
                 </Link>
               </div>
               <div className="relative">
@@ -91,7 +91,7 @@ export default function ConnexionPage() {
                   autoComplete="current-password"
                   value={form.password}
                   onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  placeholder="••••••••"
+                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                   className="w-full px-4 py-2.5 pr-11 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue transition-colors"
                 />
                 <button
@@ -119,16 +119,16 @@ export default function ConnexionPage() {
               disabled={loading}
               className="w-full py-3 bg-tef-blue text-white font-bold rounded-xl hover:bg-tef-blue-hover transition-colors disabled:opacity-60 text-base"
             >
-              {loading ? 'Connexion…' : 'Se connecter'}
+              {loading ? 'Connexionâ€¦' : 'Se connecter'}
             </button>
           </form>
 
           <p className="text-center text-xs text-gray-400 mt-6">
             Pas encore de compte ?{' '}
             <Link href="/inscription" className="text-tef-blue hover:underline font-medium">
-              Crée un compte
+              CrÃ©e un compte
             </Link>{' '}
-            pour accéder à la plateforme.
+            pour accÃ©der Ã  la plateforme.
           </p>
         </div>
       </div>

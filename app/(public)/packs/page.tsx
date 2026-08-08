@@ -200,7 +200,7 @@ export default function PacksPage() {
       </section>
 
       {/* Bannière free */}
-      <section className="py-12 px-4 bg-gray-50 border-t border-gray-100">
+      <section className="py-12 px-4 bg-background border-t border-gray-100">
         <div className="max-w-3xl mx-auto text-center">
           <h2 className="text-lg font-bold text-gray-900 mb-2">Pas encore prêt à vous abonner ?</h2>
           <p className="text-sm text-gray-500 mb-5">

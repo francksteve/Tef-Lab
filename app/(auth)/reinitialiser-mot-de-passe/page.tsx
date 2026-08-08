@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -26,7 +26,7 @@ function ResetForm() {
       return
     }
     if (password.length < 8) {
-      setError('Le mot de passe doit contenir au moins 8 caractères.')
+      setError('Le mot de passe doit contenir au moins 8 caractÃ¨res.')
       return
     }
     setLoading(true)
@@ -44,7 +44,7 @@ function ResetForm() {
         setError(data?.error ?? 'Une erreur est survenue.')
       }
     } catch {
-      setError('Erreur réseau. Vérifiez votre connexion.')
+      setError('Erreur rÃ©seau. VÃ©rifiez votre connexion.')
     } finally {
       setLoading(false)
     }
@@ -54,17 +54,17 @@ function ResetForm() {
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
       {success ? (
         <div className="text-center space-y-4">
-          <div className="text-5xl">✅</div>
-          <h2 className="text-lg font-bold text-gray-900">Mot de passe modifié !</h2>
+          <div className="text-5xl">âœ…</div>
+          <h2 className="text-lg font-bold text-gray-900">Mot de passe modifiÃ© !</h2>
           <p className="text-gray-600 text-sm leading-relaxed">
-            Votre mot de passe a été réinitialisé avec succès.
-            Vous allez être redirigé vers la page de connexion…
+            Votre mot de passe a Ã©tÃ© rÃ©initialisÃ© avec succÃ¨s.
+            Vous allez Ãªtre redirigÃ© vers la page de connexionâ€¦
           </p>
           <Link
             href="/connexion"
             className="inline-block mt-2 text-sm text-tef-blue font-semibold hover:underline"
           >
-            Se connecter →
+            Se connecter â†’
           </Link>
         </div>
       ) : (
@@ -74,7 +74,7 @@ function ResetForm() {
               {error}
               {!token && (
                 <Link href="/mot-de-passe-oublie" className="block mt-2 text-tef-blue hover:underline font-medium">
-                  Faire une nouvelle demande →
+                  Faire une nouvelle demande â†’
                 </Link>
               )}
             </div>
@@ -91,7 +91,7 @@ function ResetForm() {
                 autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="8 caractères minimum"
+                placeholder="8 caractÃ¨res minimum"
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue transition-colors"
               />
             </div>
@@ -115,12 +115,12 @@ function ResetForm() {
               disabled={loading || !token}
               className="w-full py-3 bg-tef-blue text-white font-bold rounded-xl hover:bg-tef-blue-hover transition-colors disabled:opacity-60 text-base"
             >
-              {loading ? 'Enregistrement…' : 'Réinitialiser le mot de passe'}
+              {loading ? 'Enregistrementâ€¦' : 'RÃ©initialiser le mot de passe'}
             </button>
           </form>
           <p className="text-center text-sm text-gray-400 mt-6">
             <Link href="/connexion" className="text-tef-blue hover:underline font-medium">
-              ← Retour à la connexion
+              â† Retour Ã  la connexion
             </Link>
           </p>
         </>
@@ -131,7 +131,7 @@ function ResetForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
@@ -139,10 +139,10 @@ export default function ResetPasswordPage() {
             <img src="/logo.png" alt="TEF-LAB" className="h-12 w-auto object-contain rounded-xl" />
             <span className="font-bold text-xl text-tef-blue">TEF-LAB</span>
           </Link>
-          <h1 className="text-2xl font-extrabold text-gray-900">Réinitialiser le mot de passe</h1>
-          <p className="text-gray-500 text-sm mt-1">Choisissez un nouveau mot de passe sécurisé</p>
+          <h1 className="text-2xl font-extrabold text-gray-900">RÃ©initialiser le mot de passe</h1>
+          <p className="text-gray-500 text-sm mt-1">Choisissez un nouveau mot de passe sÃ©curisÃ©</p>
         </div>
-        <Suspense fallback={<div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center text-gray-400">Chargement…</div>}>
+        <Suspense fallback={<div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center text-gray-400">Chargementâ€¦</div>}>
           <ResetForm />
         </Suspense>
       </div>

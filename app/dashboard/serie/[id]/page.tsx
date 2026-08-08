@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
@@ -68,7 +68,7 @@ function getOption(q: Question, opt: OptionLabel): string {
   return map[opt]
 }
 
-// ── CE category label map ────────────────────────────────────────────────────
+// â”€â”€ CE category label map â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const CE_CATEGORY_LABELS: Record<string, string> = {
   'Q1-7':   'Documents de la vie quotidienne',
   'Q8-17':  'Phrases et textes lacunaires',
@@ -78,7 +78,7 @@ const CE_CATEGORY_LABELS: Record<string, string> = {
   'Q33-40': 'Articles de presse',
 }
 
-// ── CO audio sequencer: pre/post delay (seconds) per category ────────────────
+// â”€â”€ CO audio sequencer: pre/post delay (seconds) per category â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const CO_TIMING: Record<string, { pre: number; post: number }> = {
   'Q1-4':   { pre: 5,  post: 10 },
   'Q5-8':   { pre: 10, post: 10 },
@@ -98,16 +98,16 @@ interface AudioPage {
   postDelay: number
 }
 
-// ── CO category map (label + consigne per question-order range) ───────────────
+// â”€â”€ CO category map (label + consigne per question-order range) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const CO_CATEGORIES: Record<string, { label: string; consigne: string }> = {
-  'Q1-4':   { label: 'Conversations avec dessins',          consigne: 'Vous allez entendre des conversations entre deux personnes. Indiquez à quel dessin correspond chaque conversation.' },
-  'Q5-8':   { label: 'Annonces publiques',                  consigne: 'Écoutez l\'annonce et répondez à la question.' },
-  'Q9-14':  { label: 'Messages sur répondeur téléphonique', consigne: 'Écoutez le message et répondez à la question.' },
-  'Q15-20': { label: 'Micro-trottoirs',                     consigne: 'Écoutez attentivement.' },
-  'Q21-22': { label: 'Chroniques audio',                    consigne: 'Écoutez la chronique et répondez à la question.' },
-  'Q23-28': { label: 'Interviews',                          consigne: 'Écoutez l\'interview et répondez aux deux questions.' },
-  'Q29-30': { label: 'Reportages RFI',                      consigne: 'Écoutez le reportage et répondez aux deux questions.' },
-  'Q31-40': { label: 'Documents audio divers',              consigne: 'Écoutez le document audio et répondez à la question.' },
+  'Q1-4':   { label: 'Conversations avec dessins',          consigne: 'Vous allez entendre des conversations entre deux personnes. Indiquez Ã  quel dessin correspond chaque conversation.' },
+  'Q5-8':   { label: 'Annonces publiques',                  consigne: 'Ã‰coutez l\'annonce et rÃ©pondez Ã  la question.' },
+  'Q9-14':  { label: 'Messages sur rÃ©pondeur tÃ©lÃ©phonique', consigne: 'Ã‰coutez le message et rÃ©pondez Ã  la question.' },
+  'Q15-20': { label: 'Micro-trottoirs',                     consigne: 'Ã‰coutez attentivement.' },
+  'Q21-22': { label: 'Chroniques audio',                    consigne: 'Ã‰coutez la chronique et rÃ©pondez Ã  la question.' },
+  'Q23-28': { label: 'Interviews',                          consigne: 'Ã‰coutez l\'interview et rÃ©pondez aux deux questions.' },
+  'Q29-30': { label: 'Reportages RFI',                      consigne: 'Ã‰coutez le reportage et rÃ©pondez aux deux questions.' },
+  'Q31-40': { label: 'Documents audio divers',              consigne: 'Ã‰coutez le document audio et rÃ©pondez Ã  la question.' },
 }
 
 function getCOCategory(order: number): string {
@@ -121,11 +121,11 @@ function getCOCategory(order: number): string {
   return 'Q31-40'
 }
 
-/** Q24, Q26, Q28, Q30 — second question of a 2-per-page pair (Q21/Q22 each have their own audio) */
+/** Q24, Q26, Q28, Q30 â€” second question of a 2-per-page pair (Q21/Q22 each have their own audio) */
 function isCOPairedSecond(order: number): boolean {
   return order === 24 || order === 26 || order === 28 || order === 30
 }
-/** Q23, Q25, Q27, Q29 — first question of a 2-per-page pair (Q21/Q22 each have their own audio) */
+/** Q23, Q25, Q27, Q29 â€” first question of a 2-per-page pair (Q21/Q22 each have their own audio) */
 function isCOPairedStart(order: number): boolean {
   return order === 23 || order === 25 || order === 27 || order === 29
 }
@@ -149,7 +149,7 @@ function getCOSnapIdx(qs: Question[], idx: number): number {
   return idx
 }
 
-// ── Shared answer options renderer ────────────────────────────────────────────
+// â”€â”€ Shared answer options renderer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function AnswerOptions({
   question,
   answers,
@@ -186,7 +186,7 @@ function AnswerOptions({
   )
 }
 
-// ── Category header pill ──────────────────────────────────────────────────────
+// â”€â”€ Category header pill â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function _CategoryHeader({ category, subCategory }: { category?: string | null; subCategory?: string | null }) {
   const label = CE_CATEGORY_LABELS[category ?? ''] ?? category
   if (!label) return null
@@ -204,7 +204,7 @@ function _CategoryHeader({ category, subCategory }: { category?: string | null; 
   )
 }
 
-// ── Navigation buttons (rendered inside CE card) ─────────────────────────────
+// â”€â”€ Navigation buttons (rendered inside CE card) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 interface NavButtonsProps {
   canGoPrev: boolean
   isLast: boolean
@@ -222,7 +222,7 @@ function NavigationButtons({ canGoPrev, isLast, submitting, onPrev, onNext, onSk
         disabled={!canGoPrev}
         className="px-3 py-1.5 bg-white border border-gray-200 text-gray-700 text-xs font-semibold rounded-lg hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
       >
-        ← Préc.
+        â† PrÃ©c.
       </button>
       <button
         onClick={onSkip}
@@ -236,21 +236,21 @@ function NavigationButtons({ canGoPrev, isLast, submitting, onPrev, onNext, onSk
           disabled={submitting}
           className="px-4 py-1.5 bg-tef-red text-white text-xs font-semibold rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
         >
-          {submitting ? 'Correction…' : 'Soumettre'}
+          {submitting ? 'Correctionâ€¦' : 'Soumettre'}
         </button>
       ) : (
         <button
           onClick={onNext}
           className="px-4 py-1.5 bg-tef-blue text-white text-xs font-semibold rounded-lg hover:bg-tef-blue-hover transition-colors"
         >
-          Suivant →
+          Suivant â†’
         </button>
       )}
     </div>
   )
 }
 
-// ── CE category-specific question renderer — 2-column card ───────────────────
+// â”€â”€ CE category-specific question renderer â€” 2-column card â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function CEQuestion({
   question,
   questionNumber,
@@ -279,7 +279,7 @@ function CEQuestion({
   const cat = question.category
   const navProps = { canGoPrev, isLast, submitting, onPrev, onNext, onSkip, onSubmit }
 
-  // ── Shared right column: number + question + (optional comment) + answers + nav ──
+  // â”€â”€ Shared right column: number + question + (optional comment) + answers + nav â”€â”€
   const rightCol = (
     <div className="space-y-3">
       <p className="font-semibold text-gray-900 text-sm leading-snug">
@@ -294,8 +294,8 @@ function CEQuestion({
     </div>
   )
 
-  // ── Card: optional consigne banner (full-width) → optional 2-col grid ────────
-  // Category is already shown in the sticky sub-header — not repeated here.
+  // â”€â”€ Card: optional consigne banner (full-width) â†’ optional 2-col grid â”€â”€â”€â”€â”€â”€â”€â”€
+  // Category is already shown in the sticky sub-header â€” not repeated here.
   const wrap = (left: React.ReactNode | null, consigne?: string | null) => (
     <div className="bg-white rounded-b-xl border border-gray-200 overflow-hidden">
       {consigne && (
@@ -316,7 +316,7 @@ function CEQuestion({
     </div>
   )
 
-  // ── Q1-7 : Documents de la vie quotidienne — image ou texte centré en carte ──
+  // â”€â”€ Q1-7 : Documents de la vie quotidienne â€” image ou texte centrÃ© en carte â”€â”€
   if (cat === 'Q1-7') {
     const left = (question.imageUrl || question.longText) ? (
       <div className="space-y-3 h-full flex flex-col justify-center">
@@ -324,14 +324,14 @@ function CEQuestion({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={question.imageUrl} alt="Document" className="max-w-full rounded-lg border border-gray-200" />
         ) : (
-          /* Texte centré dans une carte style image */
+          /* Texte centrÃ© dans une carte style image */
           <div className="flex items-center justify-center min-h-[180px] bg-white rounded-xl border-2 border-gray-200 p-6 shadow-sm">
             <p className="text-sm text-gray-800 leading-relaxed text-center whitespace-pre-wrap font-medium">
               {question.longText}
             </p>
           </div>
         )}
-        {/* Si image ET texte : texte en complément sous l'image */}
+        {/* Si image ET texte : texte en complÃ©ment sous l'image */}
         {question.imageUrl && question.longText && (
           <div className="bg-gray-50 rounded-lg p-3 border-l-4 border-tef-blue">
             <p className="text-sm text-gray-700 leading-relaxed">{question.longText}</p>
@@ -342,7 +342,7 @@ function CEQuestion({
     return wrap(left)
   }
 
-  // ── Q8-17 : Phrases et textes lacunaires — text block left ──
+  // â”€â”€ Q8-17 : Phrases et textes lacunaires â€” text block left â”€â”€
   if (cat === 'Q8-17') {
     const left = (question.taskTitle || question.longText) ? (
       <div className="bg-gray-50 rounded-lg p-3 border-l-4 border-tef-blue space-y-2">
@@ -357,7 +357,7 @@ function CEQuestion({
     return wrap(left)
   }
 
-  // ── Q18-21 : Lecture rapide de textes — 2×2 grid left ──
+  // â”€â”€ Q18-21 : Lecture rapide de textes â€” 2Ã—2 grid left â”€â”€
   if (cat === 'Q18-21') {
     let texts: Array<{ title: string; content: string }> = []
     if (question.longText) {
@@ -376,7 +376,7 @@ function CEQuestion({
     return wrap(left)
   }
 
-  // ── Q22 : Lecture rapide de graphiques — consigne full-width, image left ──
+  // â”€â”€ Q22 : Lecture rapide de graphiques â€” consigne full-width, image left â”€â”€
   if (cat === 'Q22') {
     const left = question.imageUrl ? (
       // eslint-disable-next-line @next/next/no-img-element
@@ -385,7 +385,7 @@ function CEQuestion({
     return wrap(left, question.consigne)
   }
 
-  // ── Q23-32 : Documents administratifs — consigne + image + text left ──
+  // â”€â”€ Q23-32 : Documents administratifs â€” consigne + image + text left â”€â”€
   if (cat === 'Q23-32') {
     const left = (question.consigne || question.imageUrl || question.taskTitle || question.longText) ? (
       <div className="space-y-3">
@@ -413,7 +413,7 @@ function CEQuestion({
     return wrap(left)
   }
 
-  // ── Q33-40 : Articles de presse — consigne + text left ──
+  // â”€â”€ Q33-40 : Articles de presse â€” consigne + text left â”€â”€
   if (cat === 'Q33-40') {
     const left = (question.consigne || question.taskTitle || question.longText) ? (
       <div className="space-y-3">
@@ -437,7 +437,7 @@ function CEQuestion({
     return wrap(left)
   }
 
-  // ── Fallback ──
+  // â”€â”€ Fallback â”€â”€
   const left = (question.consigne || question.imageUrl || question.taskTitle || question.longText) ? (
     <div className="space-y-3">
       {question.consigne && (
@@ -485,16 +485,16 @@ export default function QuizPage() {
   const [showExitConfirm, setShowExitConfirm] = useState(false)
   const [startTime] = useState<number>(Date.now())
   const [timerExpired, setTimerExpired] = useState(false)
-  /** Tracks which audioUrls have been played — persists across question navigation */
+  /** Tracks which audioUrls have been played â€” persists across question navigation */
   const [playedAudios, setPlayedAudios] = useState<Record<string, boolean>>({})
-  /** item 06 — grille questions collapsible */
+  /** item 06 â€” grille questions collapsible */
   const [showGrid, setShowGrid] = useState(true)
-  /** CO audio sequencer — runs independently from view navigation */
+  /** CO audio sequencer â€” runs independently from view navigation */
   const [audioSeqIdx, setAudioSeqIdx] = useState(0)
   const [audioPhase, setAudioPhase] = useState<'idle' | 'pre' | 'playing' | 'post' | 'done'>('idle')
   const [audioCountdown, setAudioCountdown] = useState(0)
   const audioInitializedRef = useRef(false)
-  /** item 04 — écran d'intro CO (affiché avant le démarrage du minuteur audio) */
+  /** item 04 â€” Ã©cran d'intro CO (affichÃ© avant le dÃ©marrage du minuteur audio) */
   const [showCoIntro, setShowCoIntro] = useState(true)
 
   useEffect(() => {
@@ -559,13 +559,13 @@ export default function QuizPage() {
       const t = setTimeout(() => setAudioCountdown((c) => c - 1), 1000)
       return () => clearTimeout(t)
     }
-    // Countdown reached 0 — transition
+    // Countdown reached 0 â€” transition
     if (audioPhase === 'pre') {
       const page = audioPages[audioSeqIdx]
       if (page?.audioUrl) {
         setAudioPhase('playing')
       } else {
-        // No audio for this page — skip to post
+        // No audio for this page â€” skip to post
         setAudioPhase('post')
         setAudioCountdown(page?.postDelay ?? 10)
       }
@@ -587,7 +587,7 @@ export default function QuizPage() {
       if (submitted || submitting) return
       if (
         !autoSubmit &&
-        !confirm('Soumettre votre copie ? Vous ne pourrez plus modifier vos réponses.')
+        !confirm('Soumettre votre copie ? Vous ne pourrez plus modifier vos rÃ©ponses.')
       )
         return
 
@@ -649,7 +649,7 @@ export default function QuizPage() {
     return () => window.removeEventListener('beforeunload', handler)
   }, [submitted])
 
-  /** Called by AudioPlayer when audio finishes — transition to post-delay */
+  /** Called by AudioPlayer when audio finishes â€” transition to post-delay */
   const handleAudioPlayed = useCallback(() => {
     const page = audioPages[audioSeqIdx]
     if (page?.audioUrl) {
@@ -662,7 +662,7 @@ export default function QuizPage() {
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-400">Chargement…</p>
+        <p className="text-gray-400">Chargementâ€¦</p>
       </div>
     )
   }
@@ -687,7 +687,7 @@ export default function QuizPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600 mb-2">Cette série ne contient pas encore de questions.</p>
+          <p className="text-gray-600 mb-2">Cette sÃ©rie ne contient pas encore de questions.</p>
           <button
             onClick={() => router.push('/dashboard')}
             className="px-4 py-2 bg-tef-blue text-white rounded-lg text-sm"
@@ -699,15 +699,15 @@ export default function QuizPage() {
     )
   }
 
-  // ── Results view ────────────────────────────────────────────────────────────
+  // â”€â”€ Results view â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (submitted && result) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
           {/* Score card */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
             <h1 className="text-2xl font-extrabold text-gray-900 mb-2">
-              {series?.title ?? 'Résultats'}
+              {series?.title ?? 'RÃ©sultats'}
             </h1>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mt-6">
               <div className="text-center">
@@ -725,14 +725,14 @@ export default function QuizPage() {
               <div className="w-px h-16 bg-gray-200 hidden sm:block" />
               <div className="text-center">
                 <p className="text-3xl font-black text-gray-700">{formatTime(result.timeTaken)}</p>
-                <p className="text-sm text-gray-500 mt-1">Temps utilisé</p>
+                <p className="text-sm text-gray-500 mt-1">Temps utilisÃ©</p>
               </div>
             </div>
           </div>
 
-          {/* Correction détaillée */}
+          {/* Correction dÃ©taillÃ©e */}
           <div>
-            <h2 className="text-lg font-bold text-gray-900 mb-4">Correction détaillée</h2>
+            <h2 className="text-lg font-bold text-gray-900 mb-4">Correction dÃ©taillÃ©e</h2>
             <div className="space-y-4">
               {result.corrections.map((item, idx) => (
                 <div
@@ -777,14 +777,14 @@ export default function QuizPage() {
                             >
                               <span className="font-bold w-4 flex-shrink-0">{opt}.</span>
                               <span className="flex-1">{getOption(item.question, opt)}</span>
-                              {isCorrectAnswer && <span>✓</span>}
-                              {isUserAnswer && !isCorrectAnswer && <span>✗</span>}
+                              {isCorrectAnswer && <span>âœ“</span>}
+                              {isUserAnswer && !isCorrectAnswer && <span>âœ—</span>}
                             </div>
                           )
                         })}
                       </div>
                       {!item.userAnswer && (
-                        <p className="text-xs text-red-600 mt-2 italic">Sans réponse</p>
+                        <p className="text-xs text-red-600 mt-2 italic">Sans rÃ©ponse</p>
                       )}
                       {item.question.explanation && (
                         <p className="text-xs text-gray-500 mt-3 p-2 bg-gray-50 rounded-lg leading-relaxed">
@@ -811,15 +811,15 @@ export default function QuizPage() {
     )
   }
 
-  // ── Intro CO (item 04) ───────────────────────────────────────────────────────
+  // â”€â”€ Intro CO (item 04) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   if (isCO && showCoIntro) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 max-w-md w-full space-y-6">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-tef-blue/10 rounded-xl flex items-center justify-center text-2xl flex-shrink-0">🎧</div>
+            <div className="w-12 h-12 bg-tef-blue/10 rounded-xl flex items-center justify-center text-2xl flex-shrink-0">ðŸŽ§</div>
             <div>
-              <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Compréhension Orale</p>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-widest">ComprÃ©hension Orale</p>
               <h1 className="font-extrabold text-gray-900 text-lg leading-tight">{series?.title}</h1>
             </div>
           </div>
@@ -828,10 +828,10 @@ export default function QuizPage() {
             <p className="font-bold text-gray-800 text-sm">Avant de commencer, lisez ces consignes :</p>
             <ul className="space-y-2.5">
               {[
-                { icon: '🔊', text: 'Chaque document audio ne se joue qu\'une seule fois — vous ne pourrez pas le réécouter.' },
-                { icon: '⏱️', text: 'Le minuteur démarre dès que vous cliquez sur « Commencer ».' },
-                { icon: '🎵', text: 'Branchez vos écouteurs pour une meilleure compréhension.' },
-                { icon: '📵', text: 'Ne quittez pas cette page pendant l\'épreuve — votre progression sera perdue.' },
+                { icon: 'ðŸ”Š', text: 'Chaque document audio ne se joue qu\'une seule fois â€” vous ne pourrez pas le rÃ©Ã©couter.' },
+                { icon: 'â±ï¸', text: 'Le minuteur dÃ©marre dÃ¨s que vous cliquez sur Â« Commencer Â».' },
+                { icon: 'ðŸŽµ', text: 'Branchez vos Ã©couteurs pour une meilleure comprÃ©hension.' },
+                { icon: 'ðŸ“µ', text: 'Ne quittez pas cette page pendant l\'Ã©preuve â€” votre progression sera perdue.' },
               ].map(({ icon, text }, i) => (
                 <li key={i} className="flex items-start gap-2.5 text-sm text-gray-700">
                   <span className="flex-shrink-0 mt-0.5">{icon}</span>
@@ -842,52 +842,52 @@ export default function QuizPage() {
           </div>
 
           <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 flex items-start gap-2.5 text-sm">
-            <span className="flex-shrink-0 text-base mt-0.5">⚠️</span>
-            <p className="text-amber-800 font-medium">L&apos;audio commence automatiquement — assurez-vous que le volume de votre appareil est suffisant.</p>
+            <span className="flex-shrink-0 text-base mt-0.5">âš ï¸</span>
+            <p className="text-amber-800 font-medium">L&apos;audio commence automatiquement â€” assurez-vous que le volume de votre appareil est suffisant.</p>
           </div>
 
           <button
             onClick={() => setShowCoIntro(false)}
             className="w-full py-3.5 bg-tef-blue hover:bg-tef-blue-hover text-white font-extrabold rounded-xl transition-colors text-base"
           >
-            Je suis prêt(e) — Commencer
+            Je suis prÃªt(e) â€” Commencer
           </button>
 
           <button
             onClick={() => router.push('/dashboard')}
             className="w-full py-2 text-sm text-gray-400 hover:text-gray-600 transition-colors"
           >
-            ← Retour au tableau de bord
+            â† Retour au tableau de bord
           </button>
         </div>
       </div>
     )
   }
 
-  // ── Quiz view ───────────────────────────────────────────────────────────────
+  // â”€â”€ Quiz view â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const currentQuestion = questions[currentIndex]
   const durationSeconds = isCO ? 40 * 60 : 60 * 60
   const answeredCount = Object.values(answers).filter(Boolean).length
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Timer — fixed top-0, h-[40px] */}
+    <div className="min-h-screen bg-background">
+      {/* Timer â€” fixed top-0, h-[40px] */}
       {!submitted && (
         <Timer durationSeconds={durationSeconds} onTimeUp={handleTimeUp} />
       )}
 
-      {/* Sticky sub-header — fixed at top-[40px]; progress bar flush at bottom */}
+      {/* Sticky sub-header â€” fixed at top-[40px]; progress bar flush at bottom */}
       {!submitted && (
         <div className="fixed top-[40px] left-0 right-0 z-40 bg-white border-b border-gray-200">
-          {/* Info row — h-[30px] + font sizes +3 Tailwind units vs original */}
+          {/* Info row â€” h-[30px] + font sizes +3 Tailwind units vs original */}
           <div className="h-[30px] max-w-[95%] mx-auto px-4 flex items-center justify-between gap-2">
             {/* Left: title + answered count */}
             <div className="flex items-center gap-2 min-w-0 flex-1">
               <span className="text-base font-bold text-gray-800 truncate">
-                {series?.title ?? 'Série'}
+                {series?.title ?? 'SÃ©rie'}
               </span>
               <span className="text-sm text-gray-400 whitespace-nowrap flex-shrink-0 hidden sm:inline">
-                · {moduleCode} · {answeredCount}/{questions.length} rép.
+                Â· {moduleCode} Â· {answeredCount}/{questions.length} rÃ©p.
               </span>
             </div>
             {/* Centre: category badge */}
@@ -906,7 +906,7 @@ export default function QuizPage() {
               onClick={() => setShowExitConfirm(true)}
               className="flex-shrink-0 px-2 py-0.5 text-xs font-medium text-gray-400 border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-red-600 hover:border-red-200 transition-colors"
             >
-              ✕
+              âœ•
             </button>
             {/* Right: Q number (range for CO paired pages) */}
             <span className="text-base font-black text-tef-blue whitespace-nowrap flex-shrink-0 ml-2">
@@ -916,7 +916,7 @@ export default function QuizPage() {
               <span className="text-gray-300 font-normal text-sm">/{questions.length}</span>
             </span>
           </div>
-          {/* Progress bar — no gap: flush at bottom of sub-header, full viewport width */}
+          {/* Progress bar â€” no gap: flush at bottom of sub-header, full viewport width */}
           <div className="w-full h-[3px] bg-gray-200">
             <div
               className="bg-tef-blue h-[3px] transition-all"
@@ -926,14 +926,14 @@ export default function QuizPage() {
         </div>
       )}
 
-      {/* Content — 73px (fixed bars) minus dashboard navbar h-14 (3.5rem) = flush below sub-header */}
+      {/* Content â€” 73px (fixed bars) minus dashboard navbar h-14 (3.5rem) = flush below sub-header */}
       <div className="max-w-[95%] mx-auto px-4 pt-[calc(73px_-_3.5rem)] pb-8 space-y-4">
 
-        {/* CO audio sequencer banner — stays mounted through navigation, drives audio independently */}
+        {/* CO audio sequencer banner â€” stays mounted through navigation, drives audio independently */}
         {isCO && !submitted && (
           <div className="bg-white rounded-xl border border-gray-200 px-4 py-3">
             {audioPhase === 'idle' && (
-              <p className="text-xs text-gray-400 text-center italic">Chargement des documents audio…</p>
+              <p className="text-xs text-gray-400 text-center italic">Chargement des documents audioâ€¦</p>
             )}
             {audioPhase === 'pre' && (
               <div className="flex items-center gap-3">
@@ -942,7 +942,7 @@ export default function QuizPage() {
                 </div>
                 <div className="flex-1">
                   <p className="text-xs font-semibold text-tef-blue">
-                    Document audio en préparation… ({audioCountdown}s)
+                    Document audio en prÃ©parationâ€¦ ({audioCountdown}s)
                   </p>
                   <div className="mt-1.5 w-full bg-gray-200 rounded-full h-1">
                     <div
@@ -961,7 +961,7 @@ export default function QuizPage() {
                   Document audio
                 </p>
                 <p className="text-xs text-gray-500 mb-2 italic">
-                  Écoutez attentivement — cet audio ne peut être joué qu&apos;une seule fois.
+                  Ã‰coutez attentivement â€” cet audio ne peut Ãªtre jouÃ© qu&apos;une seule fois.
                 </p>
                 <AudioPlayer
                   key={audioSeqIdx}
@@ -975,7 +975,7 @@ export default function QuizPage() {
             )}
             {audioPhase === 'post' && (
               <div className="flex items-center gap-3">
-                <span className="text-xl flex-shrink-0">⏭</span>
+                <span className="text-xl flex-shrink-0">â­</span>
                 <div className="flex-1">
                   <p className="text-xs font-medium text-blue-700">
                     Prochaine question dans{' '}
@@ -992,15 +992,15 @@ export default function QuizPage() {
             )}
             {audioPhase === 'done' && (
               <p className="text-xs text-gray-500 text-center py-0.5">
-                ✓ Tous les documents audio ont été lus — répondez aux questions restantes puis soumettez.
+                âœ“ Tous les documents audio ont Ã©tÃ© lus â€” rÃ©pondez aux questions restantes puis soumettez.
               </p>
             )}
           </div>
         )}
 
-        {/* Question card — CE: 2-col card with nav inside; CO: 2-col card (audio managed by sequencer above) */}
+        {/* Question card â€” CE: 2-col card with nav inside; CO: 2-col card (audio managed by sequencer above) */}
         {isCO ? (() => {
-          // ── CO layout: consigne banner + 2-col card; Q23-28, Q29-30 are paired pages (Q21/Q22 separate) ──
+          // â”€â”€ CO layout: consigne banner + 2-col card; Q23-28, Q29-30 are paired pages (Q21/Q22 separate) â”€â”€
           const firstQ     = currentQuestion
           const catKey     = getCOCategory(firstQ.questionOrder)
           const catInfo    = CO_CATEGORIES[catKey]
@@ -1010,7 +1010,7 @@ export default function QuizPage() {
           const prevIdx    = getCOPrevIdx(questions, currentIndex)
           const isLastPage = nextIdx >= questions.length
 
-          // Nav buttons only change the view — audio sequencer is independent
+          // Nav buttons only change the view â€” audio sequencer is independent
           const navBlock = (
             <NavigationButtons
               canGoPrev={currentIndex > 0}
@@ -1033,7 +1033,7 @@ export default function QuizPage() {
 
           return (
             <div className="bg-white rounded-b-xl border border-gray-200 overflow-hidden">
-              {/* Consigne — full width, derived from CO category */}
+              {/* Consigne â€” full width, derived from CO category */}
               {catInfo?.consigne && (
                 <div className="w-full px-4 py-2 bg-blue-50 border-b border-blue-100 text-xs text-blue-800 leading-relaxed">
                   {catInfo.consigne}
@@ -1044,11 +1044,11 @@ export default function QuizPage() {
                   <>
                     {/* Paired page (Q21-22 / Q23-28 / Q29-30): left col has firstQ, right col has secondQ */}
                     <div className="px-4 pt-0 pb-4 overflow-y-auto max-h-[35vh] md:max-h-[65vh] border-b md:border-b-0 border-gray-100 space-y-3">
-                      {/* longText = transcription audio only (admin/TTS use) — never shown to candidate */}
+                      {/* longText = transcription audio only (admin/TTS use) â€” never shown to candidate */}
                       <div className="space-y-3">
                         {firstQ.description && (
                           <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-700 leading-relaxed">
-                            <span className="font-semibold text-gray-500 uppercase tracking-wide text-[10px] block mb-0.5">Question posée</span>
+                            <span className="font-semibold text-gray-500 uppercase tracking-wide text-[10px] block mb-0.5">Question posÃ©e</span>
                             {firstQ.description}
                           </div>
                         )}
@@ -1072,7 +1072,7 @@ export default function QuizPage() {
                   <>
                     {/* Single question page */}
                     <div className="px-4 pt-0 pb-4 overflow-y-auto max-h-[35vh] md:max-h-[65vh] border-b md:border-b-0 border-gray-100 space-y-3">
-                      {/* longText = transcription audio only (admin/TTS use) — never shown to candidate */}
+                      {/* longText = transcription audio only (admin/TTS use) â€” never shown to candidate */}
                       {firstQ.imageUrl && (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={firstQ.imageUrl} alt="Document visuel" className="max-w-full rounded-lg border border-gray-200" />
@@ -1081,7 +1081,7 @@ export default function QuizPage() {
                     <div className="px-4 pt-0 pb-4 space-y-3">
                       {firstQ.description && (
                         <div className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-700 leading-relaxed">
-                          <span className="font-semibold text-gray-500 uppercase tracking-wide text-[10px] block mb-0.5">Question posée</span>
+                          <span className="font-semibold text-gray-500 uppercase tracking-wide text-[10px] block mb-0.5">Question posÃ©e</span>
                           {firstQ.description}
                         </div>
                       )}
@@ -1098,7 +1098,7 @@ export default function QuizPage() {
             </div>
           )
         })() : (
-          // ── CE layout: 2-col card with nav inside ──
+          // â”€â”€ CE layout: 2-col card with nav inside â”€â”€
           <CEQuestion
             question={currentQuestion}
             questionNumber={currentIndex + 1}
@@ -1117,7 +1117,7 @@ export default function QuizPage() {
           />
         )}
 
-        {/* Question overview grid — item 06 : collapsible + mobile-friendly touch targets */}
+        {/* Question overview grid â€” item 06 : collapsible + mobile-friendly touch targets */}
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <button
             onClick={() => setShowGrid((v) => !v)}
@@ -1165,7 +1165,7 @@ export default function QuizPage() {
             disabled={submitting}
             className="px-6 py-3 bg-tef-red text-white font-semibold rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
           >
-            {submitting ? 'Correction en cours…' : 'Terminer et soumettre'}
+            {submitting ? 'Correction en coursâ€¦' : 'Terminer et soumettre'}
           </button>
         </div>
       </div>
@@ -1175,10 +1175,10 @@ export default function QuizPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
           <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 space-y-4">
             <div className="text-center">
-              <span className="text-4xl">⚠️</span>
+              <span className="text-4xl">âš ï¸</span>
               <h2 className="text-lg font-bold text-gray-900 mt-2">Quitter le test ?</h2>
               <p className="text-sm text-gray-600 mt-2 leading-relaxed">
-                Vos réponses ne seront pas enregistrées et votre progression sera perdue.
+                Vos rÃ©ponses ne seront pas enregistrÃ©es et votre progression sera perdue.
               </p>
             </div>
             <div className="flex flex-col gap-2">

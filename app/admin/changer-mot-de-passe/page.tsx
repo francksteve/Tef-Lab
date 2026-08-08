@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
@@ -13,7 +13,7 @@ export default function ChangerMotDePassePage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
-    if (form.newPassword.length < 8) { setError('Le nouveau mot de passe doit contenir au moins 8 caractères.'); return }
+    if (form.newPassword.length < 8) { setError('Le nouveau mot de passe doit contenir au moins 8 caractÃ¨res.'); return }
     if (form.newPassword !== form.confirm) { setError('Les mots de passe ne correspondent pas.'); return }
     setLoading(true)
     try {
@@ -27,17 +27,17 @@ export default function ChangerMotDePassePage() {
       await update({ mustChangePassword: false })
       router.push('/admin')
     } catch {
-      setError('Une erreur est survenue. Réessayez.')
+      setError('Une erreur est survenue. RÃ©essayez.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="bg-red-600 text-white rounded-xl p-4 mb-6 text-sm font-medium text-center">
-          ⚠️ Pour votre sécurité, veuillez modifier le mot de passe par défaut avant de continuer.
+          âš ï¸ Pour votre sÃ©curitÃ©, veuillez modifier le mot de passe par dÃ©faut avant de continuer.
         </div>
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
           <h1 className="text-xl font-extrabold text-gray-900 mb-6">Changer le mot de passe</h1>
@@ -81,7 +81,7 @@ export default function ChangerMotDePassePage() {
               disabled={loading}
               className="w-full py-3 bg-tef-blue text-white font-bold rounded-xl hover:bg-tef-blue-hover transition-colors disabled:opacity-60"
             >
-              {loading ? 'Modification…' : 'Modifier le mot de passe'}
+              {loading ? 'Modificationâ€¦' : 'Modifier le mot de passe'}
             </button>
           </form>
         </div>

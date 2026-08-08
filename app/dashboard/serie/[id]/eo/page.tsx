@@ -1,9 +1,9 @@
-'use client'
+﻿'use client'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 
-/* ─────────────────────── Types ─────────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Types â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 interface Module {
   code: string
@@ -18,7 +18,7 @@ interface Series {
 
 interface SectionScore {
   cecrlLevel: string
-  nclcLevel?: number   // 0–12
+  nclcLevel?: number   // 0â€“12
   score: number        // sur 225
   feedback: string
   nbQuestionsDetectees?: number
@@ -32,7 +32,7 @@ interface EOResult {
   sectionA: SectionScore
   sectionB: SectionScore
   globalCecrlLevel: string
-  globalNclcLevel?: number  // 0–12
+  globalNclcLevel?: number  // 0â€“12
   globalScore: number       // sur 450
   pronunciation?: string
   lexique?: string
@@ -61,7 +61,7 @@ interface DialogueTurn {
   timestamp: number
 }
 
-/* ─────────────────────── Countdown ─────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Countdown â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 function Countdown({
   seconds,
@@ -116,7 +116,7 @@ function Countdown({
   )
 }
 
-/* ─────────────────── SectionDocument ───────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ SectionDocument â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 function SectionDocument({
   section,
@@ -138,7 +138,7 @@ function SectionDocument({
 
   return (
     <div className="space-y-4">
-      {/* Image takes priority — shown when available */}
+      {/* Image takes priority â€” shown when available */}
       {section.imageUrl && (
         <div
           className={`bg-white rounded-xl border border-gray-200 ${compact ? 'p-3' : 'p-6'}`}
@@ -154,7 +154,7 @@ function SectionDocument({
         </div>
       )}
 
-      {/* Annonce text card — shown when no image */}
+      {/* Annonce text card â€” shown when no image */}
       {!section.imageUrl && section.longText && (
         <div
           className={`rounded-xl border-2 ${annonceBorder} ${compact ? 'p-3' : 'p-6'} flex flex-col items-center`}
@@ -192,7 +192,7 @@ function SectionDocument({
   )
 }
 
-/* ─────────────────── EOSectionCard ─────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ EOSectionCard â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 function EOSectionCard({
   label,
@@ -206,7 +206,7 @@ function EOSectionCard({
   const isA = label.includes('Section A') || label.includes('informations')
   const accentBg = 'bg-blue-50 border-blue-100'
   const accentText = 'text-tef-blue'
-  const accentIcon = isA ? '🎙️' : '💬'
+  const accentIcon = isA ? 'ðŸŽ™ï¸' : 'ðŸ’¬'
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -230,14 +230,14 @@ function EOSectionCard({
       <div className="p-4 space-y-3">
         {extraInfo && (
           <p className={`text-xs font-semibold ${accentText} flex items-center gap-1`}>
-            <span>📊</span> {extraInfo}
+            <span>ðŸ“Š</span> {extraInfo}
           </p>
         )}
         {score.registreAdapte !== undefined && (
           <p className={`text-xs font-semibold flex items-center gap-1 ${
             score.registreAdapte ? 'text-blue-600' : 'text-red-600'
           }`}>
-            {score.registreAdapte ? '✅ Registre adapté' : '⚠️ Registre à ajuster'}
+            {score.registreAdapte ? 'âœ… Registre adaptÃ©' : 'âš ï¸ Registre Ã  ajuster'}
           </p>
         )}
         <p className="text-sm text-gray-700 leading-relaxed">{score.feedback}</p>
@@ -245,12 +245,12 @@ function EOSectionCard({
         {score.strengths.length > 0 && (
           <div className="bg-blue-50 rounded-xl p-3 border border-blue-100">
             <p className="text-xs font-extrabold text-blue-700 mb-2 flex items-center gap-1">
-              <span>✅</span> Points forts
+              <span>âœ…</span> Points forts
             </p>
             <ul className="space-y-1">
               {score.strengths.map((s, i) => (
                 <li key={i} className="flex items-start gap-2 text-xs text-blue-800">
-                  <span className="text-blue-500 mt-0.5 flex-shrink-0">•</span>
+                  <span className="text-blue-500 mt-0.5 flex-shrink-0">â€¢</span>
                   {s}
                 </li>
               ))}
@@ -260,12 +260,12 @@ function EOSectionCard({
         {score.improvements.length > 0 && (
           <div className="bg-red-50 rounded-xl p-3 border border-red-100">
             <p className="text-xs font-extrabold text-red-700 mb-2 flex items-center gap-1">
-              <span>💡</span> À améliorer
+              <span>ðŸ’¡</span> Ã€ amÃ©liorer
             </p>
             <ul className="space-y-1">
               {score.improvements.map((s, i) => (
                 <li key={i} className="flex items-start gap-2 text-xs text-red-800">
-                  <span className="text-red-500 mt-0.5 flex-shrink-0">→</span>
+                  <span className="text-red-500 mt-0.5 flex-shrink-0">â†’</span>
                   {s}
                 </li>
               ))}
@@ -277,7 +277,7 @@ function EOSectionCard({
   )
 }
 
-/* ─────────────────── DialogueSection ───────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ DialogueSection â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 type RtcState = 'idle' | 'connecting' | 'connected' | 'user_speaking' | 'ai_speaking' | 'error'
 
@@ -313,7 +313,7 @@ function DialogueSection({
   const urgencyTriggeredRef = useRef(false)
   const hasStartedRef = useRef(false)
   const sessionConfiguredRef = useRef(false)
-  // openingInstructionRef removed — opening messages sent directly in dc.onopen
+  // openingInstructionRef removed â€” opening messages sent directly in dc.onopen
   const pcRef = useRef<RTCPeerConnection | null>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
   const audioChunksRef = useRef<Blob[]>([])
@@ -323,14 +323,14 @@ function DialogueSection({
   const rtcStateRef = useRef<RtcState>('idle')
 
   // Pick one voice per section and keep it stable for the whole session
-  // Female voices: Hélène, Ashley — Male voices: Alain, Mathieu, Étienne
+  // Female voices: HÃ©lÃ¨ne, Ashley â€” Male voices: Alain, Mathieu, Ã‰tienne
   const voice = useRef<string>(
     section === 'A'
-      ? (['Hélène', 'Ashley', 'Alain'][Math.floor(Math.random() * 3)])
-      : (['Mathieu', 'Étienne', 'Ashley'][Math.floor(Math.random() * 3)])
+      ? (['HÃ©lÃ¨ne', 'Ashley', 'Alain'][Math.floor(Math.random() * 3)])
+      : (['Mathieu', 'Ã‰tienne', 'Ashley'][Math.floor(Math.random() * 3)])
   ).current
 
-  // Derived counters — count user turns only
+  // Derived counters â€” count user turns only
   const questionCount = history.filter(
     (t) => t.role === 'user' && t.content.includes('?')
   ).length
@@ -394,7 +394,7 @@ function DialogueSection({
     })
   }, [])
 
-  // ── Text fallback: Claude via /api/eo/ai-reply ───────────
+  // â”€â”€ Text fallback: Claude via /api/eo/ai-reply â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const sendToAI = useCallback(
     async (userMessage: string, currentHistory: DialogueTurn[]) => {
       if (endedRef.current) return
@@ -423,14 +423,14 @@ function DialogueSection({
     [section, sectionData.longText, appendTurn, userName]
   )
 
-  // ── WebRTC: DataChannel event handler ────────────────────
+  // â”€â”€ WebRTC: DataChannel event handler â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleDataChannelMessage = useCallback(
     (raw: string) => {
       let event: Record<string, unknown>
       try { event = JSON.parse(raw) } catch { return }
 
       switch (event.type as string) {
-        // Session confirmed — just log it (opening messages already sent in dc.onopen)
+        // Session confirmed â€” just log it (opening messages already sent in dc.onopen)
         case 'session.updated':
         case 'session.created':
           console.debug('[EO_REALTIME] session configured')
@@ -438,7 +438,7 @@ function DialogueSection({
 
         case 'input_audio_buffer.speech_started':
           setRtcState('user_speaking')
-          setLiveTranscript('…')
+          setLiveTranscript('â€¦')
           break
 
         case 'input_audio_buffer.speech_stopped':
@@ -512,7 +512,7 @@ function DialogueSection({
     [appendTurn]
   )
 
-  // ── WebRTC: Tear down + fall back to text mode ───────────
+  // â”€â”€ WebRTC: Tear down + fall back to text mode â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleWebRTCFailure = useCallback(() => {
     if (iceTimeoutRef.current) clearTimeout(iceTimeoutRef.current)
     if (dcRef.current) { try { dcRef.current.close() } catch {} dcRef.current = null }
@@ -528,10 +528,10 @@ function DialogueSection({
     setInputMode('text')
     setWebRTCFailedAuto(true)
     setAiTyping(false)
-    sendToAI('[DÉBUT DE LA CONVERSATION]', [])
+    sendToAI('[DÃ‰BUT DE LA CONVERSATION]', [])
   }, [sendToAI])
 
-  // ── WebRTC: Session.update with exact Inworld format ────────
+  // â”€â”€ WebRTC: Session.update with exact Inworld format â”€â”€â”€â”€â”€â”€â”€â”€
   const sendSessionUpdate = useCallback(
     (dc: RTCDataChannel) => {
       const documentContext = sectionData.longText
@@ -540,33 +540,33 @@ function DialogueSection({
 
       const instructions =
         section === 'A'
-          ? `LANGUE : Tu parles UNIQUEMENT en français. Jamais un mot en anglais.
+          ? `LANGUE : Tu parles UNIQUEMENT en franÃ§ais. Jamais un mot en anglais.
 
-TON RÔLE : Tu es la PERSONNE QUI A PUBLIÉ l'annonce ci-dessous. Tu travailles dans l'organisme ou l'entreprise qui a créé cette annonce. Tu es un(e) employé(e) compétent(e) qui connaît bien l'activité, le service ou l'événement présenté.
+TON RÃ”LE : Tu es la PERSONNE QUI A PUBLIÃ‰ l'annonce ci-dessous. Tu travailles dans l'organisme ou l'entreprise qui a crÃ©Ã© cette annonce. Tu es un(e) employÃ©(e) compÃ©tent(e) qui connaÃ®t bien l'activitÃ©, le service ou l'Ã©vÃ©nement prÃ©sentÃ©.
 
-SITUATION : Un candidat (l'utilisateur) te téléphone pour obtenir des renseignements. Tu décroches et réponds poliment. Il peut poser des questions sur ce qui est dans l'annonce, mais aussi sur des détails pratiques que l'annonce ne mentionne pas.
+SITUATION : Un candidat (l'utilisateur) te tÃ©lÃ©phone pour obtenir des renseignements. Tu dÃ©croches et rÃ©ponds poliment. Il peut poser des questions sur ce qui est dans l'annonce, mais aussi sur des dÃ©tails pratiques que l'annonce ne mentionne pas.
 
 COMPORTEMENT :
 - Tu VOUVOIES le candidat (registre formel, professionnel).
-- Tu réponds de façon courte et précise (1 à 2 phrases maximum par réponse).
-- Pour les informations présentes dans l'annonce, tu les donnes fidèlement.
-- Pour les questions dont la réponse N'EST PAS dans l'annonce (ex : accès en transport, restauration, hébergement, tenue requise, matériel à apporter, politique d'annulation, accessibilité PMR, parking, etc.), tu IMPROVISES une réponse cohérente et réaliste, comme le ferait un vrai employé bien informé. Ne dis JAMAIS "je n'ai pas cette information" — donne toujours une réponse plausible et utile.
-- Exemples d'improvisation : si on te demande comment venir en transport → cite les lignes les plus proches ; si on demande s'il faut apporter quelque chose → donne un conseil logique ; si on demande la politique d'annulation → réponds avec une politique standard.
+- Tu rÃ©ponds de faÃ§on courte et prÃ©cise (1 Ã  2 phrases maximum par rÃ©ponse).
+- Pour les informations prÃ©sentes dans l'annonce, tu les donnes fidÃ¨lement.
+- Pour les questions dont la rÃ©ponse N'EST PAS dans l'annonce (ex : accÃ¨s en transport, restauration, hÃ©bergement, tenue requise, matÃ©riel Ã  apporter, politique d'annulation, accessibilitÃ© PMR, parking, etc.), tu IMPROVISES une rÃ©ponse cohÃ©rente et rÃ©aliste, comme le ferait un vrai employÃ© bien informÃ©. Ne dis JAMAIS "je n'ai pas cette information" â€” donne toujours une rÃ©ponse plausible et utile.
+- Exemples d'improvisation : si on te demande comment venir en transport â†’ cite les lignes les plus proches ; si on demande s'il faut apporter quelque chose â†’ donne un conseil logique ; si on demande la politique d'annulation â†’ rÃ©ponds avec une politique standard.
 - Tu es serviable, chaleureux(se) et professionnel(le).
 ${documentContext}`
-          : `LANGUE : Tu parles UNIQUEMENT en français. Jamais un mot en anglais.
+          : `LANGUE : Tu parles UNIQUEMENT en franÃ§ais. Jamais un mot en anglais.
 
-TON RÔLE : Tu es l'AMI(E) PROCHE de l'utilisateur. Tu t'appelles ${['Mathieu', 'Étienne', 'Alain'].includes(voice) ? 'Marc' : 'Sophie'}. Vous vous connaissez depuis longtemps.
+TON RÃ”LE : Tu es l'AMI(E) PROCHE de l'utilisateur. Tu t'appelles ${['Mathieu', 'Ã‰tienne', 'Alain'].includes(voice) ? 'Marc' : 'Sophie'}. Vous vous connaissez depuis longtemps.
 
-SITUATION : Ton ami(e) (l'utilisateur) vient te voir pour te parler d'une activité ou d'un événement décrit dans une annonce. Il/elle veut te CONVAINCRE d'y participer avec lui/elle. Toi, tu n'es PAS du tout enthousiaste au départ.
+SITUATION : Ton ami(e) (l'utilisateur) vient te voir pour te parler d'une activitÃ© ou d'un Ã©vÃ©nement dÃ©crit dans une annonce. Il/elle veut te CONVAINCRE d'y participer avec lui/elle. Toi, tu n'es PAS du tout enthousiaste au dÃ©part.
 
 COMPORTEMENT :
 - Tu TUTOIES ton ami(e) (registre informel, amical).
-- Tu es SCEPTIQUE et DUBITATIF(VE) au début. Tu poses des questions, tu exprimes des doutes.
-- Exemples de réactions : "Bof, je sais pas…" / "C'est cher non ?" / "J'ai pas trop envie…" / "T'es sûr(e) que c'est bien ?" / "Ça m'emballe pas trop…"
-- Tu ne cèdes QUE progressivement, après 3 ou 4 arguments solides de ton ami(e).
-- Réponses courtes : 1 à 2 phrases maximum.
-- Quand tu commences à être convaincu(e), montre-le graduellement : "Bon, c'est vrai que…" / "Hmm, dit comme ça…" / "Ok, pourquoi pas, tu me convaincs !"
+- Tu es SCEPTIQUE et DUBITATIF(VE) au dÃ©but. Tu poses des questions, tu exprimes des doutes.
+- Exemples de rÃ©actions : "Bof, je sais pasâ€¦" / "C'est cher non ?" / "J'ai pas trop envieâ€¦" / "T'es sÃ»r(e) que c'est bien ?" / "Ã‡a m'emballe pas tropâ€¦"
+- Tu ne cÃ¨des QUE progressivement, aprÃ¨s 3 ou 4 arguments solides de ton ami(e).
+- RÃ©ponses courtes : 1 Ã  2 phrases maximum.
+- Quand tu commences Ã  Ãªtre convaincu(e), montre-le graduellement : "Bon, c'est vrai queâ€¦" / "Hmm, dit comme Ã§aâ€¦" / "Ok, pourquoi pas, tu me convaincs !"
 ${documentContext}`
 
       const openingCue =
@@ -611,7 +611,7 @@ ${documentContext}`
     [section, sectionData.longText, voice, userName]
   )
 
-  // ── WebRTC: Main connection setup ────────────────────────
+  // â”€â”€ WebRTC: Main connection setup â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const startWebRTCSession = useCallback(async () => {
     if (endedRef.current) return
     setRtcState('connecting')
@@ -660,7 +660,7 @@ ${documentContext}`
 
       micStream.getAudioTracks().forEach((t) => pc.addTrack(t, micStream))
 
-      // Incoming audio from Inworld → create MediaStream from track (official pattern)
+      // Incoming audio from Inworld â†’ create MediaStream from track (official pattern)
       pc.ontrack = (e) => {
         if (e.track.kind === 'audio') {
           const audio = document.createElement('audio')
@@ -694,7 +694,7 @@ ${documentContext}`
       const offer = await pc.createOffer()
       await pc.setLocalDescription(offer)
 
-      // Wait for ICE gathering — official debounce pattern:
+      // Wait for ICE gathering â€” official debounce pattern:
       // resolve 500ms after the last candidate, or on 'complete', or after 3s hard timeout
       await new Promise<void>((resolve) => {
         if (pc.iceGatheringState === 'complete') { resolve(); return }
@@ -727,7 +727,7 @@ ${documentContext}`
     }
   }, [sendSessionUpdate, handleDataChannelMessage, handleWebRTCFailure])
 
-  // ── WebRTC: Retry after automatic failure ────────────────
+  // â”€â”€ WebRTC: Retry after automatic failure â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const handleRetryWebRTC = useCallback(async () => {
     setWebRTCFailedAuto(false)
     setRtcState('idle')
@@ -753,7 +753,7 @@ ${documentContext}`
       const urgencyText =
         section === 'A'
           ? "Excusez-moi, j'ai un appel entrant urgent. Je dois vous laisser. Au revoir !"
-          : "Désolé(e), j'ai une urgence, je dois te laisser ! On se reparle bientôt !"
+          : "DÃ©solÃ©(e), j'ai une urgence, je dois te laisser ! On se reparle bientÃ´t !"
       appendTurn({ role: 'assistant', content: urgencyText, timestamp: Date.now() })
       if (dcRef.current?.readyState === 'open') {
         dcRef.current.send(JSON.stringify({ type: 'response.cancel' }))
@@ -807,12 +807,12 @@ ${documentContext}`
   const ss = String(timeLeft % 60).padStart(2, '0')
   const isLow = timeLeft <= 60
   const sectionLabel =
-    section === 'A' ? 'Section A — Obtenir des informations' : 'Section B — Présenter et convaincre'
+    section === 'A' ? 'Section A â€” Obtenir des informations' : 'Section B â€” PrÃ©senter et convaincre'
   const accentBg = 'bg-tef-blue'
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
-      {/* Header — pleine largeur */}
+      {/* Header â€” pleine largeur */}
       <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between flex-shrink-0 gap-2">
         <div className="flex items-center gap-2 flex-wrap">
           <span
@@ -823,11 +823,11 @@ ${documentContext}`
           {/* Counter badge */}
           {section === 'A' ? (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-tef-blue/10 text-tef-blue text-xs font-semibold rounded-full">
-              ❓ {questionCount}/10
+              â“ {questionCount}/10
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-tef-blue/10 text-tef-blue text-xs font-semibold rounded-full">
-              💬 {argCount} arg.
+              ðŸ’¬ {argCount} arg.
             </span>
           )}
         </div>
@@ -844,19 +844,19 @@ ${documentContext}`
               onClick={onRequestExit}
               className="px-2 py-0.5 text-xs font-medium text-gray-400 border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-red-600 hover:border-red-200 transition-colors"
             >
-              ✕
+              âœ•
             </button>
           )}
         </div>
       </div>
 
-      {/* Corps — 2 colonnes (lg+) ou empilé (mobile) */}
+      {/* Corps â€” 2 colonnes (lg+) ou empilÃ© (mobile) */}
       <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
 
-        {/* ── Colonne gauche : Annonce + Image (70%) — toujours visible ── */}
+        {/* â”€â”€ Colonne gauche : Annonce + Image (70%) â€” toujours visible â”€â”€ */}
         <div className="h-[38vh] flex-shrink-0 lg:h-auto lg:flex-shrink-0 lg:w-[70%] w-full flex flex-col items-center justify-center overflow-hidden p-4 lg:p-8 gap-4 border-b lg:border-b-0 lg:border-r border-gray-200 bg-white">
 
-          {/* Image — affichée si disponible */}
+          {/* Image â€” affichÃ©e si disponible */}
           {sectionData.imageUrl && (
             <div className="w-full max-w-xl">
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -868,7 +868,7 @@ ${documentContext}`
             </div>
           )}
 
-          {/* Annonce / Publicité — carte formatée affichée quand pas d'image */}
+          {/* Annonce / PublicitÃ© â€” carte formatÃ©e affichÃ©e quand pas d'image */}
           {!sectionData.imageUrl && sectionData.longText && (
             <div className="w-full max-w-xl">
               <div className="rounded-xl border-2 border-tef-blue/20 bg-tef-blue/5 p-4 lg:p-6 shadow-sm flex flex-col items-center">
@@ -896,7 +896,7 @@ ${documentContext}`
             </div>
           )}
 
-          {/* Consigne — toujours visible sous le document */}
+          {/* Consigne â€” toujours visible sous le document */}
           {sectionData.consigne && (
             <div className="w-full max-w-xl rounded-lg px-3 py-2 text-xs bg-tef-blue/5 text-tef-blue/90 border border-tef-blue/15">
               <span className="font-semibold">Consigne : </span>
@@ -906,10 +906,10 @@ ${documentContext}`
 
         </div>
 
-        {/* ── Colonne droite : Chat + Contrôles (30%) ── */}
+        {/* â”€â”€ Colonne droite : Chat + ContrÃ´les (30%) â”€â”€ */}
         <div className="flex-1 lg:flex-none lg:w-[30%] flex flex-col bg-gray-50 min-h-0">
 
-          {/* Bannière fallback WebRTC — visible uniquement si échec automatique */}
+          {/* BanniÃ¨re fallback WebRTC â€” visible uniquement si Ã©chec automatique */}
           {webRTCFailedAuto && !ended && (
             <div className="flex-shrink-0 m-3 mb-0 bg-amber-50 border border-amber-200 rounded-xl overflow-hidden">
               <div className="px-3 py-3 flex items-start gap-2">
@@ -917,9 +917,9 @@ ${documentContext}`
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
                 </svg>
                 <div>
-                  <p className="text-xs font-bold text-amber-800">Mode texte activé</p>
+                  <p className="text-xs font-bold text-amber-800">Mode texte activÃ©</p>
                   <p className="text-[11px] text-amber-700 mt-0.5 leading-relaxed">
-                    Le microphone n&apos;a pas pu démarrer. Écrivez vos réponses à la place du micro — la conversation a commencé normalement.
+                    Le microphone n&apos;a pas pu dÃ©marrer. Ã‰crivez vos rÃ©ponses Ã  la place du micro â€” la conversation a commencÃ© normalement.
                   </p>
                 </div>
               </div>
@@ -931,7 +931,7 @@ ${documentContext}`
                   <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
                   </svg>
-                  Réessayer le micro
+                  RÃ©essayer le micro
                 </button>
                 <button
                   onClick={() => setWebRTCFailedAuto(false)}
@@ -948,7 +948,7 @@ ${documentContext}`
             {history.length === 0 && !aiTyping && (
               <div className="flex-1 flex items-center justify-center py-8">
                 <p className="text-xs text-gray-400 italic text-center">
-                  La conversation va commencer…
+                  La conversation va commencerâ€¦
                 </p>
               </div>
             )}
@@ -973,7 +973,7 @@ ${documentContext}`
               </div>
             ))}
 
-            {/* Indicateur IA en train d'écrire */}
+            {/* Indicateur IA en train d'Ã©crire */}
             {aiTyping && (
               <div className="flex justify-start">
                 <div className="bg-white border border-gray-200 px-3 py-3 rounded-2xl rounded-bl-sm">
@@ -992,7 +992,7 @@ ${documentContext}`
                 <div
                   className={`max-w-[90%] px-3 py-2 rounded-2xl text-xs ${accentBg} text-white opacity-70 rounded-br-sm italic`}
                 >
-                  {liveTranscript}…
+                  {liveTranscript}â€¦
                 </div>
               </div>
             )}
@@ -1000,22 +1000,22 @@ ${documentContext}`
             <div ref={chatEndRef} />
           </div>
 
-          {/* Contrôles voix / texte */}
+          {/* ContrÃ´les voix / texte */}
           <div className="flex-shrink-0 border-t border-gray-200 bg-white p-3">
             {!ended ? (
               rtcState !== 'error' && inputMode === 'voice' ? (
-                /* ── WebRTC voice mode — VAD handles turn-taking automatically ── */
+                /* â”€â”€ WebRTC voice mode â€” VAD handles turn-taking automatically â”€â”€ */
                 <div className="flex flex-col items-center gap-2 py-1">
                   {rtcState === 'connecting' && (
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full text-xs text-gray-500 animate-pulse">
                       <span className="w-2 h-2 bg-gray-400 rounded-full inline-block" />
-                      Connexion à l&apos;interlocuteur…
+                      Connexion Ã  l&apos;interlocuteurâ€¦
                     </div>
                   )}
                   {(rtcState === 'connected' || rtcState === 'idle') && (
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-full text-xs text-blue-700">
                       <span className="w-2 h-2 bg-blue-500 rounded-full inline-block" />
-                      En écoute — parlez naturellement
+                      En Ã©coute â€” parlez naturellement
                     </div>
                   )}
                   {rtcState === 'user_speaking' && (
@@ -1026,17 +1026,17 @@ ${documentContext}`
                         <span className="w-0.5 rounded bg-current" style={{ height: '70%' }} />
                         <span className="w-0.5 rounded bg-current" style={{ height: '40%' }} />
                       </span>
-                      Vous parlez…
+                      Vous parlezâ€¦
                     </div>
                   )}
                   {rtcState === 'ai_speaking' && (
                     <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs bg-blue-50 border border-blue-200 text-tef-blue">
                       <span className="w-2 h-2 rounded-full bg-current inline-block animate-bounce" />
-                      Interlocuteur répond…
+                      Interlocuteur rÃ©pondâ€¦
                     </div>
                   )}
                   <p className="text-[10px] text-gray-400 text-center leading-tight">
-                    Détection automatique de la parole active
+                    DÃ©tection automatique de la parole active
                   </p>
                   <button
                     onClick={() => {
@@ -1048,28 +1048,28 @@ ${documentContext}`
                     }}
                     className="flex items-center gap-1 px-2.5 py-1 text-xs text-gray-400 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors"
                   >
-                    ✏️ Passer en mode texte
+                    âœï¸ Passer en mode texte
                   </button>
                   <button
                     onClick={handleEndSection}
                     className="w-full px-3 py-1.5 border border-gray-300 text-gray-600 text-xs rounded-lg hover:bg-gray-100 transition-colors"
                   >
-                    Terminer cette section →
+                    Terminer cette section â†’
                   </button>
                 </div>
               ) : (
-                /* ── Mode texte (fallback WebRTC échoué ou préférence) ── */
+                /* â”€â”€ Mode texte (fallback WebRTC Ã©chouÃ© ou prÃ©fÃ©rence) â”€â”€ */
                 <div className="flex flex-col gap-2">
                   <div className="flex items-center justify-between">
                     <p className="text-[10px] text-gray-500">
-                      {webRTCFailedAuto ? '⚠️ Micro indisponible' : '✏️ Mode texte'}
+                      {webRTCFailedAuto ? 'âš ï¸ Micro indisponible' : 'âœï¸ Mode texte'}
                     </p>
                     {rtcState !== 'error' && (
                       <button
                         onClick={() => setInputMode('voice')}
                         className="flex items-center gap-1 px-2 py-0.5 text-[10px] text-gray-500 border border-gray-300 rounded hover:bg-gray-100 transition-colors"
                       >
-                        🎤 Vocal
+                        ðŸŽ¤ Vocal
                       </button>
                     )}
                   </div>
@@ -1092,7 +1092,7 @@ ${documentContext}`
                       }}
                       disabled={aiTyping}
                       rows={2}
-                      placeholder="Écrivez votre réponse… (Entrée pour envoyer)"
+                      placeholder="Ã‰crivez votre rÃ©ponseâ€¦ (EntrÃ©e pour envoyer)"
                       className="flex-1 resize-none border border-gray-300 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue disabled:bg-gray-100"
                     />
                     <button
@@ -1120,13 +1120,13 @@ ${documentContext}`
                     onClick={handleEndSection}
                     className="w-full px-3 py-1.5 border border-gray-300 text-gray-600 text-xs rounded-lg hover:bg-gray-100 transition-colors"
                   >
-                    Terminer cette section →
+                    Terminer cette section â†’
                   </button>
                 </div>
               )
             ) : (
               <div className="text-center py-2">
-                <p className="text-blue-700 font-semibold text-xs">✅ Section terminée…</p>
+                <p className="text-blue-700 font-semibold text-xs">âœ… Section terminÃ©eâ€¦</p>
               </div>
             )}
           </div>
@@ -1136,7 +1136,7 @@ ${documentContext}`
   )
 }
 
-/* ─────────────────────── Helpers ───────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 async function uploadAudioBlob(blob: Blob, section: 'A' | 'B'): Promise<string | null> {
   try {
@@ -1156,7 +1156,7 @@ async function uploadAudioBlob(blob: Blob, section: 'A' | 'B'): Promise<string |
 
 function slugifyTitle(text: string): string {
   return text
-    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .normalize('NFD').replace(/[Ì€-Í¯]/g, '')
     .replace(/[^a-zA-Z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
 }
@@ -1167,7 +1167,7 @@ function blobExt(mimeType: string): string {
   return 'webm'
 }
 
-/* ─── Scoring progressif (item 05) ──────────────────── */
+/* â”€â”€â”€ Scoring progressif (item 05) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 function ScoringScreen({ steps, delaysMs }: { steps: string[]; delaysMs: number[] }) {
   const [current, setCurrent] = useState(0)
 
@@ -1183,7 +1183,7 @@ function ScoringScreen({ steps, delaysMs }: { steps: string[]; delaysMs: number[
         <div className="w-14 h-14 bg-tef-blue/10 rounded-2xl flex items-center justify-center mx-auto">
           <div className="w-7 h-7 border-4 border-tef-blue border-t-transparent rounded-full animate-spin" />
         </div>
-        <p className="font-extrabold text-gray-800 text-lg text-center">Correction en cours…</p>
+        <p className="font-extrabold text-gray-800 text-lg text-center">Correction en coursâ€¦</p>
         <div className="space-y-3">
           {steps.map((label, i) => {
             const done = i < current
@@ -1191,7 +1191,7 @@ function ScoringScreen({ steps, delaysMs }: { steps: string[]; delaysMs: number[
             return (
               <div key={i} className={`flex items-center gap-3 text-sm transition-colors duration-300 ${done ? 'text-tef-blue' : active ? 'text-gray-700' : 'text-gray-300'}`}>
                 <span className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center text-[10px] font-bold transition-colors ${done ? 'border-tef-blue bg-tef-blue text-white' : active ? 'border-tef-blue text-tef-blue' : 'border-gray-200 text-gray-300'}`}>
-                  {done ? '✓' : i + 1}
+                  {done ? 'âœ“' : i + 1}
                 </span>
                 <span className={active ? 'font-semibold' : ''}>{label}</span>
                 {active && <div className="w-3 h-3 border-2 border-tef-blue border-t-transparent rounded-full animate-spin ml-auto flex-shrink-0" />}
@@ -1199,13 +1199,13 @@ function ScoringScreen({ steps, delaysMs }: { steps: string[]; delaysMs: number[
             )
           })}
         </div>
-        <p className="text-xs text-gray-400 text-center">Étape {current + 1}/{steps.length}</p>
+        <p className="text-xs text-gray-400 text-center">Ã‰tape {current + 1}/{steps.length}</p>
       </div>
     </div>
   )
 }
 
-/* ─────────────────────── Main Page ─────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Main Page â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 export default function EOPage() {
   const params = useParams()
@@ -1219,14 +1219,14 @@ export default function EOPage() {
     longText: null,
     imageUrl: null,
     consigne:
-      "Vous téléphonez pour avoir plus d'informations sur cette annonce. Posez une dizaine de questions à votre interlocuteur(trice). Utilisez le vouvoiement.",
+      "Vous tÃ©lÃ©phonez pour avoir plus d'informations sur cette annonce. Posez une dizaine de questions Ã  votre interlocuteur(trice). Utilisez le vouvoiement.",
     taskTitle: null,
   })
   const [sectionB, setSectionB] = useState<SectionData>({
     longText: null,
     imageUrl: null,
     consigne:
-      "Vous en parlez à un(e) ami(e). Présentez ce document et essayez de le / la convaincre d'y participer. Utilisez le tutoiement.",
+      "Vous en parlez Ã  un(e) ami(e). PrÃ©sentez ce document et essayez de le / la convaincre d'y participer. Utilisez le tutoiement.",
     taskTitle: null,
   })
   const [loading, setLoading] = useState(true)
@@ -1264,7 +1264,7 @@ export default function EOPage() {
         if (seriesData && typeof seriesData === 'object' && 'id' in seriesData) {
           setSeries(seriesData as Series)
         } else {
-          setError('Série introuvable.')
+          setError('SÃ©rie introuvable.')
           setLoading(false)
           return
         }
@@ -1281,7 +1281,7 @@ export default function EOPage() {
               imageUrl: qA.imageUrl ?? null,
               consigne:
                 qA.question ||
-                "Vous téléphonez pour avoir plus d'informations sur cette annonce. Posez une dizaine de questions à votre interlocuteur(trice). Utilisez le vouvoiement.",
+                "Vous tÃ©lÃ©phonez pour avoir plus d'informations sur cette annonce. Posez une dizaine de questions Ã  votre interlocuteur(trice). Utilisez le vouvoiement.",
               taskTitle: qA.taskTitle ?? null,
             })
           }
@@ -1291,7 +1291,7 @@ export default function EOPage() {
               imageUrl: qB.imageUrl ?? null,
               consigne:
                 qB.question ||
-                "Vous en parlez à un(e) ami(e). Présentez ce document et essayez de le / la convaincre d'y participer. Utilisez le tutoiement.",
+                "Vous en parlez Ã  un(e) ami(e). PrÃ©sentez ce document et essayez de le / la convaincre d'y participer. Utilisez le tutoiement.",
               taskTitle: qB.taskTitle ?? null,
             })
           }
@@ -1361,9 +1361,9 @@ export default function EOPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             transcriptionA:
-              transcriptA || '[Aucune réplique enregistrée pour la Section A]',
+              transcriptA || '[Aucune rÃ©plique enregistrÃ©e pour la Section A]',
             transcriptionB:
-              transcriptB || '[Aucune réplique enregistrée pour la Section B]',
+              transcriptB || '[Aucune rÃ©plique enregistrÃ©e pour la Section B]',
             announcementA: sectionA.longText ?? '[Document non disponible]',
             announcementB: sectionB.longText ?? '[Document non disponible]',
             quotaAlreadyConsumed: quotaConsumedAtStart,
@@ -1373,10 +1373,10 @@ export default function EOPage() {
           eoResult = (await res.json()) as EOResult
           setResult(eoResult)
         } else {
-          setAiError('La correction par IA a échoué.')
+          setAiError('La correction par IA a Ã©chouÃ©.')
         }
       } catch {
-        setAiError('Erreur réseau lors de la correction IA.')
+        setAiError('Erreur rÃ©seau lors de la correction IA.')
       }
 
       // TODO: re-enable when Supabase storage upgraded (1 GB limit reached)
@@ -1406,14 +1406,14 @@ export default function EOPage() {
     [historyA, seriesId, sectionA.longText, sectionB.longText, quotaConsumedAtStart]
   )
 
-  /* ─── Loading / Error ─── */
+  /* â”€â”€â”€ Loading / Error â”€â”€â”€ */
 
   if (status === 'loading' || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center space-y-3">
           <div className="w-10 h-10 border-4 border-tef-blue border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-gray-400 text-sm">Chargement de la série…</p>
+          <p className="text-gray-400 text-sm">Chargement de la sÃ©rieâ€¦</p>
         </div>
       </div>
     )
@@ -1423,7 +1423,7 @@ export default function EOPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
         <div className="bg-white rounded-2xl border border-red-100 shadow-sm p-8 text-center max-w-sm w-full space-y-4">
-          <div className="text-4xl">❌</div>
+          <div className="text-4xl">âŒ</div>
           <p className="font-bold text-gray-800">{error}</p>
           <button
             onClick={() => router.push('/dashboard')}
@@ -1436,13 +1436,13 @@ export default function EOPage() {
     )
   }
 
-  /* ─── Scoring spinner ─── */
+  /* â”€â”€â”€ Scoring spinner â”€â”€â”€ */
 
   if (step === 'scoring') {
-    return <ScoringScreen steps={['Transcription de vos deux sections…', 'Analyse de votre expression orale…', 'Génération des corrections et conseils…']} delaysMs={[4000, 7000]} />
+    return <ScoringScreen steps={['Transcription de vos deux sectionsâ€¦', 'Analyse de votre expression oraleâ€¦', 'GÃ©nÃ©ration des corrections et conseilsâ€¦']} delaysMs={[4000, 7000]} />
   }
 
-  /* ─── Results ─── */
+  /* â”€â”€â”€ Results â”€â”€â”€ */
 
   if (step === 'results') {
     const buildTranscript = (h: DialogueTurn[]) =>
@@ -1456,7 +1456,7 @@ export default function EOPage() {
     const cecrlGrad = result ? (CECRL_GRADIENT[result.globalCecrlLevel] ?? 'from-blue-600 to-tef-blue') : 'from-gray-400 to-gray-500'
 
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         {/* Results hero */}
         <div className={`bg-gradient-to-br ${cecrlGrad} text-white`}>
           <div className="max-w-3xl mx-auto px-4 py-8">
@@ -1477,7 +1477,7 @@ export default function EOPage() {
                       NCLC {result.globalNclcLevel}
                     </div>
                   )}
-                  <div className="text-white/60 text-xs mt-1">Score global · Niveau CECRL</div>
+                  <div className="text-white/60 text-xs mt-1">Score global Â· Niveau CECRL</div>
                 </div>
               )}
             </div>
@@ -1487,23 +1487,23 @@ export default function EOPage() {
         <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
           {aiError && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm flex items-start gap-2">
-              <span className="text-lg flex-shrink-0">⚠️</span>
+              <span className="text-lg flex-shrink-0">âš ï¸</span>
               {aiError}
             </div>
           )}
 
-          {/* ─── Réécoute des productions (disponible cette session) ─── */}
+          {/* â”€â”€â”€ RÃ©Ã©coute des productions (disponible cette session) â”€â”€â”€ */}
           {(audioUrlA || audioUrlB) && (
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
               <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
-                <span className="text-base">🎙</span>
+                <span className="text-base">ðŸŽ™</span>
                 <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Vos enregistrements</p>
                 <span className="ml-auto text-[11px] text-gray-400 italic">Disponibles cette session uniquement</span>
               </div>
               <div className="px-4 py-4 space-y-4">
                 {([
-                  { label: 'Section A — Obtenir des informations', url: audioUrlA, section: 'A', blobType: blobTypeARef.current },
-                  { label: 'Section B — Présenter et convaincre',  url: audioUrlB, section: 'B', blobType: blobTypeBRef.current },
+                  { label: 'Section A â€” Obtenir des informations', url: audioUrlA, section: 'A', blobType: blobTypeARef.current },
+                  { label: 'Section B â€” PrÃ©senter et convaincre',  url: audioUrlB, section: 'B', blobType: blobTypeBRef.current },
                 ] as const).filter(({ url }) => !!url).map(({ label, url, section, blobType }) => {
                   const ext = blobExt(blobType)
                   const serieSlug = slugifyTitle(series?.title ?? 'Serie')
@@ -1520,7 +1520,7 @@ export default function EOPage() {
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
                         </svg>
-                        Télécharger ({filename})
+                        TÃ©lÃ©charger ({filename})
                       </a>
                     </div>
                   )
@@ -1535,7 +1535,7 @@ export default function EOPage() {
               <div className="grid grid-cols-2 gap-4">
                 {[
                   { label: 'Section A', sub: 'Obtenir des informations', score: result.sectionA, color: 'from-blue-600 to-tef-blue' },
-                  { label: 'Section B', sub: 'Présenter et convaincre', score: result.sectionB, color: 'from-blue-600 to-blue-700' },
+                  { label: 'Section B', sub: 'PrÃ©senter et convaincre', score: result.sectionB, color: 'from-blue-600 to-blue-700' },
                 ].map(({ label, sub, score, color }) => (
                   <div key={label} className={`bg-gradient-to-br ${color} rounded-xl p-4 text-white`}>
                     <p className="text-white/70 text-[11px] font-semibold uppercase tracking-wide">{label}</p>
@@ -1556,31 +1556,31 @@ export default function EOPage() {
 
               <div className="grid sm:grid-cols-2 gap-4">
                 <EOSectionCard
-                  label="Section A — Obtenir des informations"
+                  label="Section A â€” Obtenir des informations"
                   score={result.sectionA}
                   extraInfo={result.sectionA.nbQuestionsDetectees !== undefined
-                    ? `${result.sectionA.nbQuestionsDetectees} question(s) détectée(s)` : undefined}
+                    ? `${result.sectionA.nbQuestionsDetectees} question(s) dÃ©tectÃ©e(s)` : undefined}
                 />
                 <EOSectionCard
-                  label="Section B — Présenter et convaincre"
+                  label="Section B â€” PrÃ©senter et convaincre"
                   score={result.sectionB}
                   extraInfo={result.sectionB.argumentsDetectes !== undefined
-                    ? `${result.sectionB.argumentsDetectes} argument(s) détecté(s)` : undefined}
+                    ? `${result.sectionB.argumentsDetectes} argument(s) dÃ©tectÃ©(s)` : undefined}
                 />
               </div>
 
               {(result.pronunciation || result.lexique) && (
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
-                  <h3 className="font-extrabold text-gray-900">Commentaires généraux</h3>
+                  <h3 className="font-extrabold text-gray-900">Commentaires gÃ©nÃ©raux</h3>
                   {result.pronunciation && (
                     <div className="bg-blue-50 rounded-xl p-3 border border-blue-100">
-                      <p className="text-xs font-extrabold text-blue-700 mb-1">🗣️ Prononciation & Fluidité</p>
+                      <p className="text-xs font-extrabold text-blue-700 mb-1">ðŸ—£ï¸ Prononciation & FluiditÃ©</p>
                       <p className="text-sm text-gray-700">{result.pronunciation}</p>
                     </div>
                   )}
                   {result.lexique && (
                     <div className="bg-blue-50 rounded-xl p-3 border border-blue-100">
-                      <p className="text-xs font-extrabold text-blue-700 mb-1">📚 Lexique & Grammaire</p>
+                      <p className="text-xs font-extrabold text-blue-700 mb-1">ðŸ“š Lexique & Grammaire</p>
                       <p className="text-sm text-gray-700">{result.lexique}</p>
                     </div>
                   )}
@@ -1592,17 +1592,17 @@ export default function EOPage() {
           {/* Audio playback */}
           {(audioUrlA || audioUrlB) && (
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
-              <h3 className="font-extrabold text-gray-900">🔊 Réécoute de vos productions</h3>
+              <h3 className="font-extrabold text-gray-900">ðŸ”Š RÃ©Ã©coute de vos productions</h3>
               {audioUrlA && (
                 <div className="space-y-1.5">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Section A — Obtenir des informations</p>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Section A â€” Obtenir des informations</p>
                   {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
                   <audio controls src={audioUrlA} className="w-full rounded-lg" />
                 </div>
               )}
               {audioUrlB && (
                 <div className="space-y-1.5">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Section B — Présenter et convaincre</p>
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Section B â€” PrÃ©senter et convaincre</p>
                   {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
                   <audio controls src={audioUrlB} className="w-full rounded-lg" />
                 </div>
@@ -1613,11 +1613,11 @@ export default function EOPage() {
           {/* Transcripts */}
           {(historyA.length > 0 || historyB.length > 0) && (
             <div className="space-y-3">
-              <h2 className="text-base font-extrabold text-gray-900">📄 Transcriptions</h2>
+              <h2 className="text-base font-extrabold text-gray-900">ðŸ“„ Transcriptions</h2>
               {historyA.length > 0 && (
                 <details className="bg-white rounded-xl border border-gray-100 shadow-sm">
                   <summary className="px-5 py-4 font-semibold text-gray-800 cursor-pointer text-sm hover:bg-gray-50 rounded-xl transition-colors">
-                    Section A — Obtenir des informations ({historyA.length} répliques)
+                    Section A â€” Obtenir des informations ({historyA.length} rÃ©pliques)
                   </summary>
                   <pre className="px-5 pb-4 text-xs text-gray-600 whitespace-pre-wrap leading-relaxed font-sans border-t border-gray-50 pt-3">
                     {buildTranscript(historyA)}
@@ -1627,7 +1627,7 @@ export default function EOPage() {
               {historyB.length > 0 && (
                 <details className="bg-white rounded-xl border border-gray-100 shadow-sm">
                   <summary className="px-5 py-4 font-semibold text-gray-800 cursor-pointer text-sm hover:bg-gray-50 rounded-xl transition-colors">
-                    Section B — Présenter et convaincre ({historyB.length} répliques)
+                    Section B â€” PrÃ©senter et convaincre ({historyB.length} rÃ©pliques)
                   </summary>
                   <pre className="px-5 pb-4 text-xs text-gray-600 whitespace-pre-wrap leading-relaxed font-sans border-t border-gray-50 pt-3">
                     {buildTranscript(historyB)}
@@ -1642,7 +1642,7 @@ export default function EOPage() {
               onClick={() => router.push('/dashboard')}
               className="px-8 py-3 bg-tef-blue text-white font-bold rounded-xl hover:bg-tef-blue-hover transition-colors shadow-sm"
             >
-              Retour au tableau de bord →
+              Retour au tableau de bord â†’
             </button>
           </div>
         </div>
@@ -1650,43 +1650,43 @@ export default function EOPage() {
     )
   }
 
-  /* ─── Intro ─── */
+  /* â”€â”€â”€ Intro â”€â”€â”€ */
 
   if (step === 'intro') {
     const hasAiQuota = aiQuota && aiQuota.limit > 0 && aiQuota.remaining > 0
 
     const handleStartEpreuve = async () => {
       setQuotaStartError(null)
-      // Pas de quota IA dans ce pack → démarre directement
+      // Pas de quota IA dans ce pack â†’ dÃ©marre directement
       if (!aiQuota || aiQuota.limit === 0) {
         setStep('prepA')
         return
       }
-      // Réserve le quota IA dès le début de l'épreuve
+      // RÃ©serve le quota IA dÃ¨s le dÃ©but de l'Ã©preuve
       try {
         const res = await fetch('/api/ai-usage', { method: 'POST' })
         if (!res.ok) {
           const data = (await res.json()) as { error?: string }
-          setQuotaStartError(data.error ?? 'Quota IA insuffisant pour démarrer.')
+          setQuotaStartError(data.error ?? 'Quota IA insuffisant pour dÃ©marrer.')
           return
         }
         const data = (await res.json()) as { remaining: number; limit: number }
         setQuotaConsumedAtStart(true)
         setAiQuota((q) => q ? { ...q, remaining: data.remaining, used: q.limit - data.remaining } : q)
       } catch {
-        // Erreur réseau : on démarre quand même, le scoring gèrera le quota
+        // Erreur rÃ©seau : on dÃ©marre quand mÃªme, le scoring gÃ¨rera le quota
       }
       setStep('prepA')
     }
 
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         {/* Header */}
         <div className="bg-gradient-to-br from-tef-blue via-[#002070] to-[#001a5c] text-white">
           <div className="max-w-2xl mx-auto px-4 py-8 text-center">
-            <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-3">🎤</div>
+            <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-3">ðŸŽ¤</div>
             <h1 className="text-2xl font-extrabold">Expression Orale</h1>
-            <p className="text-white/80 text-sm mt-1">{series?.title} · 15 minutes · 2 sections</p>
+            <p className="text-white/80 text-sm mt-1">{series?.title} Â· 15 minutes Â· 2 sections</p>
           </div>
         </div>
 
@@ -1701,14 +1701,14 @@ export default function EOPage() {
               <div className="p-4 space-y-2">
                 <div className="flex items-center gap-2 text-xs text-gray-500">
                   <span className="w-5 h-5 rounded-full bg-tef-blue/10 text-tef-blue flex items-center justify-center font-bold text-[10px] flex-shrink-0">A</span>
-                  Préparez votre appel téléphonique (30 s)
+                  PrÃ©parez votre appel tÃ©lÃ©phonique (30 s)
                 </div>
                 <div className="flex items-center gap-2 text-xs text-gray-500">
                   <span className="w-5 h-5 rounded-full bg-tef-blue/10 text-tef-blue flex items-center justify-center font-bold text-[10px] flex-shrink-0">5&apos;</span>
                   Dialogue en direct avec l&apos;interlocuteur IA
                 </div>
                 <p className="text-xs text-tef-blue font-semibold mt-1">
-                  🎩 Registre formel · vouvoiement · ~10 questions
+                  ðŸŽ© Registre formel Â· vouvoiement Â· ~10 questions
                 </p>
               </div>
             </div>
@@ -1716,19 +1716,19 @@ export default function EOPage() {
             <div className="bg-white rounded-2xl border border-tef-blue/10 shadow-sm overflow-hidden">
               <div className="bg-tef-blue px-4 py-3">
                 <p className="text-white font-extrabold text-sm">Section B</p>
-                <p className="text-white/70 text-xs">Présenter et convaincre</p>
+                <p className="text-white/70 text-xs">PrÃ©senter et convaincre</p>
               </div>
               <div className="p-4 space-y-2">
                 <div className="flex items-center gap-2 text-xs text-gray-500">
                   <span className="w-5 h-5 rounded-full bg-tef-blue/10 text-tef-blue flex items-center justify-center font-bold text-[10px] flex-shrink-0">B</span>
-                  Lisez l&apos;annonce et préparez-vous (60 s)
+                  Lisez l&apos;annonce et prÃ©parez-vous (60 s)
                 </div>
                 <div className="flex items-center gap-2 text-xs text-gray-500">
                   <span className="w-5 h-5 rounded-full bg-tef-blue/10 text-tef-blue flex items-center justify-center font-bold text-[10px] flex-shrink-0">10&apos;</span>
-                  Présentez et convainquez un(e) ami(e) IA
+                  PrÃ©sentez et convainquez un(e) ami(e) IA
                 </div>
                 <p className="text-xs text-tef-blue font-semibold mt-1">
-                  👕 Registre informel · tutoiement · 3+ arguments
+                  ðŸ‘• Registre informel Â· tutoiement Â· 3+ arguments
                 </p>
               </div>
             </div>
@@ -1738,9 +1738,9 @@ export default function EOPage() {
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-1.5">
             <p className="text-xs font-extrabold text-amber-800 mb-2">Avant de commencer :</p>
             {[
-              '🎙️ Activez votre microphone — la voix est recommandée',
-              '🌐 Utilisez Chrome ou Edge pour la reconnaissance vocale',
-              '🔇 Placez-vous dans un endroit calme pour de meilleurs résultats',
+              'ðŸŽ™ï¸ Activez votre microphone â€” la voix est recommandÃ©e',
+              'ðŸŒ Utilisez Chrome ou Edge pour la reconnaissance vocale',
+              'ðŸ”‡ Placez-vous dans un endroit calme pour de meilleurs rÃ©sultats',
             ].map((tip) => (
               <p key={tip} className="text-xs text-amber-800">{tip}</p>
             ))}
@@ -1750,31 +1750,31 @@ export default function EOPage() {
           {aiQuota && (
             !hasAiQuota ? (
               <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-sm">
-                <span className="flex-shrink-0 text-base mt-0.5">⚠️</span>
+                <span className="flex-shrink-0 text-base mt-0.5">âš ï¸</span>
                 <div>
                   <p className="font-semibold text-amber-800">
                     {aiQuota.limit === 0
                       ? 'Correction IA non incluse dans votre pack'
-                      : `Quota IA épuisé (${aiQuota.used}/${aiQuota.limit} ${aiQuota.isMonthly ? 'ce mois' : "aujourd'hui"})`}
+                      : `Quota IA Ã©puisÃ© (${aiQuota.used}/${aiQuota.limit} ${aiQuota.isMonthly ? 'ce mois' : "aujourd'hui"})`}
                   </p>
                   <p className="text-amber-700 text-xs mt-0.5">
                     {aiQuota.isMonthly
-                      ? 'Vous pouvez continuer — la correction ne sera pas disponible. Passez à un pack payant pour plus de corrections IA.'
-                      : "Vous pouvez continuer l'épreuve — la correction automatique ne sera pas disponible. Revenez demain ou passez à un pack supérieur."}
+                      ? 'Vous pouvez continuer â€” la correction ne sera pas disponible. Passez Ã  un pack payant pour plus de corrections IA.'
+                      : "Vous pouvez continuer l'Ã©preuve â€” la correction automatique ne sera pas disponible. Revenez demain ou passez Ã  un pack supÃ©rieur."}
                   </p>
                 </div>
               </div>
             ) : (
               <div className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-tef-blue/5 border border-tef-blue/15 rounded-full text-xs text-tef-blue font-semibold self-start mx-auto">
-                🤖 {aiQuota.remaining} correction{aiQuota.remaining > 1 ? 's' : ''} IA disponible{aiQuota.remaining > 1 ? 's' : ''} {aiQuota.isMonthly ? 'ce mois' : "aujourd'hui"}
+                ðŸ¤– {aiQuota.remaining} correction{aiQuota.remaining > 1 ? 's' : ''} IA disponible{aiQuota.remaining > 1 ? 's' : ''} {aiQuota.isMonthly ? 'ce mois' : "aujourd'hui"}
               </div>
             )
           )}
 
-          {/* Erreur réservation quota */}
+          {/* Erreur rÃ©servation quota */}
           {quotaStartError && (
             <div className="flex items-start gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3 text-sm">
-              <span className="flex-shrink-0 text-base mt-0.5">❌</span>
+              <span className="flex-shrink-0 text-base mt-0.5">âŒ</span>
               <p className="text-red-700 font-medium">{quotaStartError}</p>
             </div>
           )}
@@ -1784,7 +1784,7 @@ export default function EOPage() {
               onClick={handleStartEpreuve}
               className="px-8 py-3 bg-tef-blue text-white font-extrabold rounded-xl hover:bg-tef-blue-hover transition-colors shadow-sm"
             >
-              Commencer l&apos;épreuve →
+              Commencer l&apos;Ã©preuve â†’
             </button>
           </div>
         </div>
@@ -1792,21 +1792,21 @@ export default function EOPage() {
     )
   }
 
-  /* ─── Prep A ─── */
+  /* â”€â”€â”€ Prep A â”€â”€â”€ */
 
   if (step === 'prepA') {
     const startA = () => setStep('dialogueA')
     return (
       <>
-        <div className="min-h-screen bg-gray-50">
-          {/* Gradient header — même registre que l'intro */}
+        <div className="min-h-screen bg-background">
+          {/* Gradient header â€” mÃªme registre que l'intro */}
           <div className="bg-gradient-to-br from-tef-blue via-blue-700 to-blue-600 text-white">
             <div className="max-w-3xl mx-auto px-4 py-6">
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <span className="inline-block px-3 py-1 bg-white/20 text-white text-xs font-bold rounded-full mb-2">Section A</span>
-                  <h1 className="text-xl font-extrabold">Temps de préparation</h1>
-                  <p className="text-white/70 text-sm mt-0.5">Lisez l&apos;annonce et préparez vos questions</p>
+                  <h1 className="text-xl font-extrabold">Temps de prÃ©paration</h1>
+                  <p className="text-white/70 text-sm mt-0.5">Lisez l&apos;annonce et prÃ©parez vos questions</p>
                 </div>
                 <div className="flex-shrink-0">
                   <Countdown seconds={30} onDone={startA} label="secondes" />
@@ -1818,7 +1818,7 @@ export default function EOPage() {
           <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">
             {/* Consigne */}
             <div className="bg-tef-blue/5 border border-tef-blue/20 rounded-xl px-4 py-3 flex gap-3">
-              <span className="text-tef-blue text-lg flex-shrink-0">💡</span>
+              <span className="text-tef-blue text-lg flex-shrink-0">ðŸ’¡</span>
               <p className="text-sm text-tef-blue/90 font-medium leading-relaxed">{sectionA.consigne}</p>
             </div>
 
@@ -1826,7 +1826,7 @@ export default function EOPage() {
             {(sectionA.imageUrl || sectionA.longText) && (
               <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
                 <div className="bg-gray-50 px-4 py-2.5 border-b border-gray-100">
-                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">📄 Document support</span>
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">ðŸ“„ Document support</span>
                 </div>
                 <div className="p-4">
                   {sectionA.imageUrl ? (
@@ -1853,13 +1853,13 @@ export default function EOPage() {
                 onClick={() => setShowExitConfirm(true)}
                 className="px-3 py-1.5 text-xs text-gray-400 border border-gray-200 rounded-lg hover:text-red-600 hover:border-red-200 hover:bg-gray-50 transition-colors"
               >
-                ✕ Abandonner
+                âœ• Abandonner
               </button>
               <button
                 onClick={startA}
                 className="px-6 py-3 bg-tef-blue text-white font-bold rounded-xl hover:bg-tef-blue-hover transition-colors shadow-sm"
               >
-                Commencer maintenant →
+                Commencer maintenant â†’
               </button>
             </div>
           </div>
@@ -1868,15 +1868,15 @@ export default function EOPage() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
             <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 space-y-4">
               <div className="text-center">
-                <span className="text-4xl">⚠️</span>
+                <span className="text-4xl">âš ï¸</span>
                 <h2 className="text-lg font-bold text-gray-900 mt-2">Quitter le test ?</h2>
                 <p className="text-sm text-gray-600 mt-2 leading-relaxed">
-                  Vos réponses ne seront pas enregistrées et votre progression sera perdue.
+                  Vos rÃ©ponses ne seront pas enregistrÃ©es et votre progression sera perdue.
                 </p>
               </div>
               {quotaConsumedAtStart && (
                 <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 text-xs text-amber-800 leading-relaxed">
-                  <span className="font-bold">Attention :</span> votre quota de correction IA a déjà été consommé pour cette session. Quitter maintenant ne le restitue pas.
+                  <span className="font-bold">Attention :</span> votre quota de correction IA a dÃ©jÃ  Ã©tÃ© consommÃ© pour cette session. Quitter maintenant ne le restitue pas.
                 </div>
               )}
               <div className="flex flex-col gap-2">
@@ -1900,7 +1900,7 @@ export default function EOPage() {
     )
   }
 
-  /* ─── Dialogue A ─── */
+  /* â”€â”€â”€ Dialogue A â”€â”€â”€ */
 
   if (step === 'dialogueA') {
     return (
@@ -1917,15 +1917,15 @@ export default function EOPage() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
             <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 space-y-4">
               <div className="text-center">
-                <span className="text-4xl">⚠️</span>
+                <span className="text-4xl">âš ï¸</span>
                 <h2 className="text-lg font-bold text-gray-900 mt-2">Quitter le test ?</h2>
                 <p className="text-sm text-gray-600 mt-2 leading-relaxed">
-                  Vos réponses ne seront pas enregistrées et votre progression sera perdue.
+                  Vos rÃ©ponses ne seront pas enregistrÃ©es et votre progression sera perdue.
                 </p>
               </div>
               {quotaConsumedAtStart && (
                 <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 text-xs text-amber-800 leading-relaxed">
-                  <span className="font-bold">Attention :</span> votre quota de correction IA a déjà été consommé pour cette session. Quitter maintenant ne le restitue pas.
+                  <span className="font-bold">Attention :</span> votre quota de correction IA a dÃ©jÃ  Ã©tÃ© consommÃ© pour cette session. Quitter maintenant ne le restitue pas.
                 </div>
               )}
               <div className="flex flex-col gap-2">
@@ -1949,28 +1949,28 @@ export default function EOPage() {
     )
   }
 
-  /* ─── Pause ─── */
+  /* â”€â”€â”€ Pause â”€â”€â”€ */
 
   if (step === 'pause') {
     return (
       <>
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+        <div className="min-h-screen bg-background flex items-center justify-center px-4">
           <div className="bg-white rounded-2xl border border-gray-200 shadow-sm max-w-sm w-full p-8 text-center space-y-6">
-            <div className="w-14 h-14 bg-tef-blue/10 rounded-2xl flex items-center justify-center text-2xl mx-auto">⏸</div>
+            <div className="w-14 h-14 bg-tef-blue/10 rounded-2xl flex items-center justify-center text-2xl mx-auto">â¸</div>
             <div>
-              <h2 className="text-xl font-extrabold text-gray-900">Section A terminée</h2>
-              <p className="text-sm text-gray-500 mt-1">Préparez-vous pour la Section B.</p>
+              <h2 className="text-xl font-extrabold text-gray-900">Section A terminÃ©e</h2>
+              <p className="text-sm text-gray-500 mt-1">PrÃ©parez-vous pour la Section B.</p>
             </div>
             <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-left space-y-1">
-              <p className="text-xs font-bold text-amber-800">Section B — Présenter et convaincre</p>
-              <p className="text-xs text-amber-700">Vous allez parler avec un(e) ami(e) IA. Présentez l&apos;annonce et convainquez-le/la d&apos;y participer. Tutoiement requis.</p>
+              <p className="text-xs font-bold text-amber-800">Section B â€” PrÃ©senter et convaincre</p>
+              <p className="text-xs text-amber-700">Vous allez parler avec un(e) ami(e) IA. PrÃ©sentez l&apos;annonce et convainquez-le/la d&apos;y participer. Tutoiement requis.</p>
             </div>
             <Countdown seconds={10} onDone={() => setStep('prepB')} label="Passage automatique dans" />
             <button
               onClick={() => setShowExitConfirm(true)}
               className="px-3 py-1.5 text-xs font-medium text-gray-400 border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-red-600 hover:border-red-200 transition-colors"
             >
-              ✕ Abandonner le test
+              âœ• Abandonner le test
             </button>
           </div>
         </div>
@@ -1978,15 +1978,15 @@ export default function EOPage() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
             <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 space-y-4">
               <div className="text-center">
-                <span className="text-4xl">⚠️</span>
+                <span className="text-4xl">âš ï¸</span>
                 <h2 className="text-lg font-bold text-gray-900 mt-2">Quitter le test ?</h2>
                 <p className="text-sm text-gray-600 mt-2 leading-relaxed">
-                  Vos réponses ne seront pas enregistrées et votre progression sera perdue.
+                  Vos rÃ©ponses ne seront pas enregistrÃ©es et votre progression sera perdue.
                 </p>
               </div>
               {quotaConsumedAtStart && (
                 <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 text-xs text-amber-800 leading-relaxed">
-                  <span className="font-bold">Attention :</span> votre quota de correction IA a déjà été consommé pour cette session. Quitter maintenant ne le restitue pas.
+                  <span className="font-bold">Attention :</span> votre quota de correction IA a dÃ©jÃ  Ã©tÃ© consommÃ© pour cette session. Quitter maintenant ne le restitue pas.
                 </div>
               )}
               <div className="flex flex-col gap-2">
@@ -2010,21 +2010,21 @@ export default function EOPage() {
     )
   }
 
-  /* ─── Prep B ─── */
+  /* â”€â”€â”€ Prep B â”€â”€â”€ */
 
   if (step === 'prepB') {
     const startB = () => setStep('dialogueB')
     return (
       <>
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-background">
           {/* Gradient header */}
           <div className="bg-gradient-to-br from-tef-blue via-blue-700 to-blue-600 text-white">
             <div className="max-w-3xl mx-auto px-4 py-6">
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <span className="inline-block px-3 py-1 bg-white/20 text-white text-xs font-bold rounded-full mb-2">Section B</span>
-                  <h1 className="text-xl font-extrabold">Temps de préparation</h1>
-                  <p className="text-white/70 text-sm mt-0.5">Lisez l&apos;annonce et préparez votre présentation</p>
+                  <h1 className="text-xl font-extrabold">Temps de prÃ©paration</h1>
+                  <p className="text-white/70 text-sm mt-0.5">Lisez l&apos;annonce et prÃ©parez votre prÃ©sentation</p>
                 </div>
                 <div className="flex-shrink-0">
                   <Countdown seconds={60} onDone={startB} label="secondes" />
@@ -2036,7 +2036,7 @@ export default function EOPage() {
           <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">
             {/* Consigne */}
             <div className="bg-tef-blue/5 border border-tef-blue/20 rounded-xl px-4 py-3 flex gap-3">
-              <span className="text-tef-blue text-lg flex-shrink-0">💡</span>
+              <span className="text-tef-blue text-lg flex-shrink-0">ðŸ’¡</span>
               <p className="text-sm text-tef-blue/90 font-medium leading-relaxed">{sectionB.consigne}</p>
             </div>
 
@@ -2044,7 +2044,7 @@ export default function EOPage() {
             {(sectionB.imageUrl || sectionB.longText) && (
               <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
                 <div className="bg-gray-50 px-4 py-2.5 border-b border-gray-100">
-                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">📄 Document support</span>
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">ðŸ“„ Document support</span>
                 </div>
                 <div className="p-4">
                   {sectionB.imageUrl ? (
@@ -2071,13 +2071,13 @@ export default function EOPage() {
                 onClick={() => setShowExitConfirm(true)}
                 className="px-3 py-1.5 text-xs text-gray-400 border border-gray-200 rounded-lg hover:text-red-600 hover:border-red-200 hover:bg-gray-50 transition-colors"
               >
-                ✕ Abandonner
+                âœ• Abandonner
               </button>
               <button
                 onClick={startB}
                 className="px-6 py-3 bg-tef-blue text-white font-bold rounded-xl hover:bg-tef-blue-hover transition-colors shadow-sm"
               >
-                Commencer maintenant →
+                Commencer maintenant â†’
               </button>
             </div>
           </div>
@@ -2086,15 +2086,15 @@ export default function EOPage() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
             <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 space-y-4">
               <div className="text-center">
-                <span className="text-4xl">⚠️</span>
+                <span className="text-4xl">âš ï¸</span>
                 <h2 className="text-lg font-bold text-gray-900 mt-2">Quitter le test ?</h2>
                 <p className="text-sm text-gray-600 mt-2 leading-relaxed">
-                  Vos réponses ne seront pas enregistrées et votre progression sera perdue.
+                  Vos rÃ©ponses ne seront pas enregistrÃ©es et votre progression sera perdue.
                 </p>
               </div>
               {quotaConsumedAtStart && (
                 <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 text-xs text-amber-800 leading-relaxed">
-                  <span className="font-bold">Attention :</span> votre quota de correction IA a déjà été consommé pour cette session. Quitter maintenant ne le restitue pas.
+                  <span className="font-bold">Attention :</span> votre quota de correction IA a dÃ©jÃ  Ã©tÃ© consommÃ© pour cette session. Quitter maintenant ne le restitue pas.
                 </div>
               )}
               <div className="flex flex-col gap-2">
@@ -2118,7 +2118,7 @@ export default function EOPage() {
     )
   }
 
-  /* ─── Dialogue B ─── */
+  /* â”€â”€â”€ Dialogue B â”€â”€â”€ */
 
   if (step === 'dialogueB') {
     return (
@@ -2135,15 +2135,15 @@ export default function EOPage() {
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
             <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 space-y-4">
               <div className="text-center">
-                <span className="text-4xl">⚠️</span>
+                <span className="text-4xl">âš ï¸</span>
                 <h2 className="text-lg font-bold text-gray-900 mt-2">Quitter le test ?</h2>
                 <p className="text-sm text-gray-600 mt-2 leading-relaxed">
-                  Vos réponses ne seront pas enregistrées et votre progression sera perdue.
+                  Vos rÃ©ponses ne seront pas enregistrÃ©es et votre progression sera perdue.
                 </p>
               </div>
               {quotaConsumedAtStart && (
                 <div className="bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5 text-xs text-amber-800 leading-relaxed">
-                  <span className="font-bold">Attention :</span> votre quota de correction IA a déjà été consommé pour cette session. Quitter maintenant ne le restitue pas.
+                  <span className="font-bold">Attention :</span> votre quota de correction IA a dÃ©jÃ  Ã©tÃ© consommÃ© pour cette session. Quitter maintenant ne le restitue pas.
                 </div>
               )}
               <div className="flex flex-col gap-2">

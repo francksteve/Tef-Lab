@@ -429,7 +429,7 @@ export default async function MentionsLegalesPage() {
       </section>
 
       {/* Table of contents */}
-      <section className="border-b border-gray-100 bg-gray-50 py-6 px-4 hidden md:block">
+      <section className="border-b border-gray-100 bg-background py-6 px-4 hidden md:block">
         <div className="max-w-3xl mx-auto">
           <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Sommaire</p>
           <ol className="grid grid-cols-2 gap-x-8 gap-y-1">

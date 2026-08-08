@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -36,7 +36,7 @@ export default function InscriptionPage() {
     setError('')
 
     if (!pwdHas8 || !pwdHasNum || !pwdHasSpecial) {
-      setError('Le mot de passe ne respecte pas les critères de sécurité.')
+      setError('Le mot de passe ne respecte pas les critÃ¨res de sÃ©curitÃ©.')
       return
     }
     if (!pwdMatch) {
@@ -63,14 +63,14 @@ export default function InscriptionPage() {
         if (result?.ok) {
           router.push('/dashboard')
         } else {
-          // Auto-login failed (unlikely) — fall back to login page
+          // Auto-login failed (unlikely) â€” fall back to login page
           setTimeout(() => router.push('/connexion?inscrit=1'), 1500)
         }
       } else {
         setError(data?.error ?? 'Une erreur est survenue.')
       }
     } catch {
-      setError('Erreur réseau. Vérifiez votre connexion.')
+      setError('Erreur rÃ©seau. VÃ©rifiez votre connexion.')
     } finally {
       setLoading(false)
     }
@@ -78,12 +78,12 @@ export default function InscriptionPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 max-w-md w-full text-center space-y-4">
-          <div className="text-5xl">🎉</div>
-          <h2 className="text-xl font-extrabold text-gray-900">Compte créé avec succès !</h2>
+          <div className="text-5xl">ðŸŽ‰</div>
+          <h2 className="text-xl font-extrabold text-gray-900">Compte crÃ©Ã© avec succÃ¨s !</h2>
           <p className="text-gray-600 text-sm">
-            Bienvenue sur TEF-LAB. Connexion en cours, redirection vers ton espace…
+            Bienvenue sur TEF-LAB. Connexion en cours, redirection vers ton espaceâ€¦
           </p>
         </div>
       </div>
@@ -91,7 +91,7 @@ export default function InscriptionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-10">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-10">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 w-full max-w-md space-y-6">
         {/* Logo */}
         <div className="text-center">
@@ -104,19 +104,19 @@ export default function InscriptionPage() {
                 TEF<span className="text-tef-red">-</span>LAB
               </span>
               <span className="text-[11px] font-semibold tracking-widest uppercase text-gray-400 mt-0.5">
-                Prépa TEF Canada
+                PrÃ©pa TEF Canada
               </span>
             </div>
           </Link>
-          <h1 className="text-2xl font-extrabold text-gray-900 mt-4">Créer un compte gratuit</h1>
+          <h1 className="text-2xl font-extrabold text-gray-900 mt-4">CrÃ©er un compte gratuit</h1>
           <p className="text-sm text-gray-500 mt-1">
-            Accédez immédiatement aux séries gratuites CE et CO
+            AccÃ©dez immÃ©diatement aux sÃ©ries gratuites CE et CO
           </p>
         </div>
 
         {error && (
           <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-            <span className="flex-shrink-0 mt-0.5">⚠️</span>
+            <span className="flex-shrink-0 mt-0.5">âš ï¸</span>
             {error}
           </div>
         )}
@@ -137,7 +137,7 @@ export default function InscriptionPage() {
 
           {/* Ville */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Ville de résidence *</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Ville de rÃ©sidence *</label>
             <input
               type="text"
               value={form.cityOfResidence}
@@ -183,7 +183,7 @@ export default function InscriptionPage() {
                 type={showPassword ? 'text' : 'password'}
                 value={form.password}
                 onChange={(e) => set('password', e.target.value)}
-                placeholder="••••••••"
+                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                 required
                 className="w-full px-4 py-2.5 pr-11 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue"
               />
@@ -208,12 +208,12 @@ export default function InscriptionPage() {
             {form.password.length > 0 && (
               <div className="mt-2 space-y-1">
                 {[
-                  { ok: pwdHas8, label: '8 caractères minimum' },
+                  { ok: pwdHas8, label: '8 caractÃ¨res minimum' },
                   { ok: pwdHasNum, label: 'Au moins un chiffre' },
-                  { ok: pwdHasSpecial, label: 'Au moins un caractère spécial (!@#$…)' },
+                  { ok: pwdHasSpecial, label: 'Au moins un caractÃ¨re spÃ©cial (!@#$â€¦)' },
                 ].map(({ ok, label }) => (
                   <p key={label} className={`text-xs flex items-center gap-1.5 ${ok ? 'text-blue-600' : 'text-gray-400'}`}>
-                    <span>{ok ? '✓' : '○'}</span> {label}
+                    <span>{ok ? 'âœ“' : 'â—‹'}</span> {label}
                   </p>
                 ))}
               </div>
@@ -228,7 +228,7 @@ export default function InscriptionPage() {
                 type={showConfirm ? 'text' : 'password'}
                 value={form.confirmPassword}
                 onChange={(e) => set('confirmPassword', e.target.value)}
-                placeholder="••••••••"
+                placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                 required
                 className={`w-full px-4 py-2.5 pr-11 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue ${
                   form.confirmPassword.length > 0
@@ -256,7 +256,7 @@ export default function InscriptionPage() {
             </div>
             {form.confirmPassword.length > 0 && (
               <p className={`text-xs mt-1 ${pwdMatch ? 'text-blue-600' : 'text-red-500'}`}>
-                {pwdMatch ? '✓ Les mots de passe correspondent' : '✗ Les mots de passe ne correspondent pas'}
+                {pwdMatch ? 'âœ“ Les mots de passe correspondent' : 'âœ— Les mots de passe ne correspondent pas'}
               </p>
             )}
           </div>
@@ -266,21 +266,21 @@ export default function InscriptionPage() {
             disabled={loading}
             className="w-full py-3 bg-tef-blue text-white font-bold rounded-xl hover:bg-tef-blue-hover transition-colors disabled:opacity-60 text-sm"
           >
-            {loading ? 'Création en cours…' : 'Créer mon compte gratuit'}
+            {loading ? 'CrÃ©ation en coursâ€¦' : 'CrÃ©er mon compte gratuit'}
           </button>
         </form>
 
         <p className="text-center text-sm text-gray-500">
-          Déjà un compte ?{' '}
+          DÃ©jÃ  un compte ?{' '}
           <Link href="/connexion" className="text-tef-blue font-semibold hover:underline">
             Se connecter
           </Link>
         </p>
 
         <p className="text-xs text-center text-gray-400 leading-relaxed">
-          En créant un compte, vous acceptez nos{' '}
+          En crÃ©ant un compte, vous acceptez nos{' '}
           <Link href="/mentions-legales" className="underline hover:text-gray-600">conditions d'utilisation</Link>.
-          <br />Le compte gratuit donne accès aux séries CE et CO marquées « Gratuite ».
+          <br />Le compte gratuit donne accÃ¨s aux sÃ©ries CE et CO marquÃ©es Â« Gratuite Â».
         </p>
       </div>
     </div>

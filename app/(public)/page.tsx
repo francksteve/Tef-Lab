@@ -158,7 +158,7 @@ export default function HomePage() {
       </section>
 
       {/* ── LE TEF CANADA ── */}
-      <section className="py-10 px-4 sm:px-6 bg-gray-50 border-y border-gray-100">
+      <section className="py-10 px-4 sm:px-6 bg-background border-y border-gray-100">
         <div className="max-w-6xl mx-auto">
           <div className="grid sm:grid-cols-3 gap-6">
             {[
@@ -241,7 +241,7 @@ export default function HomePage() {
           <div className="grid sm:grid-cols-3 gap-5">
 
             {/* Étape 01 */}
-            <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5 flex flex-col gap-4 hover:border-tef-blue/30 hover:shadow-sm transition-all">
+            <div className="bg-background border border-gray-100 rounded-2xl p-5 flex flex-col gap-4 hover:border-tef-blue/30 hover:shadow-sm transition-all">
               <div className="flex items-center gap-3 sm:hidden">
                 <div className="w-8 h-8 rounded-full bg-tef-blue text-white flex items-center justify-center text-xs font-black flex-shrink-0">01</div>
               </div>
@@ -275,7 +275,7 @@ export default function HomePage() {
             </div>
 
             {/* Étape 02 */}
-            <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5 flex flex-col gap-4 hover:border-tef-blue/30 hover:shadow-sm transition-all">
+            <div className="bg-background border border-gray-100 rounded-2xl p-5 flex flex-col gap-4 hover:border-tef-blue/30 hover:shadow-sm transition-all">
               <div className="flex items-center gap-3 sm:hidden">
                 <div className="w-8 h-8 rounded-full bg-tef-blue text-white flex items-center justify-center text-xs font-black flex-shrink-0">02</div>
               </div>
@@ -315,7 +315,7 @@ export default function HomePage() {
             </div>
 
             {/* Étape 03 */}
-            <div className="bg-gray-50 border border-gray-100 rounded-2xl p-5 flex flex-col gap-4 hover:border-tef-blue/30 hover:shadow-sm transition-all">
+            <div className="bg-background border border-gray-100 rounded-2xl p-5 flex flex-col gap-4 hover:border-tef-blue/30 hover:shadow-sm transition-all">
               <div className="flex items-center gap-3 sm:hidden">
                 <div className="w-8 h-8 rounded-full bg-tef-blue text-white flex items-center justify-center text-xs font-black flex-shrink-0">03</div>
               </div>
@@ -352,7 +352,7 @@ export default function HomePage() {
 
           </div>
 
-          <div className="mt-8 pt-6 border-t border-gray-100">
+          <div className="mt-8 pt-6 border-t border-gray-100 flex justify-center">
             <Link
               href="/inscription"
               className="inline-flex items-center gap-2 px-7 py-3.5 bg-tef-blue hover:bg-[#001F60] text-white font-bold rounded-lg transition-colors text-sm"
@@ -367,7 +367,7 @@ export default function HomePage() {
       </section>
 
       {/* ── PACKS ── */}
-      <section className="py-12 px-4 sm:px-6 bg-gray-50 border-t border-gray-100">
+      <section className="py-12 px-4 sm:px-6 bg-background border-t border-gray-100">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
             <div>
