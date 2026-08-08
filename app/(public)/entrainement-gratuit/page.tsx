@@ -44,16 +44,25 @@ export default function EntrainementGratuitPage() {
             Testez les modules de compréhension du TEF Canada sans créer de compte.
             Accès immédiat, aucune carte bancaire requise.
           </p>
-          <div className="inline-flex items-start gap-3 bg-white/5 border border-white/10 rounded-xl px-5 py-3 text-sm text-white/70 text-left max-w-sm mx-auto">
-            <svg className="w-4 h-4 text-white/50 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-            </svg>
-            <p>
-              Expression Écrite et Orale disponibles avec un pack.{' '}
-              <Link href="/packs" className="text-white font-semibold hover:text-white/80 transition-colors">
-                Voir les tarifs →
-              </Link>
-            </p>
+          <div className="flex flex-col sm:flex-row items-stretch gap-3 max-w-lg mx-auto">
+            <div className="flex-1 inline-flex items-start gap-3 bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white/70 text-left">
+              <svg className="w-4 h-4 text-tef-red flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+              </svg>
+              <p>
+                <span className="text-white font-semibold">Compte gratuit</span> : EE et EO accessibles avec{' '}
+                <span className="text-tef-red font-semibold">2 corrections IA offertes / mois</span>.
+              </p>
+            </div>
+            <Link
+              href="/inscription"
+              className="inline-flex items-center justify-center gap-1.5 px-5 py-3 bg-tef-red hover:bg-red-700 text-white text-sm font-bold rounded-xl transition-colors whitespace-nowrap"
+            >
+              Créer un compte
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+              </svg>
+            </Link>
           </div>
         </div>
       </section>
@@ -136,52 +145,95 @@ export default function EntrainementGratuitPage() {
             </div>
           )}
 
-          {/* ── Modules verrouillés ── */}
-          <div className="mt-12 grid sm:grid-cols-2 gap-5">
-            {[
-              {
-                code: 'EE',
-                name: 'Expression Écrite',
-                desc: '2 tâches de rédaction chronométrées avec correction par IA et score NCLC instantané.',
-              },
-              {
-                code: 'EO',
-                name: 'Expression Orale',
-                desc: '2 sections d\'enregistrement (formel + informel) avec évaluation et feedback IA.',
-              },
-            ].map(({ code, name, desc }) => (
-              <div
-                key={code}
-                className="rounded-xl border border-gray-200 bg-gray-50 p-6 flex flex-col items-center text-center gap-4"
-              >
-                <div className="relative">
-                  <div className="w-12 h-12 rounded-xl bg-gray-200 flex items-center justify-center text-gray-500 text-xs font-black">
-                    {code}
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-gray-400 flex items-center justify-center">
-                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                    </svg>
-                  </div>
-                </div>
-                <div>
-                  <h3 className="font-bold text-gray-700 text-sm mb-1">{name}</h3>
-                  <p className="text-xs text-gray-500 leading-relaxed max-w-xs">{desc}</p>
-                </div>
-                <span className="text-xs font-semibold text-gray-500 bg-gray-200 px-3 py-1 rounded-full">
-                  Disponible avec un pack
-                </span>
-                <Link
-                  href="/packs"
-                  className="inline-flex items-center gap-1.5 px-5 py-2 bg-tef-blue text-white text-xs font-bold rounded-lg hover:bg-tef-night transition-colors"
-                >
-                  Voir les packs
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                  </svg>
-                </Link>
+          {/* ── EE / EO — accessibles avec un compte gratuit ── */}
+          <div className="mt-12">
+
+            {/* Banner IA */}
+            <div className="mb-5 bg-tef-night rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <div className="w-10 h-10 bg-tef-red/20 border border-tef-red/30 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-tef-red" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                </svg>
               </div>
-            ))}
+              <div className="flex-1">
+                <p className="text-white font-bold text-sm">2 corrections IA offertes par mois — avec un compte gratuit</p>
+                <p className="text-white/60 text-xs mt-1 leading-relaxed">
+                  Créez un compte en 30 secondes pour accéder aux modules Expression Écrite et Expression Orale,
+                  et recevez chaque mois 2 évaluations IA avec score NCLC, feedback détaillé et texte amélioré.
+                </p>
+              </div>
+              <Link
+                href="/inscription"
+                className="flex-shrink-0 inline-flex items-center gap-1.5 px-5 py-2.5 bg-tef-red hover:bg-red-700 text-white text-xs font-bold rounded-lg transition-colors whitespace-nowrap"
+              >
+                Créer mon compte gratuit
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                </svg>
+              </Link>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-5">
+              {[
+                {
+                  code: 'EE',
+                  name: 'Expression Écrite',
+                  meta: '60 min · 2 tâches',
+                  desc: 'Suite d\'article (80 mots min.) et lettre au journal (200 mots min.) évaluées par IA sur 450 pts.',
+                  features: ['Score NCLC instantané', 'Feedback personnalisé', 'Texte corrigé au niveau supérieur'],
+                },
+                {
+                  code: 'EO',
+                  name: 'Expression Orale',
+                  meta: '15 min · 2 sections',
+                  desc: 'Section formelle et informelle enregistrées via le navigateur, avec évaluation et axes de progression.',
+                  features: ['Évaluation IA optionnelle', 'Score CECRL + NCLC', 'Grille d\'auto-évaluation'],
+                },
+              ].map(({ code, name, meta, desc, features }) => (
+                <div
+                  key={code}
+                  className="rounded-xl border border-tef-blue/15 bg-white p-6 flex flex-col gap-4 hover:border-tef-blue/30 hover:shadow-sm transition-all"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-11 h-11 rounded-xl bg-tef-red flex items-center justify-center text-white text-xs font-black flex-shrink-0">
+                      {code}
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-gray-900 text-sm leading-tight">{name}</h3>
+                      <p className="text-[11px] text-gray-400 mt-0.5">{meta}</p>
+                    </div>
+                    <span className="ml-auto text-[10px] font-bold text-tef-red bg-red-50 border border-red-100 px-2 py-0.5 rounded-full whitespace-nowrap flex-shrink-0">
+                      Correction IA
+                    </span>
+                  </div>
+                  <p className="text-xs text-gray-500 leading-relaxed">{desc}</p>
+                  <ul className="space-y-1.5">
+                    {features.map(f => (
+                      <li key={f} className="flex items-center gap-2 text-xs text-gray-600">
+                        <svg className="w-3 h-3 text-tef-blue flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                        </svg>
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-auto flex items-center gap-2 pt-2 border-t border-gray-50">
+                    <Link
+                      href="/inscription"
+                      className="flex-1 text-center py-2 bg-tef-blue hover:bg-tef-night text-white text-xs font-bold rounded-lg transition-colors"
+                    >
+                      Créer un compte gratuit
+                    </Link>
+                    <Link
+                      href="/packs"
+                      className="px-3 py-2 border border-gray-200 text-gray-500 text-xs font-semibold rounded-lg hover:border-gray-300 transition-colors"
+                    >
+                      Packs
+                    </Link>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* ── CTA ── */}

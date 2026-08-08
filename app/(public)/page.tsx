@@ -1,52 +1,9 @@
 'use client'
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import PaymentModal from '@/components/ui/PaymentModal'
 
-interface Pack {
-  id: string
-  name: string
-  price: number
-  description: string
-  moduleAccess: 'EE_EO' | 'ALL'
-  maxSessions: number
-  aiUsagePerDay: number
-  durationDays: number
-  isRecommended: boolean
-}
-
-interface Settings {
-  usdExchangeRate: number
-  discountRate: number
-  whatsappNumber?: string
-}
-
-const moduleLabels: Record<string, string> = {
-  EE_EO: 'EE + EO uniquement',
-  ALL: 'CE · CO · EE · EO',
-}
+const waNum = '237683008287'
 
 export default function HomePage() {
-  const [packs, setPacks] = useState<Pack[]>([])
-  const [settings, setSettings] = useState<Settings>({ usdExchangeRate: 0.00165, discountRate: 0 })
-  const [selectedPack, setSelectedPack] = useState<Pack | null>(null)
-  const [payModalOpen, setPayModalOpen] = useState(false)
-
-  useEffect(() => {
-    Promise.all([
-      fetch('/api/packs').then(r => r.json()),
-      fetch('/api/settings').then(r => r.json()),
-    ]).then(([p, s]) => {
-      if (Array.isArray(p)) setPacks(p)
-      if (s?.usdExchangeRate) setSettings(s)
-    }).catch(() => {})
-  }, [])
-
-  const finalPrice = (price: number) => Math.round(price * (1 - settings.discountRate / 100))
-  const usdPrice = (price: number) => (finalPrice(price) * settings.usdExchangeRate).toFixed(2)
-  const openPayment = (pack: Pack) => { setSelectedPack(pack); setPayModalOpen(true) }
-  const waNum = (settings.whatsappNumber ?? '237683008287').replace(/\D/g, '')
-
   return (
     <div className="min-h-screen bg-background">
 
@@ -87,14 +44,14 @@ export default function HomePage() {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                   </svg>
                 </Link>
-                <a
-                  href="#packs"
+                <Link
+                  href="/packs"
                   className="inline-flex items-center justify-center px-7 py-3 border border-white/20 text-white/80 hover:border-white/40 hover:text-white font-semibold rounded-lg transition-colors text-sm"
                 >
                   Voir les tarifs
-                </a>
+                </Link>
               </div>
-              <div className="mt-7 flex gap-8">
+              <div className="mt-7 flex flex-wrap gap-x-8 gap-y-4">
                 {[
                   { n: '4', label: 'modules officiels' },
                   { n: '15+', label: 'séries CO' },
@@ -105,6 +62,17 @@ export default function HomePage() {
                     <p className="text-white/60 text-xs mt-0.5">{s.label}</p>
                   </div>
                 ))}
+                <div className="flex items-center gap-2.5 pl-6 border-l border-white/20">
+                  <div className="w-8 h-8 rounded-lg bg-tef-red/20 border border-tef-red/30 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-4 h-4 text-tef-red" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="text-xl font-black text-white leading-none">2 / mois</p>
+                    <p className="text-white/60 text-xs mt-0.5">corrections IA offertes</p>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -280,32 +248,26 @@ export default function HomePage() {
               <div>
                 <h3 className="font-bold text-gray-900 text-sm mb-1.5">Créez votre compte</h3>
                 <p className="text-sm text-gray-500 leading-relaxed">
-                  Inscription gratuite en 30 secondes. Pas de carte bancaire. Accès immédiat aux modules CE et CO.
+                  Inscription gratuite en 30 secondes. Pas de carte bancaire. Accès aux 4 modules, dont 2 corrections IA offertes/mois sur EE et EO.
                 </p>
               </div>
               {/* Preview : modules débloqués */}
               <div className="mt-auto bg-white border border-gray-100 rounded-xl p-3.5 space-y-2.5">
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wide">Accès inclus gratuitement</p>
+                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wide">Accès inclus avec un compte gratuit</p>
                 <div className="space-y-1.5">
                   {[
-                    { code: 'CE', label: 'Compréhension Écrite', locked: false },
-                    { code: 'CO', label: 'Compréhension Orale', locked: false },
-                    { code: 'EE', label: 'Expression Écrite', locked: true },
-                    { code: 'EO', label: 'Expression Orale', locked: true },
+                    { code: 'CE', label: 'Compréhension Écrite', badge: null as string | null },
+                    { code: 'CO', label: 'Compréhension Orale', badge: null as string | null },
+                    { code: 'EE', label: 'Expression Écrite', badge: '2 IA/mois' },
+                    { code: 'EO', label: 'Expression Orale', badge: '2 IA/mois' },
                   ].map(m => (
-                    <div key={m.code} className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium ${m.locked ? 'bg-gray-50 text-gray-400' : 'bg-tef-blue/8 text-tef-blue'}`}>
-                      {m.locked ? (
-                        <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-                        </svg>
-                      ) : (
-                        <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                        </svg>
-                      )}
+                    <div key={m.code} className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium ${m.badge ? 'bg-red-50 text-tef-red' : 'bg-tef-blue/8 text-tef-blue'}`}>
+                      <svg className="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                      </svg>
                       <span className="font-bold">{m.code}</span>
                       <span className="text-[11px]">{m.label}</span>
-                      {m.locked && <span className="ml-auto text-[10px]">Pack</span>}
+                      {m.badge && <span className="ml-auto text-[10px] font-bold">{m.badge}</span>}
                     </div>
                   ))}
                 </div>
@@ -405,100 +367,41 @@ export default function HomePage() {
       </section>
 
       {/* ── PACKS ── */}
-      <section id="packs" className="py-12 px-4 sm:px-6 bg-gray-50 border-t border-gray-100">
+      <section className="py-12 px-4 sm:px-6 bg-gray-50 border-t border-gray-100">
         <div className="max-w-6xl mx-auto">
-          <div className="mb-7">
-            <p className="text-tef-red text-xs font-bold uppercase tracking-[0.15em] mb-2">Tarifs</p>
-            <h2 className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tight">Packs de préparation</h2>
-            <p className="text-gray-500 mt-3 text-sm max-w-xl">
-              Orange Money, MTN MoMo ou carte bancaire. Accès activé instantanément.
-            </p>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+            <div>
+              <p className="text-tef-red text-xs font-bold uppercase tracking-[0.15em] mb-2">Tarifs</p>
+              <h2 className="text-2xl sm:text-3xl font-black text-gray-900 tracking-tight">Packs de préparation</h2>
+              <p className="text-gray-500 mt-2 text-sm">
+                À partir de <span className="font-bold text-tef-blue">5 000 FCFA</span> · 30 jours d&apos;accès · Activation immédiate
+              </p>
+            </div>
+            <Link
+              href="/packs"
+              className="flex-shrink-0 inline-flex items-center gap-2 px-7 py-3.5 bg-tef-blue hover:bg-tef-night text-white font-bold rounded-lg transition-colors text-sm whitespace-nowrap"
+            >
+              Voir tous les packs
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+              </svg>
+            </Link>
           </div>
 
-          {settings.discountRate > 0 && (
-            <div className="mb-8 inline-flex items-center gap-2 px-4 py-2 bg-tef-blue/10 border border-tef-blue/20 text-tef-blue rounded-lg text-sm font-semibold">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 14.25l6-6m4.5-3.493V21.75l-3.75-1.5-3.75 1.5-3.75-1.5-3.75 1.5V4.757c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0111.186 0c1.1.128 1.907 1.077 1.907 2.185z" />
-              </svg>
-              Remise de {settings.discountRate}% sur tous les packs
-            </div>
-          )}
-
-          {packs.length === 0 ? (
-            <p className="text-gray-400 text-sm">Packs disponibles prochainement.</p>
-          ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {packs.map(pack => {
-                const discounted = finalPrice(pack.price)
-                const hasDiscount = discounted < pack.price
-                return (
-                  <div
-                    key={pack.id}
-                    className={`relative bg-white flex flex-col rounded-xl border transition-all ${
-                      pack.isRecommended
-                        ? 'border-tef-blue shadow-lg shadow-tef-blue/10 ring-1 ring-tef-blue/10'
-                        : 'border-gray-200 hover:border-gray-300 shadow-sm'
-                    }`}
-                  >
-                    {pack.isRecommended && (
-                      <div className="absolute -top-3 left-4">
-                        <span className="bg-tef-blue text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest">
-                          Recommandé
-                        </span>
-                      </div>
-                    )}
-
-                    <div className={`px-5 pb-4 ${pack.isRecommended ? 'pt-7' : 'pt-5'} border-b border-gray-50`}>
-                      <p className="font-black text-gray-900 text-base">{pack.name}</p>
-                      <p className="text-xs text-gray-400 mt-1 line-clamp-2 leading-snug">{pack.description}</p>
-                      <div className="flex items-baseline gap-1.5 mt-4">
-                        <span className="text-3xl font-black text-tef-blue tracking-tight">{discounted.toLocaleString('fr-FR')}</span>
-                        <span className="text-sm text-gray-400 font-medium">FCFA</span>
-                        {hasDiscount && <span className="text-sm line-through text-gray-300">{pack.price.toLocaleString('fr-FR')}</span>}
-                      </div>
-                      <p className="text-[11px] text-gray-400 mt-0.5">≈ {usdPrice(pack.price)} USD</p>
-                    </div>
-
-                    <div className="px-5 py-4 flex-1 space-y-2">
-                      {[
-                        moduleLabels[pack.moduleAccess] ?? pack.moduleAccess,
-                        `${pack.maxSessions} session${pack.maxSessions > 1 ? 's' : ''} simultanée${pack.maxSessions > 1 ? 's' : ''}`,
-                        `${pack.aiUsagePerDay} correction${pack.aiUsagePerDay > 1 ? 's' : ''} IA / jour`,
-                        `${pack.durationDays} jours d'accès`,
-                      ].map(feature => (
-                        <div key={feature} className="flex items-center gap-2 text-xs text-gray-600">
-                          <svg className="w-3.5 h-3.5 text-tef-blue flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                          </svg>
-                          {feature}
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="px-5 pb-5 pt-3">
-                      <button
-                        onClick={() => openPayment(pack)}
-                        className={`w-full py-2.5 font-bold rounded-lg text-sm transition-colors ${
-                          pack.isRecommended
-                            ? 'bg-tef-blue hover:bg-tef-night text-white'
-                            : 'border border-tef-blue/20 hover:border-tef-blue text-tef-blue hover:bg-tef-blue/5'
-                        }`}
-                      >
-                        S&apos;abonner
-                      </button>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          )}
-
-          <p className="mt-8 text-xs text-gray-400 flex items-center gap-1.5">
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
-            </svg>
-            Paiement sécurisé · Orange Money · MTN MoMo · Visa · Mastercard
-          </p>
+          <div className="mt-7 flex flex-wrap gap-3">
+            {[
+              { icon: 'M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 8.25h3m-3 3.75h3m-3 3.75h3M6.75 21h10.5', label: 'Orange Money · MTN MoMo · Visa · Mastercard' },
+              { icon: 'M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.955 11.955 0 003 12c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286z', label: 'Paiement sécurisé, accès activé instantanément' },
+              { icon: 'M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09z', label: 'Correction IA incluse selon le pack choisi' },
+            ].map(item => (
+              <div key={item.label} className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-xs text-gray-600">
+                <svg className="w-3.5 h-3.5 text-tef-blue flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d={item.icon} />
+                </svg>
+                {item.label}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -559,7 +462,7 @@ export default function HomePage() {
               Accès gratuit, sans carte bancaire.
             </h2>
             <p className="text-white/50 text-sm mt-2">
-              Séries CE et CO incluses dès l&apos;inscription. Passez à un pack payant quand vous êtes prêt.
+              Séries CE et CO + 2 corrections IA gratuites/mois sur EE et EO. Passez à un pack payant quand vous êtes prêt.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 flex-shrink-0">
@@ -608,7 +511,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      <PaymentModal isOpen={payModalOpen} onClose={() => setPayModalOpen(false)} pack={selectedPack} />
     </div>
   )
 }
