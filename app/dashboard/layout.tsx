@@ -70,7 +70,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     exact ? pathname === href : pathname.startsWith(href)
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="min-h-screen flex flex-col bg-background">
       {/* Session limit modal */}
       {sessionBlocked && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 px-4">
