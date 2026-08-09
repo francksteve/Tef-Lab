@@ -18,6 +18,8 @@ interface Order {
 
 type Filter = 'ALL' | 'PENDING' | 'VALIDATED' | 'REJECTED'
 
+const PAGE_SIZE = 10
+
 const statusLabel: Record<string, string> = { PENDING: 'En attente', VALIDATED: 'Validée', REJECTED: 'Rejetée' }
 const statusBg: Record<string, string> = {
   PENDING: 'bg-amber-100 text-amber-700',
@@ -60,7 +62,9 @@ export default function CommandesPage() {
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [confirmAction, setConfirmAction] = useState<{ type: 'validate' | 'reject'; order: Order } | null>(null)
+  const [confirmDelete, setConfirmDelete] = useState<Order | null>(null)
   const [toast, setToast] = useState<{ type: 'success' | 'error'; message: string; waUrl?: string } | null>(null)
+  const [page, setPage] = useState(1)
 
   const loadOrders = useCallback(() => {
     setLoading(true)
@@ -71,7 +75,25 @@ export default function CommandesPage() {
       .catch(() => setLoading(false))
   }, [filter])
 
-  useEffect(() => { loadOrders() }, [loadOrders])
+  const deleteOrder = async (order: Order) => {
+    setConfirmDelete(null)
+    setActionLoading(order.id + '-delete')
+    try {
+      const res = await fetch(`/api/orders/${order.id}`, { method: 'DELETE' })
+      if (res.ok) {
+        setToast({ type: 'success', message: `Commande ${order.reference} supprimée.` })
+        loadOrders()
+      } else {
+        setToast({ type: 'error', message: 'Échec de la suppression. Veuillez réessayer.' })
+      }
+    } catch {
+      setToast({ type: 'error', message: 'Erreur réseau. Vérifiez votre connexion et réessayez.' })
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  useEffect(() => { loadOrders(); setPage(1) }, [loadOrders])
 
   // Auto-dismiss toast after 10s
   useEffect(() => {
@@ -109,6 +131,8 @@ export default function CommandesPage() {
   }
 
   const pendingCount = orders.filter((o) => o.status === 'PENDING').length
+  const totalPages = Math.max(1, Math.ceil(orders.length / PAGE_SIZE))
+  const paginated = orders.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
 
   return (
     <div className="p-6 space-y-6 max-w-6xl mx-auto">
@@ -194,7 +218,7 @@ export default function CommandesPage() {
                 </tr>
               </thead>
               <tbody>
-                {orders.map((order, index) => (
+                {paginated.map((order, index) => (
                   <tr
                     key={order.id}
                     className={`border-b border-blue-100 transition-colors hover:bg-blue-50 ${
@@ -260,34 +284,43 @@ export default function CommandesPage() {
 
                     {/* Actions */}
                     <td className="px-4 py-3">
-                      {order.status === 'PENDING' ? (
-                        <div className="flex flex-col gap-1.5">
-                          <button
-                            onClick={() => setConfirmAction({ type: 'validate', order })}
-                            disabled={!!actionLoading}
-                            className="px-3 py-1.5 bg-tef-blue text-white text-xs font-semibold rounded-lg hover:bg-tef-blue-hover disabled:opacity-50 transition-colors"
+                      <div className="flex flex-col gap-1.5">
+                        {order.status === 'PENDING' ? (
+                          <>
+                            <button
+                              onClick={() => setConfirmAction({ type: 'validate', order })}
+                              disabled={!!actionLoading}
+                              className="px-3 py-1.5 bg-tef-blue text-white text-xs font-semibold rounded-lg hover:bg-tef-blue-hover disabled:opacity-50 transition-colors"
+                            >
+                              {actionLoading === order.id + '-validate' ? '…' : 'Valider'}
+                            </button>
+                            <button
+                              onClick={() => setConfirmAction({ type: 'reject', order })}
+                              disabled={!!actionLoading}
+                              className="px-3 py-1.5 bg-white border border-red-200 text-tef-red text-xs font-semibold rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors"
+                            >
+                              {actionLoading === order.id + '-reject' ? '…' : 'Rejeter'}
+                            </button>
+                          </>
+                        ) : (
+                          <a
+                            href={buildWaUrl(order.visitorPhone, buildWaMessage('contact', order))}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-semibold text-[#25D366] border border-[#25D366]/30 rounded-lg hover:bg-[#25D366]/8 transition-colors"
                           >
-                            {actionLoading === order.id + '-validate' ? '…' : 'Valider'}
-                          </button>
-                          <button
-                            onClick={() => setConfirmAction({ type: 'reject', order })}
-                            disabled={!!actionLoading}
-                            className="px-3 py-1.5 bg-white border border-red-200 text-tef-red text-xs font-semibold rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors"
-                          >
-                            {actionLoading === order.id + '-reject' ? '…' : 'Rejeter'}
-                          </button>
-                        </div>
-                      ) : (
-                        <a
-                          href={buildWaUrl(order.visitorPhone, buildWaMessage('contact', order))}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] font-semibold text-[#25D366] border border-[#25D366]/30 rounded-lg hover:bg-[#25D366]/8 transition-colors"
+                            <WaIcon className="w-3 h-3" />
+                            WhatsApp
+                          </a>
+                        )}
+                        <button
+                          onClick={() => setConfirmDelete(order)}
+                          disabled={!!actionLoading}
+                          className="px-3 py-1.5 bg-white border border-gray-200 text-gray-500 text-xs font-semibold rounded-lg hover:bg-red-50 hover:border-red-200 hover:text-tef-red disabled:opacity-50 transition-colors"
                         >
-                          <WaIcon className="w-3 h-3" />
-                          WhatsApp
-                        </a>
-                      )}
+                          {actionLoading === order.id + '-delete' ? '…' : 'Supprimer'}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -295,7 +328,73 @@ export default function CommandesPage() {
             </table>
           </div>
         )}
+
+        {/* Pagination */}
+        {!loading && orders.length > 0 && totalPages > 1 && (
+          <div className="flex items-center justify-between px-4 py-3 border-t border-blue-100">
+            <p className="text-xs text-gray-500">
+              {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, orders.length)} sur {orders.length}
+            </p>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-3 py-1 rounded-lg text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                ← Préc.
+              </button>
+              {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => i + 1).map((p) => (
+                <button
+                  key={p}
+                  onClick={() => setPage(p)}
+                  className={`w-8 h-8 rounded-lg text-xs font-semibold transition-colors ${p === page ? 'bg-tef-blue text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                >
+                  {p}
+                </button>
+              ))}
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="px-3 py-1 rounded-lg text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                Suiv. →
+              </button>
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 space-y-4">
+            <h2 className="text-lg font-extrabold text-gray-900">Supprimer la commande</h2>
+            <p className="text-sm text-gray-600">
+              Confirmez-vous la suppression de la commande{' '}
+              <span className="font-mono font-semibold text-gray-900">{confirmDelete.reference}</span>{' '}
+              de <span className="font-semibold">{confirmDelete.visitorName}</span> ?
+            </p>
+            <p className="text-xs text-red-700 bg-red-50 rounded-xl px-4 py-2.5 border border-red-100">
+              Cette action est irréversible.
+            </p>
+            <div className="flex gap-3 pt-1">
+              <button
+                onClick={() => setConfirmDelete(null)}
+                className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors text-sm"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => deleteOrder(confirmDelete)}
+                disabled={!!actionLoading}
+                className="flex-1 px-4 py-2.5 bg-tef-red text-white font-bold rounded-xl hover:bg-red-700 transition-colors text-sm disabled:opacity-50"
+              >
+                Supprimer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Confirmation Modal */}
       {confirmAction && (

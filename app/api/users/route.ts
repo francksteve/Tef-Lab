@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma'
 import { authOptions } from '@/lib/auth'
 import { Prisma } from '@prisma/client'
 
-const PAGE_SIZE = 25
+const PAGE_SIZE = 10
 
 export async function GET(req: NextRequest) {
   try {

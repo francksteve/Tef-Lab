@@ -232,8 +232,8 @@ export default function UtilisateursPage() {
 
   const filters: FilterType[] = ['Tous', 'Abonnés', 'Admins']
 
-  const pageStart = total === 0 ? 0 : (page - 1) * 25 + 1
-  const pageEnd = Math.min(page * 25, total)
+  const pageStart = total === 0 ? 0 : (page - 1) * 10 + 1
+  const pageEnd = Math.min(page * 10, total)
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
