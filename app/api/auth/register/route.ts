@@ -13,7 +13,7 @@ const registerSchema = z
     name: z.string().min(2, 'Le nom doit contenir au moins 2 caractères').max(100),
     cityOfResidence: z.string().min(2, 'La ville est requise').max(100),
     referenceCode: z.string().max(50).optional().or(z.literal('')),
-    phone: z.string().max(25).optional().or(z.literal('')),
+    phone: z.string().min(8, 'Le numéro de téléphone est requis').max(25),
     email: z.string().email('Adresse email invalide'),
     password: z
       .string()

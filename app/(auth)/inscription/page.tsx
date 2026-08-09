@@ -151,14 +151,13 @@ export default function InscriptionPage() {
 
           {/* Téléphone */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Numéro de téléphone <span className="text-gray-400 font-normal">(optionnel)</span>
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Numéro de téléphone *</label>
             <input
               type="tel"
               value={form.phone}
               onChange={(e) => set('phone', e.target.value)}
               placeholder="+237 6XX XXX XXX"
+              required
               className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue"
             />
             <p className="text-xs text-gray-400 mt-1">Permet d&apos;être contacté via WhatsApp</p>
