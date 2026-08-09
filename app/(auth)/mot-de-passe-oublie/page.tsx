@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 import { useState } from 'react'
 import Link from 'next/link'
 
@@ -22,10 +22,10 @@ export default function ForgotPasswordPage() {
         setSent(true)
       } else {
         const data = await res.json().catch(() => ({}))
-        setError(data?.error ?? 'Une erreur est survenue. RÃ©essayez.')
+        setError(data?.error ?? 'Une erreur est survenue. Réessayez.')
       }
     } catch {
-      setError('Erreur rÃ©seau. VÃ©rifiez votre connexion.')
+      setError('Erreur réseau. Vérifiez votre connexion.')
     } finally {
       setLoading(false)
     }
@@ -40,28 +40,28 @@ export default function ForgotPasswordPage() {
             <img src="/logo.png" alt="TEF-LAB" className="h-12 w-auto object-contain rounded-xl" />
             <span className="font-bold text-xl text-tef-blue">TEF-LAB</span>
           </Link>
-          <h1 className="text-2xl font-extrabold text-gray-900">Mot de passe oubliÃ©</h1>
+          <h1 className="text-2xl font-extrabold text-gray-900">Mot de passe oublié</h1>
           <p className="text-gray-500 text-sm mt-1">
-            Renseignez votre email pour recevoir un lien de rÃ©initialisation
+            Renseignez votre email pour recevoir un lien de réinitialisation
           </p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
           {sent ? (
             <div className="text-center space-y-4">
-              <div className="text-5xl">ðŸ“§</div>
-              <h2 className="text-lg font-bold text-gray-900">Email envoyÃ© !</h2>
+              <div className="text-5xl">📧</div>
+              <h2 className="text-lg font-bold text-gray-900">Email envoyé !</h2>
               <p className="text-gray-600 text-sm leading-relaxed">
-                Si l&apos;adresse <strong>{email}</strong> est associÃ©e Ã  un compte,
-                vous recevrez un lien de rÃ©initialisation dans quelques minutes.
-                Pensez Ã  vÃ©rifier vos spams.
+                Si l&apos;adresse <strong>{email}</strong> est associée à un compte,
+                vous recevrez un lien de réinitialisation dans quelques minutes.
+                Pensez à vérifier vos spams.
               </p>
               <p className="text-xs text-gray-400">Le lien expire dans 1 heure.</p>
               <Link
                 href="/connexion"
                 className="inline-block mt-4 text-sm text-tef-blue font-semibold hover:underline"
               >
-                â† Retour Ã  la connexion
+                ← Retour à la connexion
               </Link>
             </div>
           ) : (
@@ -91,12 +91,12 @@ export default function ForgotPasswordPage() {
                   disabled={loading}
                   className="w-full py-3 bg-tef-blue text-white font-bold rounded-xl hover:bg-tef-blue-hover transition-colors disabled:opacity-60 text-base"
                 >
-                  {loading ? 'Envoi en coursâ€¦' : 'Envoyer le lien de rÃ©initialisation'}
+                  {loading ? 'Envoi en cours…' : 'Envoyer le lien de réinitialisation'}
                 </button>
               </form>
               <p className="text-center text-sm text-gray-400 mt-6">
                 <Link href="/connexion" className="text-tef-blue hover:underline font-medium">
-                  â† Retour Ã  la connexion
+                  ← Retour à la connexion
                 </Link>
               </p>
             </>
