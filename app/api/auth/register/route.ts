@@ -13,6 +13,7 @@ const registerSchema = z
     name: z.string().min(2, 'Le nom doit contenir au moins 2 caractères').max(100),
     cityOfResidence: z.string().min(2, 'La ville est requise').max(100),
     referenceCode: z.string().max(50).optional().or(z.literal('')),
+    phone: z.string().max(25).optional().or(z.literal('')),
     email: z.string().email('Adresse email invalide'),
     password: z
       .string()
@@ -52,7 +53,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: first?.message ?? 'Données invalides' }, { status: 400 })
     }
 
-    const { name, cityOfResidence, referenceCode, email, password } = parsed.data
+    const { name, cityOfResidence, referenceCode, phone, email, password } = parsed.data
 
     // Check email not already taken
     const existing = await prisma.user.findUnique({ where: { email } })
@@ -72,6 +73,7 @@ export async function POST(req: NextRequest) {
         password: hashedPassword,
         cityOfResidence,
         referenceCode: referenceCode || null,
+        phone: phone || null,
         role: 'SUBSCRIBER',
         accountStatus: 'ACTIVE',
         mustChangePassword: false,

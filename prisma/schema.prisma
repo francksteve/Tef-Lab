@@ -54,6 +54,7 @@ model User {
   mustChangePassword Boolean      @default(false)
   cityOfResidence    String?
   referenceCode      String?
+  phone              String?
   createdAt          DateTime     @default(now())
   orders             Order[]
   attempts           Attempt[]

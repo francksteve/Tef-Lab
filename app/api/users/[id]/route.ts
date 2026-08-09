@@ -11,6 +11,7 @@ const updateUserSchema = z.object({
   accountStatus: z.enum(['ACTIVE', 'SUSPENDED']).optional(),
   role: z.enum(['VISITOR', 'SUBSCRIBER', 'ADMIN']).optional(),
   resetPassword: z.boolean().optional(),
+  phone: z.string().max(25).optional().nullable(),
 })
 
 export async function PATCH(
@@ -49,6 +50,9 @@ export async function PATCH(
     }
     if (data.role !== undefined) {
       updateData.role = data.role
+    }
+    if (data.phone !== undefined) {
+      updateData.phone = data.phone || null
     }
 
     if (data.resetPassword) {
