@@ -27,16 +27,16 @@ const moduleLabels: Record<string, string> = {
 
 const faqs = [
   {
-    q: 'Comment fonctionne le paiement ?',
-    a: 'Cliquez sur le bouton du pack pour choisir votre méthode de paiement : NotchPay (Orange Money, MTN MoMo, Visa, Mastercard) pour un accès instantané, ou un virement manuel validé par notre équipe sous 5 à 10 minutes.',
+    q: 'Pourquoi pas YouTube ou les groupes WhatsApp ?',
+    a: 'Ces ressources préparent souvent l\'ancien format du TEF, ou le TCF — pas le TEF Canada tel qu\'il est administré aujourd\'hui. TEF-Lab simule les 4 modules dans les conditions réelles actuelles : chronométrage, audio unique en CO, format des tâches EE et EO. C\'est la différence entre répéter et vraiment se préparer.',
   },
   {
     q: 'Puis-je tester avant d\'acheter ?',
-    a: 'Oui. Créez un compte gratuit et accédez immédiatement aux séries CE et CO gratuites. Aucune carte bancaire requise.',
+    a: 'Oui. Créez un compte gratuit et accédez immédiatement aux séries CE et CO gratuites, plus 2 corrections IA offertes sur EE et EO. Aucune carte bancaire requise.',
   },
   {
-    q: 'Quelle est la différence entre les packs ?',
-    a: 'Le pack Special donne accès aux modules EE et EO uniquement. Tous les autres packs couvrent les 4 modules. Les différences portent sur le nombre de corrections IA par jour, les sessions simultanées et la durée d\'accès.',
+    q: 'Comment fonctionne le paiement ?',
+    a: 'Cliquez sur le bouton du pack pour choisir votre méthode de paiement : NotchPay (Orange Money, MTN MoMo, Visa, Mastercard) pour un accès instantané, ou un virement manuel validé par notre équipe sous 5 à 10 minutes.',
   },
   {
     q: 'Que se passe-t-il à l\'expiration du pack ?',
@@ -80,14 +80,15 @@ export default function PacksPage() {
     <div className="min-h-screen">
 
       {/* Hero */}
-      <section className="bg-tef-night text-white py-16 px-4">
+      <section className="bg-tef-night text-white py-14 px-4">
         <div className="max-w-3xl mx-auto text-center">
           <p className="text-xs font-bold uppercase tracking-[0.15em] text-white/60 mb-3">Tarifs</p>
           <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-4">
-            Packs de préparation TEF Canada
+            Réussir le premier coup coûte moins cher que de repasser.
           </h1>
           <p className="text-white/70 text-sm leading-relaxed max-w-xl mx-auto">
-            Accès activé instantanément après paiement. Orange Money, MTN MoMo, Visa et Mastercard acceptés.
+            Rater le TEF, c'est des mois de retard sur votre dossier d'immigration — en plus des frais de repassage.
+            Préparez-vous sérieusement, une bonne fois. Accès activé instantanément après paiement.
           </p>
         </div>
       </section>
@@ -113,7 +114,7 @@ export default function PacksPage() {
                   Aucun pack disponible pour le moment.
                 </div>
               ) : (
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
                   {packs.map((pack) => {
                     const discounted = finalPrice(pack.price)
                     const hasDiscount = discounted < pack.price
@@ -129,7 +130,7 @@ export default function PacksPage() {
                         {pack.isRecommended && (
                           <div className="absolute -top-3 left-4">
                             <span className="bg-tef-blue text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wide">
-                              Recommandé
+                              Meilleur rapport qualité / réussite
                             </span>
                           </div>
                         )}
@@ -157,7 +158,9 @@ export default function PacksPage() {
                           {[
                             moduleLabels[pack.moduleAccess] ?? pack.moduleAccess,
                             `${pack.maxSessions} session${pack.maxSessions > 1 ? 's' : ''} simultanée${pack.maxSessions > 1 ? 's' : ''}`,
-                            `${pack.aiUsagePerDay} correction${pack.aiUsagePerDay > 1 ? 's' : ''} IA / jour`,
+                            pack.aiUsagePerDay >= 10
+                              ? `${pack.aiUsagePerDay} corrections IA / jour — de quoi s'entraîner jusqu'au dernier soir`
+                              : `${pack.aiUsagePerDay} correction${pack.aiUsagePerDay > 1 ? 's' : ''} IA / jour`,
                             `${pack.durationDays} jours d'accès`,
                           ].map((feature) => (
                             <div key={feature} className="flex items-start gap-2 text-xs text-gray-600">
@@ -200,17 +203,17 @@ export default function PacksPage() {
       </section>
 
       {/* Bannière free */}
-      <section className="py-12 px-4 bg-background border-t border-gray-100">
+      <section className="py-7 px-4 bg-white border-t border-b border-gray-100">
         <div className="max-w-3xl mx-auto text-center">
-          <h2 className="text-lg font-bold text-gray-900 mb-2">Pas encore prêt à vous abonner ?</h2>
+          <h2 className="text-lg font-bold text-gray-900 mb-2">Commencez gratuitement, passez à un pack quand vous voulez.</h2>
           <p className="text-sm text-gray-500 mb-5">
-            Créez un compte gratuit et accédez aux séries CE et CO sans aucun engagement.
+            Compte gratuit : séries CE et CO + 2 corrections IA sur EE et EO. Aucune carte bancaire.
           </p>
           <a
             href="/inscription"
             className="inline-flex items-center gap-2 px-6 py-2.5 bg-tef-blue text-white font-semibold rounded-lg hover:bg-tef-night transition-colors text-sm"
           >
-            Essayer gratuitement
+            Créer mon compte gratuit
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
             </svg>
