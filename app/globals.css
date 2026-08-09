@@ -34,3 +34,11 @@ select,
   -moz-user-select: text;
   user-select: text;
 }
+
+/* Allow text selection in admin area */
+.admin-selectable,
+.admin-selectable * {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  user-select: text;
+}
