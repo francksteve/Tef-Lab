@@ -702,7 +702,7 @@ export default function QuizPage() {
   // ── Results view ────────────────────────────────────────────────────────────
   if (submitted && result) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-background">
         <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
           {/* Score card */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 text-center">
@@ -814,7 +814,7 @@ export default function QuizPage() {
   // ── Intro CO (item 04) ───────────────────────────────────────────────────────
   if (isCO && showCoIntro) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 max-w-md w-full space-y-6">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-tef-blue/10 rounded-xl flex items-center justify-center text-2xl flex-shrink-0">🎧</div>

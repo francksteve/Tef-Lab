@@ -811,7 +811,7 @@ ${documentContext}`
   const accentBg = 'bg-tef-blue'
 
   return (
-    <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
+    <div className="h-screen bg-background flex flex-col overflow-hidden">
       {/* Header — pleine largeur */}
       <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between flex-shrink-0 gap-2">
         <div className="flex items-center gap-2 flex-wrap">
@@ -1178,7 +1178,7 @@ function ScoringScreen({ steps, delaysMs }: { steps: string[]; delaysMs: number[
   }, [current, steps.length, delaysMs])
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4">
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8 max-w-sm w-full space-y-6">
         <div className="w-14 h-14 bg-tef-blue/10 rounded-2xl flex items-center justify-center mx-auto">
           <div className="w-7 h-7 border-4 border-tef-blue border-t-transparent rounded-full animate-spin" />
