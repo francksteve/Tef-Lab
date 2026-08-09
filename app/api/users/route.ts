@@ -49,6 +49,8 @@ export async function GET(req: NextRequest) {
           role: true,
           accountStatus: true,
           mustChangePassword: true,
+          cityOfResidence: true,
+          referenceCode: true,
           createdAt: true,
           orders: {
             where: { status: 'VALIDATED' },

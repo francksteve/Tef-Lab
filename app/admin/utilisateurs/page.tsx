@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 interface UserOrder {
   pack: { name: string } | null
   expiresAt?: string | null
+  visitorPhone?: string
 }
 
 interface User {
@@ -13,8 +14,18 @@ interface User {
   role: 'VISITOR' | 'SUBSCRIBER' | 'ADMIN'
   accountStatus: 'ACTIVE' | 'SUSPENDED'
   mustChangePassword: boolean
+  cityOfResidence?: string | null
+  referenceCode?: string | null
   createdAt: string
   orders: UserOrder[]
+}
+
+function whatsappLink(phone: string): string {
+  const digits = phone.replace(/\D/g, '')
+  const normalized = digits.startsWith('237') ? digits
+    : digits.length === 9 ? '237' + digits
+    : digits
+  return `https://wa.me/${normalized}`
 }
 
 interface ApiResponse {
@@ -298,7 +309,7 @@ export default function UtilisateursPage() {
                   <SortHeader label="Statut"         col="status"    sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
                   <SortHeader label="Pack en cours"  col="pack"      sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="hidden md:table-cell" />
                   <SortHeader label="Créé le"        col="createdAt" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="hidden sm:table-cell" />
-                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider hidden sm:table-cell">Mailing</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider hidden sm:table-cell">Contact</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
@@ -307,6 +318,7 @@ export default function UtilisateursPage() {
                   const activePack = getActivePack(user)
                   const rowNum = (page - 1) * 25 + index + 1
                   const isEven = index % 2 === 0
+                  const phone = user.orders[0]?.visitorPhone ?? null
                   return (
                     <tr
                       key={user.id}
@@ -320,9 +332,39 @@ export default function UtilisateursPage() {
 
                       <td className="px-4 py-3">
                         <p className="font-medium text-gray-900">{user.name}</p>
-                        <p className="text-xs text-gray-400">{user.email}</p>
+                        <a
+                          href={`mailto:${user.email}`}
+                          className="text-xs text-gray-400 hover:text-tef-blue transition-colors"
+                        >
+                          {user.email}
+                        </a>
+                        {(user.cityOfResidence || user.referenceCode) && (
+                          <p className="text-[11px] text-gray-400 mt-0.5 flex items-center gap-1.5 flex-wrap">
+                            {user.cityOfResidence && <span>{user.cityOfResidence}</span>}
+                            {user.cityOfResidence && user.referenceCode && <span className="text-gray-300">·</span>}
+                            {user.referenceCode && (
+                              <span className="font-mono bg-gray-100 text-gray-500 px-1 rounded text-[10px]">
+                                {user.referenceCode}
+                              </span>
+                            )}
+                          </p>
+                        )}
+                        {phone && (
+                          <a
+                            href={whatsappLink(phone)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-[11px] text-green-600 hover:text-green-700 font-medium mt-0.5 transition-colors"
+                          >
+                            <svg className="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                              <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.532 5.862L.054 23.25a.75.75 0 00.916.916l5.388-1.478A11.942 11.942 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75A9.73 9.73 0 016.66 20.1l-.386-.23-4.003 1.098 1.097-4.003-.23-.386A9.732 9.732 0 012.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/>
+                            </svg>
+                            {phone}
+                          </a>
+                        )}
                         {user.mustChangePassword && (
-                          <p className="text-xs text-red-500">Doit changer son mdp</p>
+                          <p className="text-xs text-red-500 mt-0.5">Doit changer son mdp</p>
                         )}
                       </td>
 
@@ -357,30 +399,47 @@ export default function UtilisateursPage() {
                       </td>
 
                       <td className="px-4 py-3 hidden sm:table-cell">
-                        {user.role === 'SUBSCRIBER' ? (
-                          <button
-                            onClick={() => sendReminder(user)}
-                            disabled={mailStatus[user.id] === 'sending' || actionLoading === user.id + '_delete'}
-                            title={`Envoyer un email de rappel à ${user.name}`}
-                            className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 inline-flex items-center gap-1 ${
-                              mailStatus[user.id] === 'sent'
-                                ? 'bg-blue-100 text-tef-blue'
+                        <div className="flex flex-col gap-1.5">
+                          {user.role === 'SUBSCRIBER' && (
+                            <button
+                              onClick={() => sendReminder(user)}
+                              disabled={mailStatus[user.id] === 'sending' || actionLoading === user.id + '_delete'}
+                              title={`Envoyer un email de rappel à ${user.name}`}
+                              className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors disabled:opacity-50 inline-flex items-center gap-1 ${
+                                mailStatus[user.id] === 'sent'
+                                  ? 'bg-blue-100 text-tef-blue'
+                                  : mailStatus[user.id] === 'error'
+                                  ? 'bg-red-100 text-tef-red'
+                                  : 'bg-blue-50 text-tef-blue hover:bg-blue-100'
+                              }`}
+                            >
+                              {mailStatus[user.id] === 'sending'
+                                ? <><svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25"/><path fill="currentColor" className="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Envoi…</>
+                                : mailStatus[user.id] === 'sent'
+                                ? <><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg> Envoyé</>
                                 : mailStatus[user.id] === 'error'
-                                ? 'bg-red-100 text-tef-red'
-                                : 'bg-blue-50 text-tef-blue hover:bg-blue-100'
-                            }`}
-                          >
-                            {mailStatus[user.id] === 'sending'
-                              ? <><svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" className="opacity-25"/><path fill="currentColor" className="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Envoi…</>
-                              : mailStatus[user.id] === 'sent'
-                              ? <><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"/></svg> Envoyé</>
-                              : mailStatus[user.id] === 'error'
-                              ? <><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg> Erreur</>
-                              : <><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg> Rappel</>}
-                          </button>
-                        ) : (
-                          <span className="text-gray-300 text-xs">—</span>
-                        )}
+                                ? <><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12"/></svg> Erreur</>
+                                : <><svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg> Mail</>}
+                            </button>
+                          )}
+                          {phone ? (
+                            <a
+                              href={whatsappLink(phone)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              title={`WhatsApp : ${phone}`}
+                              className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-green-50 text-green-700 hover:bg-green-100 transition-colors inline-flex items-center gap-1"
+                            >
+                              <svg className="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                                <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.126 1.532 5.862L.054 23.25a.75.75 0 00.916.916l5.388-1.478A11.942 11.942 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75A9.73 9.73 0 016.66 20.1l-.386-.23-4.003 1.098 1.097-4.003-.23-.386A9.732 9.732 0 012.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/>
+                              </svg>
+                              WhatsApp
+                            </a>
+                          ) : (
+                            user.role !== 'SUBSCRIBER' && <span className="text-gray-300 text-xs">—</span>
+                          )}
+                        </div>
                       </td>
 
                       <td className="px-4 py-3">
