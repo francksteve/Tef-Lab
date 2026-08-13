@@ -26,7 +26,8 @@ interface Props {
 }
 
 type PayMethod = 'notchpay' | 'paypal' | 'orange_money' | 'mtn_momo'
-type Step = 'choose' | 'manual_form' | 'manual_success'
+type Step = 'choose' | 'campay_waiting' | 'manual_form' | 'manual_success'
+type CampayStatus = 'pending' | 'success' | 'failed'
 
 const methodConfig: Record<PayMethod, { label: string; sub: string; icon: string; color: string; borderColor: string }> = {
   notchpay: {
@@ -45,17 +46,17 @@ const methodConfig: Record<PayMethod, { label: string; sub: string; icon: string
   },
   orange_money: {
     label: 'Orange Money',
-    sub: 'Paiement manuel — activation sous 5-10 min',
+    sub: 'Paiement automatique via Campay',
     icon: '🟠',
     color: 'bg-white text-gray-900',
-    borderColor: 'border-red-400',
+    borderColor: 'border-orange-400',
   },
   mtn_momo: {
     label: 'MTN MoMo',
-    sub: 'Paiement manuel — activation sous 5-10 min',
+    sub: 'Paiement automatique via Campay',
     icon: '🟡',
     color: 'bg-white text-gray-900',
-    borderColor: 'border-blue-300',
+    borderColor: 'border-yellow-400',
   },
 }
 
@@ -70,6 +71,10 @@ export default function PaymentModal({ isOpen, onClose, pack }: Props) {
   const [payError, setPayError] = useState('')
   const [orderRef, setOrderRef] = useState('')
   const [whatsappLink, setWhatsappLink] = useState('')
+
+  // Campay state
+  const [campayRef, setCampayRef] = useState('')
+  const [campayStatus, setCampayStatus] = useState<CampayStatus>('pending')
 
   useEffect(() => {
     fetch('/api/settings').then(r => r.json()).then(s => {
@@ -96,8 +101,36 @@ export default function PaymentModal({ isOpen, onClose, pack }: Props) {
       setOrderRef('')
       setWhatsappLink('')
       setContactErrors({})
+      setCampayRef('')
+      setCampayStatus('pending')
     }
   }, [isOpen])
+
+  // Poll order status while waiting for Campay confirmation
+  useEffect(() => {
+    if (step !== 'campay_waiting' || !campayRef) return
+
+    const poll = async () => {
+      try {
+        const res = await fetch(`/api/payment/campay/status?ref=${campayRef}`)
+        const data = await res.json()
+        if (data.status === 'VALIDATED') {
+          setCampayStatus('success')
+          setTimeout(() => { window.location.href = '/dashboard?payment=success' }, 2500)
+        } else if (data.status === 'REJECTED') {
+          setCampayStatus('failed')
+        }
+      } catch {}
+    }
+
+    const interval = setInterval(poll, 3000)
+    // Timeout after 5 minutes
+    const timeout = setTimeout(() => {
+      setCampayStatus('failed')
+    }, 5 * 60 * 1000)
+
+    return () => { clearInterval(interval); clearTimeout(timeout) }
+  }, [step, campayRef])
 
   if (!isOpen || !pack) return null
 
@@ -114,59 +147,30 @@ export default function PaymentModal({ isOpen, onClose, pack }: Props) {
     return Object.keys(errors).length === 0
   }
 
-  const handleNotchPay = async () => {
+  const handleCampay = async (method: 'orange_money' | 'mtn_momo') => {
     setPayError('')
     if (!validateContact()) return
-    setSelectedMethod('notchpay')
+    setSelectedMethod(method)
     setPaying(true)
     try {
-      const res = await fetch('/api/payment/notchpay', {
+      const res = await fetch('/api/payment/campay', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           packId: pack.id,
-          customerName: contactForm.name,
-          customerEmail: contactForm.email,
-          customerPhone: contactForm.phone,
-        }),
-      })
-      const data = await res.json()
-      if (res.ok && data.paymentUrl) {
-        window.location.href = data.paymentUrl
-      } else {
-        setPayError(data?.error ?? 'Erreur lors de l\'initialisation du paiement.')
-      }
-    } catch {
-      setPayError('Erreur réseau. Réessayez.')
-    } finally {
-      setPaying(false)
-    }
-  }
-
-  const handlePayPal = async () => {
-    setPayError('')
-    const errors: Record<string, string> = {}
-    if (contactForm.name.trim().length < 2) errors.name = 'Nom requis (2 caractères min.)'
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactForm.email)) errors.email = 'Email invalide'
-    setContactErrors(errors)
-    if (Object.keys(errors).length > 0) return
-    setSelectedMethod('paypal')
-    setPaying(true)
-    try {
-      const res = await fetch('/api/payment/paypal/create-order', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          packId: pack!.id,
+          phone: contactForm.phone,
+          paymentMethod: method,
           customerName: contactForm.name,
           customerEmail: contactForm.email,
         }),
       })
       const data = await res.json()
-      if (res.ok && data.paymentUrl) {
-        window.location.href = data.paymentUrl
+      if (res.ok && data.reference) {
+        setCampayRef(data.reference)
+        setCampayStatus('pending')
+        setStep('campay_waiting')
       } else {
-        setPayError(data?.error ?? 'Erreur lors de l\'initialisation PayPal.')
+        setPayError(data?.error ?? 'Erreur lors de l\'initiation du paiement.')
         setSelectedMethod(null)
       }
     } catch {
@@ -213,6 +217,14 @@ export default function PaymentModal({ isOpen, onClose, pack }: Props) {
     ? (settings.mtnMomoNumber ?? '237683008287')
     : (settings.orangeMoneyNumber ?? '237683008287')
 
+  const resetToChoose = () => {
+    setStep('choose')
+    setPayError('')
+    setCampayRef('')
+    setCampayStatus('pending')
+    setSelectedMethod(null)
+  }
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm"
@@ -224,7 +236,9 @@ export default function PaymentModal({ isOpen, onClose, pack }: Props) {
         <div className="sticky top-0 bg-white border-b px-5 py-4 flex items-center justify-between">
           <div>
             <h2 className="text-base font-extrabold text-gray-900">
-              {step === 'manual_success' ? 'Commande enregistrée ✅' : 'Finaliser votre abonnement'}
+              {step === 'manual_success' ? 'Commande enregistrée ✅'
+                : step === 'campay_waiting' && campayStatus === 'success' ? 'Paiement confirmé ✅'
+                : 'Finaliser votre abonnement'}
             </h2>
             <p className="text-xs text-gray-500 mt-0.5">
               {pack.name} —&nbsp;
@@ -315,28 +329,29 @@ export default function PaymentModal({ isOpen, onClose, pack }: Props) {
                 </div>
               )}
 
+              {payError && <p className="text-xs text-red-600 bg-red-50 px-3 py-2 rounded-lg">⚠️ {payError}</p>}
+
               {/* Payment methods */}
               <div className="space-y-3">
                 <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">Méthode de paiement</p>
 
-                {/* ── MANUEL ── */}
                 <div className="rounded-xl border-2 border-tef-blue overflow-hidden">
                   <div className="bg-tef-blue px-4 py-2.5 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <svg className="w-4 h-4 text-white flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                       </svg>
                       <span className="text-sm font-extrabold text-white">Paiement mobile</span>
                     </div>
-                    <span className="text-xs font-semibold text-white/80 bg-white/15 px-2 py-0.5 rounded-full whitespace-nowrap">
-                      ⏱ Activation 5-10 min
+                    <span className="text-xs font-semibold text-green-300 bg-green-900/30 px-2 py-0.5 rounded-full whitespace-nowrap">
+                      ✓ Activation immédiate
                     </span>
                   </div>
 
                   <div className="p-3 grid grid-cols-2 gap-2">
                     {/* Orange Money */}
                     <button
-                      onClick={() => { setSelectedMethod('orange_money'); setStep('manual_form') }}
+                      onClick={() => handleCampay('orange_money')}
                       disabled={paying}
                       className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border-2 border-orange-300 bg-orange-50 hover:bg-orange-100 disabled:opacity-50 transition-colors"
                     >
@@ -347,7 +362,7 @@ export default function PaymentModal({ isOpen, onClose, pack }: Props) {
 
                     {/* MTN MoMo */}
                     <button
-                      onClick={() => { setSelectedMethod('mtn_momo'); setStep('manual_form') }}
+                      onClick={() => handleCampay('mtn_momo')}
                       disabled={paying}
                       className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl border-2 border-yellow-300 bg-yellow-50 hover:bg-yellow-100 disabled:opacity-50 transition-colors"
                     >
@@ -361,17 +376,82 @@ export default function PaymentModal({ isOpen, onClose, pack }: Props) {
             </>
           )}
 
-          {/* ── LOGGED IN — MANUAL FORM ── */}
+          {/* ── CAMPAY WAITING ── */}
+          {session && step === 'campay_waiting' && (
+            <div className="text-center space-y-4 py-2">
+
+              {campayStatus === 'pending' && (
+                <>
+                  <div className="flex justify-center">
+                    <div className="w-14 h-14 border-4 border-tef-blue/20 border-t-tef-blue rounded-full animate-spin" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-gray-900">Vérifiez votre téléphone</h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Un message {selectedMethod === 'orange_money' ? 'Orange Money' : 'MTN MoMo'} a été envoyé
+                      au <strong className="text-gray-800">{contactForm.phone}</strong>.
+                    </p>
+                    <p className="text-sm text-gray-500 mt-0.5">Entrez votre PIN pour confirmer le paiement.</p>
+                  </div>
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-xs text-blue-700 text-left space-y-1">
+                    <p className="font-semibold">Cette page se met à jour automatiquement.</p>
+                    <p>Ne fermez pas cette fenêtre — votre abonnement s'activera dès confirmation.</p>
+                  </div>
+                  <button
+                    onClick={resetToChoose}
+                    className="text-sm text-gray-400 hover:text-gray-600 underline"
+                  >
+                    Annuler
+                  </button>
+                </>
+              )}
+
+              {campayStatus === 'success' && (
+                <>
+                  <div className="text-6xl">✅</div>
+                  <h3 className="text-lg font-bold text-gray-900">Paiement confirmé !</h3>
+                  <p className="text-sm text-gray-500">Votre abonnement est actif. Redirection en cours…</p>
+                  <div className="w-6 h-6 border-2 border-tef-blue/20 border-t-tef-blue rounded-full animate-spin mx-auto" />
+                </>
+              )}
+
+              {campayStatus === 'failed' && (
+                <>
+                  <div className="text-5xl">❌</div>
+                  <div>
+                    <h3 className="text-base font-bold text-gray-900">Paiement non confirmé</h3>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Le paiement n'a pas été approuvé dans le délai imparti.
+                    </p>
+                  </div>
+                  <button
+                    onClick={resetToChoose}
+                    className="w-full py-3 bg-tef-blue text-white font-bold rounded-xl text-sm hover:bg-tef-blue-hover transition-colors"
+                  >
+                    Réessayer
+                  </button>
+                  <button
+                    onClick={() => { setStep('manual_form') }}
+                    className="text-sm text-gray-500 hover:text-gray-700 underline"
+                  >
+                    Payer manuellement à la place
+                  </button>
+                </>
+              )}
+
+            </div>
+          )}
+
+          {/* ── MANUAL FORM (fallback) ── */}
           {session && step === 'manual_form' && selectedMethod && (
             <div className="space-y-4">
               <button
-                onClick={() => { setStep('choose'); setPayError('') }}
+                onClick={resetToChoose}
                 className="flex items-center gap-1 text-sm text-tef-blue hover:underline"
               >
                 ← Retour
               </button>
 
-              {/* Instructions */}
               <div className={`rounded-xl border-2 ${methodConfig[selectedMethod].borderColor} p-4 space-y-2`}>
                 <div>
                   <p className="font-bold text-gray-900">{methodConfig[selectedMethod].label}</p>
@@ -386,7 +466,6 @@ export default function PaymentModal({ isOpen, onClose, pack }: Props) {
                 </div>
               </div>
 
-              {/* Contact form (pre-filled) */}
               <div className="space-y-2">
                 <div>
                   <input
