@@ -854,7 +854,7 @@ export default function EEPage() {
             </div>
           </div>
 
-          <div className="max-w-3xl mx-auto px-4 pt-[calc(89px_-_3.5rem)] pb-10 space-y-5">
+          <div className="max-w-3xl mx-auto px-4 pt-[96px] pb-10 space-y-5">
 
             {/* Bannière brouillon restauré (item 02) */}
             {draftBanner && (
@@ -990,7 +990,7 @@ export default function EEPage() {
           </div>
         </div>
 
-        <div className="max-w-3xl mx-auto px-4 pt-[calc(89px_-_3.5rem)] pb-10 space-y-5">
+        <div className="max-w-3xl mx-auto px-4 pt-[96px] pb-10 space-y-5">
 
           {/* Quota IA */}
           {aiQuota && (
