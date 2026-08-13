@@ -44,7 +44,17 @@ interface EEResult {
   globalScore: number       // sur 450
 }
 
-type PagePhase = 'task1' | 'task2' | 'submitting' | 'results'
+type PagePhase = 'history' | 'view-texts' | 'task1' | 'task2' | 'submitting' | 'results'
+
+interface PastAttempt {
+  id: string
+  completedAt: string
+  aiScore: number | null
+  cecrlLevel: string | null
+  scoringData: EEResult | null
+  writtenTask1: string | null
+  writtenTask2: string | null
+}
 
 const TASK1_CONSIGNE =
   'Terminez cet article en ajoutant un texte de 80 mots minimum, en plusieurs paragraphes.'
@@ -160,7 +170,11 @@ export default function EEPage() {
   const [aiError, setAiError] = useState<string | null>(null)
   const [canRetry, setCanRetry] = useState(false)
   const [isRetrying, setIsRetrying] = useState(false)
+  const [pastAttempts, setPastAttempts] = useState<PastAttempt[]>([])
+  const [attemptId, setAttemptId] = useState<string | null>(null)
   const [showExitConfirm, setShowExitConfirm] = useState(false)
+  const [viewingAttempt, setViewingAttempt] = useState<PastAttempt | null>(null)
+  const [showRecorrigerConfirm, setShowRecorrigerConfirm] = useState(false)
   const [aiQuota, setAiQuota] = useState<{ used: number; limit: number; remaining: number; isMonthly?: boolean } | null>(null)
   const [draftBanner, setDraftBanner] = useState(false)
 
@@ -171,8 +185,9 @@ export default function EEPage() {
       fetch(`/api/series/${seriesId}`).then((r) => r.json()),
       fetch(`/api/series/${seriesId}/questions`).then((r) => r.json()),
       fetch('/api/ai-usage').then((r) => r.json()),
+      fetch(`/api/attempts?seriesId=${seriesId}&moduleCode=EE`).then((r) => r.json()),
     ])
-      .then(([seriesData, questionsData, quotaData]: [unknown, unknown, unknown]) => {
+      .then(([seriesData, questionsData, quotaData, attemptsData]: [unknown, unknown, unknown, unknown]) => {
         if (quotaData && typeof quotaData === 'object' && 'remaining' in quotaData) {
           setAiQuota(quotaData as { used: number; limit: number; remaining: number })
         }
@@ -185,6 +200,10 @@ export default function EEPage() {
           const qs = questionsData as EEQuestion[]
           setTask1Q(qs.find((q) => q.category === 'SECTION_A') ?? null)
           setTask2Q(qs.find((q) => q.category === 'SECTION_B') ?? null)
+        }
+        if (Array.isArray(attemptsData) && attemptsData.length > 0) {
+          setPastAttempts(attemptsData as PastAttempt[])
+          setPhase('history')
         }
         setLoading(false)
       })
@@ -229,17 +248,23 @@ export default function EEPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [task1Text, task2Text])
 
-  const saveAttempt = useCallback((extra: Record<string, unknown> = {}) =>
-    fetch('/api/attempts', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        seriesId, moduleCode: 'EE', answers: {},
-        writtenTask1: task1Text, writtenTask2: task2Text,
-        ...extra,
-      }),
-    }).catch(() => {}),
-  [seriesId, task1Text, task2Text])
+  const saveAttempt = useCallback(async (extra: Record<string, unknown> = {}) => {
+    try {
+      const res = await fetch('/api/attempts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          seriesId, moduleCode: 'EE', answers: {},
+          writtenTask1: task1Text, writtenTask2: task2Text,
+          ...extra,
+        }),
+      })
+      if (res.ok) {
+        const data = await res.json() as { id: string }
+        setAttemptId(data.id)
+      }
+    } catch { /* ignore */ }
+  }, [seriesId, task1Text, task2Text])
 
   const handleFinalSubmit = useCallback(async () => {
     if (phase === 'submitting' || phase === 'results') return
@@ -256,7 +281,7 @@ export default function EEPage() {
       if (scoringRes.ok) {
         const scoringData = (await scoringRes.json()) as EEResult
         setResult(scoringData)
-        await saveAttempt({ aiScore: scoringData.globalScore, cecrlLevel: scoringData.globalCecrlLevel })
+        await saveAttempt({ aiScore: scoringData.globalScore, cecrlLevel: scoringData.globalCecrlLevel, scoringData })
       } else {
         const isQuota = scoringRes.status === 403
         setAiError(
@@ -268,7 +293,6 @@ export default function EEPage() {
         await saveAttempt()
       }
     } catch {
-      // Erreur réseau : on sauvegarde quand même les textes
       setAiError('Erreur de connexion. Vos textes ont été enregistrés — relancez la correction dès que votre réseau est disponible.')
       setCanRetry(true)
       await saveAttempt()
@@ -291,7 +315,16 @@ export default function EEPage() {
         const scoringData = (await scoringRes.json()) as EEResult
         setResult(scoringData)
         setCanRetry(false)
-        await saveAttempt({ aiScore: scoringData.globalScore, cecrlLevel: scoringData.globalCecrlLevel })
+        // Mettre à jour la tentative existante au lieu d'en créer une nouvelle
+        if (attemptId) {
+          await fetch(`/api/attempts/${attemptId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ aiScore: scoringData.globalScore, cecrlLevel: scoringData.globalCecrlLevel, scoringData }),
+          }).catch(() => {})
+        } else {
+          await saveAttempt({ aiScore: scoringData.globalScore, cecrlLevel: scoringData.globalCecrlLevel, scoringData })
+        }
       } else {
         const isQuota = scoringRes.status === 403
         setAiError(
@@ -308,7 +341,287 @@ export default function EEPage() {
       setPhase('results')
       setIsRetrying(false)
     }
-  }, [task1Text, task2Text, seriesId, saveAttempt])
+  }, [task1Text, task2Text, seriesId, saveAttempt, attemptId])
+
+  const handleResumeCorrection = useCallback(async (attempt: PastAttempt) => {
+    const t1 = attempt.writtenTask1 ?? ''
+    const t2 = attempt.writtenTask2 ?? ''
+    setTask1Text(t1)
+    setTask2Text(t2)
+    setAttemptId(attempt.id)
+    setAiError(null)
+    setCanRetry(false)
+    setPhase('submitting')
+    try {
+      const scoringRes = await fetch('/api/scoring/ee', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task1Text: t1, task2Text: t2, seriesId }),
+      })
+      if (scoringRes.ok) {
+        const scoringData = (await scoringRes.json()) as EEResult
+        setResult(scoringData)
+        await fetch(`/api/attempts/${attempt.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ aiScore: scoringData.globalScore, cecrlLevel: scoringData.globalCecrlLevel, scoringData }),
+        }).catch(() => {})
+      } else {
+        const isQuota = scoringRes.status === 403
+        setAiError(
+          isQuota
+            ? 'Quota IA atteint. Revenez demain ou passez à un pack supérieur.'
+            : 'La correction a échoué. Réessayez plus tard.'
+        )
+        setCanRetry(!isQuota)
+      }
+    } catch {
+      setAiError('Erreur de connexion. Réessayez quand votre réseau est disponible.')
+      setCanRetry(true)
+    } finally {
+      setPhase('results')
+    }
+  }, [seriesId])
+
+  // ── View Texts ──
+  if (phase === 'view-texts' && viewingAttempt) {
+    const dateStr = new Date(viewingAttempt.completedAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+    const grad = viewingAttempt.cecrlLevel ? (CECRL_GRADIENT[viewingAttempt.cecrlLevel] ?? 'from-gray-400 to-gray-500') : 'from-gray-300 to-gray-400'
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="max-w-2xl mx-auto px-4 py-10 space-y-6">
+          {/* Header */}
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-3">
+              <button
+                onClick={() => { setViewingAttempt(null); setShowRecorrigerConfirm(false); setPhase('history') }}
+                className="text-gray-400 hover:text-gray-600 transition-colors p-1 mt-0.5"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <div>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-0.5">Productions · {series?.title}</p>
+                <div className="flex items-center gap-2">
+                  <div className={`bg-gradient-to-br ${grad} rounded-lg px-2.5 py-1 text-center`}>
+                    <span className="text-white font-black text-sm">{viewingAttempt.cecrlLevel}</span>
+                    <span className="text-white/70 text-[10px] font-semibold ml-1">{viewingAttempt.aiScore}/450</span>
+                  </div>
+                  <span className="text-xs text-gray-400">{dateStr}</span>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => {
+                setTask1Text('')
+                setTask2Text('')
+                setAttemptId(null)
+                setResult(null)
+                setAiError(null)
+                setViewingAttempt(null)
+                setPhase('task1')
+              }}
+              className="px-4 py-2 bg-tef-blue text-white text-sm font-bold rounded-xl hover:bg-tef-blue-hover transition-colors shadow-sm flex-shrink-0"
+            >
+              + Nouvelle tentative
+            </button>
+          </div>
+
+          {/* Tâche 1 */}
+          {viewingAttempt.writtenTask1 && (
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
+              <div>
+                <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Tâche 1 — Suite d&apos;article</h2>
+                {task1Q && (
+                  <div className="bg-gray-50 rounded-xl p-4 space-y-2 mb-4">
+                    {task1Q.taskTitle && <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">{task1Q.taskTitle}</p>}
+                    {task1Q.longText && <p className="text-xs text-gray-600 leading-relaxed italic">{task1Q.longText}</p>}
+                    <p className="text-xs text-tef-blue font-semibold">{task1Q.question}</p>
+                  </div>
+                )}
+              </div>
+              <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{viewingAttempt.writtenTask1}</p>
+            </div>
+          )}
+
+          {/* Tâche 2 */}
+          {viewingAttempt.writtenTask2 && (
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
+              <div>
+                <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Tâche 2 — Lettre au journal</h2>
+                {task2Q && (
+                  <div className="bg-gray-50 rounded-xl p-4 space-y-2 mb-4">
+                    {task2Q.taskTitle && <p className="text-xs font-bold text-gray-500 uppercase tracking-wide">{task2Q.taskTitle}</p>}
+                    {task2Q.longText && <p className="text-xs text-gray-600 leading-relaxed italic">{task2Q.longText}</p>}
+                    <p className="text-xs text-tef-blue font-semibold">{task2Q.question}</p>
+                  </div>
+                )}
+              </div>
+              <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">{viewingAttempt.writtenTask2}</p>
+            </div>
+          )}
+
+          {/* Recorriger */}
+          {!showRecorrigerConfirm ? (
+            <div className="flex justify-center">
+              <button
+                onClick={() => setShowRecorrigerConfirm(true)}
+                className="px-6 py-2.5 bg-amber-500 text-white text-sm font-bold rounded-xl hover:bg-amber-600 transition-colors shadow-sm"
+              >
+                Recorriger avec l&apos;IA
+              </button>
+            </div>
+          ) : (
+            <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 space-y-3">
+              <p className="text-sm font-bold text-amber-800">Confirmation requise</p>
+              <p className="text-sm text-amber-700">
+                Cette correction utilisera <strong>1 crédit IA</strong> de votre quota journalier
+                {aiQuota ? ` (${aiQuota.remaining} restant${aiQuota.remaining > 1 ? 's' : ''})` : ''}.
+                Les commentaires détaillés et la version améliorée seront générés et sauvegardés.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setShowRecorrigerConfirm(false)
+                    handleResumeCorrection(viewingAttempt)
+                  }}
+                  className="px-4 py-2 bg-amber-500 text-white text-sm font-bold rounded-lg hover:bg-amber-600 transition-colors"
+                >
+                  Confirmer
+                </button>
+                <button
+                  onClick={() => setShowRecorrigerConfirm(false)}
+                  className="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-semibold rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Annuler
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
+  // ── History ──
+  if (phase === 'history') {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="max-w-2xl mx-auto px-4 py-10 space-y-6">
+          {/* Header */}
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Expression Écrite</p>
+              <h1 className="text-xl font-extrabold text-gray-900">{series?.title}</h1>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <button
+                onClick={() => {
+                  setTask1Text('')
+                  setTask2Text('')
+                  setAttemptId(null)
+                  setResult(null)
+                  setAiError(null)
+                  setPhase('task1')
+                }}
+                className="px-4 py-2 bg-tef-blue text-white text-sm font-bold rounded-xl hover:bg-tef-blue-hover transition-colors shadow-sm"
+              >
+                + Nouvelle tentative
+              </button>
+              <button
+                onClick={() => router.push('/dashboard')}
+                className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Tentatives passées */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+              <span className="text-base">📋</span>
+              <h2 className="font-bold text-gray-800 text-sm">Tentatives précédentes</h2>
+              <span className="ml-auto text-xs text-gray-400">{pastAttempts.length} tentative{pastAttempts.length > 1 ? 's' : ''}</span>
+            </div>
+            <div className="divide-y divide-gray-50">
+              {pastAttempts.map((attempt) => {
+                const hasScore = attempt.aiScore !== null
+                const hasDetails = attempt.scoringData !== null
+                const date = new Date(attempt.completedAt)
+                const dateStr = date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+                const grad = attempt.cecrlLevel ? (CECRL_GRADIENT[attempt.cecrlLevel] ?? 'from-gray-400 to-gray-500') : 'from-gray-300 to-gray-400'
+                return (
+                  <div key={attempt.id} className="px-5 py-4 flex items-center gap-4">
+                    {/* Badge niveau */}
+                    <div className={`bg-gradient-to-br ${grad} rounded-xl px-3 py-2 text-center flex-shrink-0 min-w-[64px]`}>
+                      {hasScore ? (
+                        <>
+                          <div className="text-white font-black text-lg leading-none">{attempt.cecrlLevel}</div>
+                          <div className="text-white/70 text-[10px] font-semibold mt-0.5">{attempt.aiScore}/450</div>
+                        </>
+                      ) : (
+                        <div className="text-white text-[10px] font-bold leading-tight">Non<br/>corrigé</div>
+                      )}
+                    </div>
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-800">
+                        {hasScore ? `Score : ${attempt.aiScore}/450 · ${attempt.cecrlLevel}` : 'Correction IA non effectuée'}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-0.5">{dateStr}</p>
+                    </div>
+                    {/* Actions */}
+                    <div className="flex flex-col gap-1.5 flex-shrink-0">
+                      {hasDetails && (
+                        <button
+                          onClick={() => {
+                            setResult(attempt.scoringData)
+                            setTask1Text(attempt.writtenTask1 ?? '')
+                            setTask2Text(attempt.writtenTask2 ?? '')
+                            setAttemptId(attempt.id)
+                            setAiError(null)
+                            setPhase('results')
+                          }}
+                          className="px-3 py-1.5 bg-tef-blue text-white text-xs font-bold rounded-lg hover:bg-tef-blue-hover transition-colors whitespace-nowrap"
+                        >
+                          Voir les résultats
+                        </button>
+                      )}
+                      {hasScore && !hasDetails && (attempt.writtenTask1 || attempt.writtenTask2) && (
+                        <button
+                          onClick={() => {
+                            setViewingAttempt(attempt)
+                            setShowRecorrigerConfirm(false)
+                            setPhase('view-texts')
+                          }}
+                          className="px-3 py-1.5 bg-gray-700 text-white text-xs font-bold rounded-lg hover:bg-gray-800 transition-colors whitespace-nowrap"
+                        >
+                          Voir les textes
+                        </button>
+                      )}
+                      {!hasScore && (
+                        <button
+                          onClick={() => handleResumeCorrection(attempt)}
+                          className="px-3 py-1.5 bg-amber-500 text-white text-xs font-bold rounded-lg hover:bg-amber-600 transition-colors whitespace-nowrap"
+                        >
+                          Reprendre la correction
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    )
+  }
 
   // ── Loading ──
   if (status === 'loading' || loading) {

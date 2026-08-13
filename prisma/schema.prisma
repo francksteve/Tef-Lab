@@ -55,6 +55,11 @@ model User {
   cityOfResidence    String?
   referenceCode      String?
   phone              String?
+  examDate           DateTime?
+  targetCE           String?
+  targetCO           String?
+  targetEE           String?
+  targetEO           String?
   createdAt          DateTime     @default(now())
   orders             Order[]
   attempts           Attempt[]
@@ -176,6 +181,7 @@ model Attempt {
   score        Int?
   aiScore      Float?
   cecrlLevel   String?
+  scoringData  Json?
   timeTaken    Int?
   completedAt  DateTime @default(now())
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -215,9 +221,10 @@ model PlatformSettings {
   whatsappNumber    String   @default("237683008287")
   orangeMoneyNumber String   @default("237683008287")
   mtnMomoNumber     String   @default("237683008287")
-  usdExchangeRate   Float    @default(0.00165)
-  discountRate      Float    @default(0)
-  updatedAt         DateTime @updatedAt
+  usdExchangeRate    Float    @default(0.00165)
+  discountRate       Float    @default(0)
+  freeAiUsagePerDay  Int      @default(0)
+  updatedAt          DateTime @updatedAt
 }
 
 model AIUsageLog {

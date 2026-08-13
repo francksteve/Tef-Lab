@@ -14,6 +14,7 @@ const updateSchema = z.object({
   mtnMomoNumber: z.string().min(8).regex(/^\d+$/, 'Chiffres uniquement'),
   usdExchangeRate: z.number().positive('Le taux doit être positif'),
   discountRate: z.number().min(0).max(100, 'La remise doit être entre 0 et 100'),
+  freeAiUsagePerDay: z.number().int().min(0, 'La valeur doit être positive ou nulle'),
 })
 
 export async function GET() {

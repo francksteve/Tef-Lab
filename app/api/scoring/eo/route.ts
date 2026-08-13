@@ -6,6 +6,8 @@ import { authOptions } from '@/lib/auth'
 import { EO_SCORING_PROMPT } from '@/lib/scoring'
 import { canAccessSeries, checkAndIncrementAIUsage } from '@/lib/access'
 import { config } from '@/lib/config'
+import { sendAIResultEmail } from '@/lib/email'
+import { prisma } from '@/lib/prisma'
 
 const eoScoringSchema = z.object({
   transcriptionA: z.string().min(1, 'La transcription de la section A est requise'),
@@ -83,6 +85,29 @@ export async function POST(req: NextRequest) {
         { error: 'La correction IA a renvoyé une réponse invalide. Veuillez réessayer.' },
         { status: 502 }
       )
+    }
+
+    // ── 5. Send motivational email if user has a target for EO (fire-and-forget)
+    const parsed = result as { globalCecrlLevel?: string }
+    if (parsed.globalCecrlLevel) {
+      const CECRL_ORDER = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { name: true, email: true, targetEO: true },
+      })
+      if (user?.targetEO && CECRL_ORDER.includes(parsed.globalCecrlLevel) && CECRL_ORDER.includes(user.targetEO)) {
+        const metTarget = CECRL_ORDER.indexOf(parsed.globalCecrlLevel) >= CECRL_ORDER.indexOf(user.targetEO)
+        sendAIResultEmail({
+          clientName: user.name,
+          clientEmail: user.email,
+          moduleCode: 'EO',
+          moduleName: 'Expression Orale',
+          cecrlLevel: parsed.globalCecrlLevel,
+          targetLevel: user.targetEO,
+          metTarget,
+          seriesTitle: data.seriesId ?? 'Expression Orale',
+        }).catch((err) => console.error('[EMAIL] sendAIResultEmail EO failed:', err))
+      }
     }
 
     return NextResponse.json({ ...result as object, aiQuotaRemaining: quota.remaining })

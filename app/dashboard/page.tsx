@@ -76,13 +76,16 @@ function formatTime(seconds: number): string {
   return `${m}min${s > 0 ? ` ${s}s` : ''}`
 }
 
-function isSeriesLocked(series: Series, accessLevel: AccessLevel): boolean {
+function isSeriesLocked(series: Series, accessLevel: AccessLevel, freeAiLimit = -1): boolean {
   if (accessLevel === 'ALL') return false
   if (accessLevel === 'EE_EO') {
     return series.module.code !== 'EE' && series.module.code !== 'EO'
   }
-  // FREE : séries isFree (CE/CO) + toutes les séries EE et EO (quota IA 2/mois)
-  return !(series.isFree || series.module.code === 'EE' || series.module.code === 'EO')
+  // FREE: EE/EO series locked when admin has disabled free AI corrections
+  if (series.module.code === 'EE' || series.module.code === 'EO') {
+    return freeAiLimit === 0
+  }
+  return !series.isFree
 }
 
 function getAccessBadge(accessLevel: AccessLevel): { label: string; color: string } {
@@ -99,6 +102,26 @@ function getAccessBadge(accessLevel: AccessLevel): { label: string; color: strin
 const moduleOrder = ['CE', 'CO', 'EE', 'EO']
 const SERIES_PAGE_SIZE = 10
 const HISTORY_PAGE_SIZE = 10
+const CECRL_LEVELS = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+
+const GREETING_VARIANTS = [
+  'Prêt pour aujourd\'hui,',
+  'En avant,',
+  'Bonne séance,',
+  'Continuons ensemble,',
+  'C\'est parti,',
+  'À toi de jouer,',
+  'Bienvenue,',
+  'Un pas de plus,',
+]
+
+interface UserProfile {
+  examDate: string | null
+  targetCE: string | null
+  targetCO: string | null
+  targetEE: string | null
+  targetEO: string | null
+}
 
 function LockIcon({ className = 'w-3 h-3' }: { className?: string }) {
   return (
@@ -125,6 +148,8 @@ function DashboardContent() {
   const [paymentBanner, setPaymentBanner] = useState<'pending' | 'success' | null>(null)
   const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({})
   const [historyPage, setHistoryPage] = useState(0)
+  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const greeting = useState(() => GREETING_VARIANTS[Math.floor(Math.random() * GREETING_VARIANTS.length)])[0]
 
   const isPaymentReturn = useRef(searchParams.get('payment') === 'success')
   const loadedAccessLevel = useRef<AccessLevel>('FREE')
@@ -145,8 +170,9 @@ function DashboardContent() {
       fetch('/api/attempts').then((r) => r.json()),
       fetch('/api/subscription').then((r) => r.json()),
       fetch('/api/ai-usage').then((r) => r.json()),
+      fetch('/api/profile').then((r) => r.json()),
     ])
-      .then(([s, a, sub, quota]) => {
+      .then(([s, a, sub, quota, prof]) => {
         if (Array.isArray(s)) setSeries(s)
         if (Array.isArray(a)) setAttempts(a)
         const level: AccessLevel = sub?.accessLevel ?? 'FREE'
@@ -156,6 +182,9 @@ function DashboardContent() {
         setPackName(sub?.subscription?.pack?.name ?? null)
         if (quota && typeof quota === 'object' && 'remaining' in quota) {
           setAiQuota(quota as { used: number; limit: number; remaining: number })
+        }
+        if (prof && typeof prof === 'object' && !('error' in prof)) {
+          setProfile(prof as UserProfile)
         }
         setLoading(false)
       })
@@ -214,6 +243,11 @@ function DashboardContent() {
   const firstName = session?.user?.name?.split(' ')[0] ?? 'Candidat'
   const badge = getAccessBadge(accessLevel)
   const isAdmin = session?.user?.role === 'ADMIN'
+
+  const examDaysLeft = profile?.examDate
+    ? Math.ceil((new Date(profile.examDate).getTime() - Date.now()) / 86400000)
+    : null
+  const examPassed = examDaysLeft !== null && examDaysLeft < 0
 
   const daysLeft = expiresAt
     ? Math.max(0, Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 86400000))
@@ -296,10 +330,20 @@ function DashboardContent() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <p className="text-white/60 text-xs font-bold uppercase tracking-[0.15em] mb-1">Mon espace TEF</p>
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight">Bonjour, {firstName}</h1>
+              {(examDaysLeft !== null || examPassed) && (
+                <p className="text-white/60 text-xs font-bold uppercase tracking-[0.15em] mb-1">
+                  {examPassed
+                    ? 'Examen passé — continuez à progresser'
+                    : `Examen dans ${examDaysLeft === 0 ? 'moins de 24h' : `${examDaysLeft} jour${examDaysLeft > 1 ? 's' : ''}`}`}
+                </p>
+              )}
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight">{greeting} {firstName}</h1>
               <p className="text-white/75 text-sm mt-1.5">
-                Continuez votre préparation au TEF Canada — chaque série compte.
+                {examDaysLeft !== null && !examPassed && examDaysLeft <= 7
+                  ? 'Dernière ligne droite — chaque série compte !'
+                  : examDaysLeft !== null && !examPassed
+                  ? `${examDaysLeft} jours pour atteindre vos objectifs.`
+                  : 'Chaque série vous rapproche du niveau visé.'}
               </p>
             </div>
             {!isAdmin && (
@@ -390,7 +434,7 @@ function DashboardContent() {
               const sampleModule = moduleSeries[0]?.module
               const acc = moduleAccent[code] ?? moduleAccent.CE
               const gradient = moduleGradients[code] ?? 'from-gray-600 to-gray-700'
-              const lockedCount = moduleSeries.filter((s) => isSeriesLocked(s, accessLevel)).length
+              const lockedCount = moduleSeries.filter((s) => isSeriesLocked(s, accessLevel, aiQuota?.limit ?? -1)).length
               const unlockedCount = moduleSeries.length - lockedCount
               const isExpanded = expandedModules[code] ?? false
               const visibleSeries = isExpanded ? moduleSeries : moduleSeries.slice(0, SERIES_PAGE_SIZE)
@@ -435,7 +479,7 @@ function DashboardContent() {
                       <>
                         <div className="flex flex-row flex-wrap gap-1.5">
                           {visibleSeries.map((s, i) => {
-                            const locked = isSeriesLocked(s, accessLevel)
+                            const locked = isSeriesLocked(s, accessLevel, aiQuota?.limit ?? -1)
                             const shortLabel = `${code} ${i + 1}`
                             if (locked) {
                               return (
@@ -508,7 +552,6 @@ function DashboardContent() {
                           {passedCount}
                         </span>
                       )}
-                      {/* Badge quota IA — affiché sur les cartes EE et EO uniquement */}
                       {(code === 'EE' || code === 'EO') && aiQuota && aiQuota.limit > 0 && (
                         aiQuota.remaining === 0 ? (
                           <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-red-50 text-red-600">

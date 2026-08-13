@@ -120,6 +120,7 @@ const sections = [
         </p>
         <ul className="list-disc pl-5 mt-3 space-y-1">
           <li><strong>NotchPay</strong> — pour les paiements en XAF (Orange Money, MTN MoMo, Visa, Mastercard)</li>
+          <li><strong>PayPal</strong> — pour les paiements en USD, via compte PayPal ou carte bancaire internationale</li>
           <li><strong>Paiement manuel</strong> — via Orange Money ou MTN MoMo, avec activation en 5-10 min après vérification</li>
         </ul>
         <p className="mt-3">
@@ -423,7 +424,7 @@ export default async function MentionsLegalesPage() {
           <p className="text-white/60 text-xs font-bold mb-2 uppercase tracking-[0.15em]">Légal</p>
           <h1 className="text-3xl sm:text-4xl font-black tracking-tight mb-3">Mentions légales</h1>
           <p className="text-white/70 text-sm">
-            Dernière mise à jour : mars 2026 &nbsp;·&nbsp; Plateforme TEF-LAB, préparation au TEF Canada
+            Dernière mise à jour : août 2026 &nbsp;·&nbsp; Plateforme TEF-LAB, préparation au TEF Canada
           </p>
         </div>
       </section>

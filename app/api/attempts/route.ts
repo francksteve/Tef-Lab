@@ -16,6 +16,7 @@ const createAttemptSchema = z.object({
   score: z.number().int().optional(),
   aiScore: z.number().optional(),
   cecrlLevel: z.string().optional(),
+  scoringData: z.unknown().optional(),
   timeTaken: z.number().int().optional(),
 })
 
@@ -43,6 +44,9 @@ export async function POST(req: NextRequest) {
         score: data.score,
         aiScore: data.aiScore,
         cecrlLevel: data.cecrlLevel,
+        scoringData: data.scoringData !== undefined
+          ? data.scoringData as Parameters<typeof prisma.attempt.create>[0]['data']['scoringData']
+          : undefined,
         timeTaken: data.timeTaken,
       },
       include: {
@@ -95,7 +99,7 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
@@ -103,9 +107,16 @@ export async function GET(_req: NextRequest) {
     }
 
     const userId = session.user.id
+    const { searchParams } = new URL(req.url)
+    const seriesId = searchParams.get('seriesId')
+    const moduleCode = searchParams.get('moduleCode')
 
     const attempts = await prisma.attempt.findMany({
-      where: { userId },
+      where: {
+        userId,
+        ...(seriesId ? { seriesId } : {}),
+        ...(moduleCode ? { moduleCode } : {}),
+      },
       include: {
         series: {
           include: { module: true },

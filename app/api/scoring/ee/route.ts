@@ -7,6 +7,7 @@ import { authOptions } from '@/lib/auth'
 import { EE_SCORING_PROMPT } from '@/lib/scoring'
 import { canAccessSeries, checkAndIncrementAIUsage } from '@/lib/access'
 import { config } from '@/lib/config'
+import { sendAIResultEmail } from '@/lib/email'
 
 const eeScoringSchema = z.object({
   task1Text: z.string().min(1, 'Le texte de la tâche 1 est requis'),
@@ -86,6 +87,30 @@ export async function POST(req: NextRequest) {
         { error: 'La correction IA a renvoyé une réponse invalide. Veuillez réessayer.' },
         { status: 502 }
       )
+    }
+
+    // ── 6. Send motivational email if user has a target for EE (fire-and-forget)
+    const parsed = result as { globalCecrlLevel?: string }
+    if (parsed.globalCecrlLevel) {
+      const CECRL_ORDER = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { name: true, email: true, targetEE: true },
+      })
+      if (user?.targetEE && CECRL_ORDER.includes(parsed.globalCecrlLevel) && CECRL_ORDER.includes(user.targetEE)) {
+        const metTarget = CECRL_ORDER.indexOf(parsed.globalCecrlLevel) >= CECRL_ORDER.indexOf(user.targetEE)
+        const seriesTitle = series.title
+        sendAIResultEmail({
+          clientName: user.name,
+          clientEmail: user.email,
+          moduleCode: 'EE',
+          moduleName: 'Expression Écrite',
+          cecrlLevel: parsed.globalCecrlLevel,
+          targetLevel: user.targetEE,
+          metTarget,
+          seriesTitle,
+        }).catch((err) => console.error('[EMAIL] sendAIResultEmail EE failed:', err))
+      }
     }
 
     return NextResponse.json({ ...result as object, aiQuotaRemaining: quota.remaining })

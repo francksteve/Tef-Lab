@@ -152,19 +152,31 @@ function EvolutionTooltip({ active, payload, label, moduleName }: {
   )
 }
 
+interface UserProfile {
+  examDate: string | null
+  targetCE: string | null
+  targetCO: string | null
+  targetEE: string | null
+  targetEO: string | null
+}
+
 // ─── Page principale ──────────────────────────────────────────────────────────
 export default function PerformancePage() {
   const [stats, setStats] = useState<Stats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [activeModule, setActiveModule] = useState<'CE' | 'CO' | 'EE' | 'EO'>('CE')
+  const [profile, setProfile] = useState<UserProfile | null>(null)
 
   useEffect(() => {
-    fetch('/api/stats/subscriber')
-      .then((r) => r.json())
-      .then((data) => {
+    Promise.all([
+      fetch('/api/stats/subscriber').then((r) => r.json()),
+      fetch('/api/profile').then((r) => r.json()),
+    ])
+      .then(([data, prof]) => {
         if (data.error) setError(data.error)
         else setStats(data)
+        if (prof && !prof.error) setProfile(prof as UserProfile)
       })
       .catch(() => setError('Erreur de chargement.'))
       .finally(() => setLoading(false))
@@ -220,7 +232,13 @@ export default function PerformancePage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-extrabold text-gray-900">Mes performances</h1>
-          <p className="text-gray-500 text-sm mt-0.5">Suivi de progression · Objectif NCLC 7</p>
+          <p className="text-gray-500 text-sm mt-0.5">
+            Suivi de progression · Objectif NCLC 7
+            {profile?.examDate && (() => {
+              const d = Math.ceil((new Date(profile.examDate).getTime() - Date.now()) / 86400000)
+              return d > 0 ? ` · Examen dans ${d} jour${d > 1 ? 's' : ''}` : d === 0 ? ' · Examen aujourd\'hui !' : null
+            })()}
+          </p>
         </div>
         {subscription ? (
           <div className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border ${
@@ -315,8 +333,31 @@ export default function PerformancePage() {
                         </p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <CecrlBadge level={m.bestCecrl} />
+                    <div className="flex items-center gap-2 flex-wrap justify-end">
+                      {/* Niveau actuel */}
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-gray-400 font-semibold uppercase">Actuel</span>
+                        <CecrlBadge level={m.bestCecrl} />
+                      </div>
+                      {/* Cible */}
+                      {(() => {
+                        const target = profile?.[`target${m.code}` as keyof UserProfile] as string | null
+                        if (!target) return null
+                        const reached = m.bestCecrl && ['A1','A2','B1','B2','C1','C2'].indexOf(m.bestCecrl) >= ['A1','A2','B1','B2','C1','C2'].indexOf(target)
+                        return (
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] text-gray-400 font-semibold uppercase">Cible</span>
+                            <span className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-full border ${
+                              reached
+                                ? 'bg-green-50 border-green-200 text-green-700'
+                                : 'bg-amber-50 border-amber-200 text-amber-700'
+                            }`}>
+                              {reached && <span>✓</span>}
+                              {target}
+                            </span>
+                          </div>
+                        )
+                      })()}
                     </div>
                   </div>
                   {m.avgScore != null ? (

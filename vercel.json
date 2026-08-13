@@ -10,6 +10,10 @@
       "schedule": "0 6 * * *"
     },
     {
+      "path": "/api/cron/exam-day",
+      "schedule": "0 5 * * *"
+    },
+    {
       "path": "/api/cron/cleanup-inactive",
       "schedule": "0 2 * * 0"
     }

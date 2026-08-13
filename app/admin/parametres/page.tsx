@@ -9,6 +9,7 @@ interface FormState {
   mtnMomoNumber: string
   usdExchangeRate: string
   discountRate: string
+  freeAiUsagePerDay: string
 }
 
 const defaultForm: FormState = {
@@ -19,6 +20,7 @@ const defaultForm: FormState = {
   mtnMomoNumber: '',
   usdExchangeRate: '0.00165',
   discountRate: '0',
+  freeAiUsagePerDay: '0',
 }
 
 interface CleanupPreview {
@@ -58,6 +60,7 @@ export default function ParametresPage() {
           mtnMomoNumber: data.mtnMomoNumber ?? '',
           usdExchangeRate: String(data.usdExchangeRate ?? 0.00165),
           discountRate: String(data.discountRate ?? 0),
+          freeAiUsagePerDay: String(data.freeAiUsagePerDay ?? 0),
         })
         setLoading(false)
       })
@@ -119,6 +122,7 @@ export default function ParametresPage() {
 
     const usdRate = parseFloat(form.usdExchangeRate)
     const discount = parseFloat(form.discountRate)
+    const freeAi = parseInt(form.freeAiUsagePerDay, 10)
 
     if (isNaN(usdRate) || usdRate <= 0) {
       setError('Le taux USD doit être un nombre positif.')
@@ -127,6 +131,11 @@ export default function ParametresPage() {
     }
     if (isNaN(discount) || discount < 0 || discount > 100) {
       setError('La remise doit être comprise entre 0 et 100.')
+      setSaving(false)
+      return
+    }
+    if (isNaN(freeAi) || freeAi < 0) {
+      setError('Le quota IA gratuit doit être un entier positif ou nul.')
       setSaving(false)
       return
     }
@@ -143,6 +152,7 @@ export default function ParametresPage() {
           mtnMomoNumber: form.mtnMomoNumber,
           usdExchangeRate: usdRate,
           discountRate: discount,
+          freeAiUsagePerDay: freeAi,
         }),
       })
       const data = await res.json().catch(() => ({}))
@@ -388,9 +398,45 @@ export default function ParametresPage() {
           </div>
         </section>
 
+        {/* Section 5 — IA */}
+        <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 space-y-5">
+          <div className="flex items-center gap-3 pb-3 border-b border-gray-100">
+            <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center text-purple-600 font-bold text-sm">IA</div>
+            <div>
+              <h2 className="font-bold text-gray-800">Intelligence artificielle</h2>
+              <p className="text-xs text-gray-400">Quota IA pour les comptes sans abonnement actif</p>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <label className="block text-sm font-semibold text-gray-700">
+              Corrections IA / jour — comptes gratuits
+            </label>
+            <div className="relative">
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={form.freeAiUsagePerDay}
+                onChange={(e) => handleChange('freeAiUsagePerDay', e.target.value)}
+                required
+                className="w-full pl-4 pr-24 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue transition-colors"
+              />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-semibold">correction/jour</span>
+            </div>
+            <p className="text-xs text-gray-400 mt-1">
+              Mettre 0 pour désactiver la correction IA sur les comptes gratuits. S&apos;applique aux modules EE et EO.
+            </p>
+            {parseInt(form.freeAiUsagePerDay) > 0 && (
+              <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 border border-purple-200 rounded-lg text-xs font-semibold text-purple-700">
+                Les comptes gratuits ont droit à {form.freeAiUsagePerDay} correction{parseInt(form.freeAiUsagePerDay) > 1 ? 's' : ''} IA par jour
+              </div>
+            )}
+          </div>
+        </section>
+
       </form>
 
-      {/* Section 5 — Maintenance (hors formulaire) */}
+      {/* Section 6 — Maintenance (hors formulaire) */}
       <section className="bg-white rounded-2xl border border-red-100 shadow-sm p-6 space-y-5 mt-8">
         <div className="flex items-center gap-3 pb-3 border-b border-red-100">
           <svg className="w-5 h-5 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

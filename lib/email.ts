@@ -808,6 +808,202 @@ export async function sendDailyPracticeReminder(data: DailyPracticeReminderData)
   })
 }
 
+// ─── Template 11 : Email J-0 → Jour de l'examen ────────────────────────────
+
+export interface ExamDayEmailData {
+  clientName: string
+  clientEmail: string
+  targets: { CE?: string | null; CO?: string | null; EE?: string | null; EO?: string | null }
+}
+
+export async function sendExamDayEmail(data: ExamDayEmailData): Promise<void> {
+  const firstName = data.clientName.split(' ')[0]
+  const siteUrl = config.siteUrl
+
+  const targetLines = Object.entries(data.targets)
+    .filter(([, v]) => v)
+    .map(([mod, level]) => `<li style="margin:4px 0;"><strong>${mod}</strong> : objectif ${level}</li>`)
+    .join('')
+
+  const targetsBlock = targetLines
+    ? `<div style="background:#f0f4ff; border:1px solid #c3d3f0; border-radius:6px; padding:16px 20px; margin-bottom:24px;">
+        <p style="margin:0 0 8px; font-size:13px; font-weight:bold; color:#003087; text-transform:uppercase; letter-spacing:0.5px;">Vos objectifs du jour</p>
+        <ul style="margin:0; padding-left:18px; color:#444; font-size:14px; line-height:1.8;">${targetLines}</ul>
+      </div>`
+    : ''
+
+  const html = `
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"><title>C'est le grand jour – TEF-LAB</title></head>
+<body style="font-family:Arial,sans-serif; background:#f5f5f5; margin:0; padding:20px;">
+  <div style="max-width:600px; margin:0 auto; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+
+    <div style="background:#003087; padding:24px 32px;">
+      <p style="color:#fff; margin:0; font-size:20px; font-weight:900;">TEF-LAB</p>
+      <p style="color:#cce0ff; margin:6px 0 0; font-size:13px;">Conseils de dernière minute</p>
+    </div>
+
+    <div style="padding:32px;">
+      <p style="color:#003087; font-size:20px; font-weight:bold; margin-top:0;">Bon courage, ${firstName} !</p>
+      <p style="color:#444; font-size:14px; line-height:1.7; margin-bottom:20px;">
+        C'est le grand jour. Toute l'équipe TEF-LAB est avec vous.
+        Voici quelques conseils pratiques pour aborder l'examen sereinement.
+      </p>
+
+      ${targetsBlock}
+
+      <h3 style="color:#003087; font-size:14px; text-transform:uppercase; letter-spacing:0.5px; border-bottom:1px solid #e5e7eb; padding-bottom:8px; margin:24px 0 16px;">Avant l'examen</h3>
+      <ul style="color:#444; font-size:14px; line-height:2; padding-left:18px; margin-bottom:20px;">
+        <li>Arrivez <strong>30 minutes en avance</strong> — inutile de stresser à la dernière minute</li>
+        <li>Apportez une <strong>pièce d'identité valide</strong> (carte nationale ou passeport)</li>
+        <li>Mangez léger, hydratez-vous et respirez profondément</li>
+        <li>Éteignez votre téléphone avant d'entrer dans la salle</li>
+      </ul>
+
+      <h3 style="color:#003087; font-size:14px; text-transform:uppercase; letter-spacing:0.5px; border-bottom:1px solid #e5e7eb; padding-bottom:8px; margin:24px 0 16px;">Pendant les épreuves</h3>
+      <ul style="color:#444; font-size:14px; line-height:2; padding-left:18px; margin-bottom:20px;">
+        <li><strong>CE</strong> : lisez les questions <em>avant</em> le texte — cherchez les mots-clés</li>
+        <li><strong>CO</strong> : l'audio ne se joue qu'une fois — notez les informations essentielles dès la 1ʳᵉ écoute</li>
+        <li><strong>EE</strong> : respectez les minimums (80 mots T1 · 200 mots T2), réservez 5 min pour relire</li>
+        <li><strong>EO</strong> : parlez clairement, ne cherchez pas la perfection, montrez votre aisance</li>
+      </ul>
+
+      <div style="background:#f0fdf4; border-left:3px solid #22c55e; padding:14px 18px; border-radius:4px; margin:24px 0; font-size:14px; color:#166534; line-height:1.7;">
+        <strong>Rappel :</strong> en cas de doute sur une question, passez à la suivante et revenez-y si le temps le permet.
+        Une question sans réponse vaut 0, une réponse hasardeuse a une chance sur 4 — tentez votre chance.
+      </div>
+
+      <div style="text-align:center; margin:28px 0 12px;">
+        <p style="color:#003087; font-size:16px; font-weight:bold; margin:0 0 8px;">Vous avez préparé, vous êtes prêt(e).</p>
+        <p style="color:#555; font-size:14px; margin:0;">On croit en vous — allez chercher ce score !</p>
+      </div>
+
+      <p style="color:#888; font-size:12px; line-height:1.6; margin-top:28px;">
+        Pour toute question après l'examen, contactez-nous sur
+        <a href="https://wa.me/${config.adminWhatsapp}" style="color:#555;">WhatsApp</a>.
+      </p>
+    </div>
+
+    <div style="background:#f5f5f5; padding:14px 32px; text-align:center; color:#888; font-size:12px;">
+      © ${new Date().getFullYear()} TEF-LAB &nbsp;·&nbsp;
+      <a href="${siteUrl}" style="color:#0055B3; text-decoration:none;">tef-lab.com</a>
+    </div>
+  </div>
+</body>
+</html>
+`
+
+  await transporter.sendMail({
+    from: config.smtp.from,
+    to: data.clientEmail,
+    subject: `[TEF-LAB] Bon courage ${firstName} — c'est le jour de votre TEF Canada !`,
+    html,
+  })
+}
+
+// ─── Template 12 : Résultat IA vs objectif → Abonné ─────────────────────────
+
+export interface AIResultEmailData {
+  clientName: string
+  clientEmail: string
+  moduleCode: 'EE' | 'EO'
+  moduleName: string
+  cecrlLevel: string
+  targetLevel: string
+  metTarget: boolean
+  seriesTitle: string
+}
+
+export async function sendAIResultEmail(data: AIResultEmailData): Promise<void> {
+  const firstName = data.clientName.split(' ')[0]
+  const siteUrl = config.siteUrl
+
+  const CECRL_ORDER = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']
+  const gapLevels = CECRL_ORDER.indexOf(data.targetLevel) - CECRL_ORDER.indexOf(data.cecrlLevel)
+
+  const headline = data.metTarget
+    ? `Objectif ${data.targetLevel} atteint en ${data.moduleName} !`
+    : `Vous progressez en ${data.moduleName}`
+
+  const resultColor = data.metTarget ? '#22c55e' : '#003087'
+  const resultBg = data.metTarget ? '#f0fdf4' : '#f0f4ff'
+  const resultBorder = data.metTarget ? '#86efac' : '#c3d3f0'
+
+  const bodyText = data.metTarget
+    ? `Bravo ! Votre correction IA pour la série <strong>${data.seriesTitle}</strong> affiche un niveau <strong>${data.cecrlLevel}</strong> — vous avez atteint votre objectif ${data.targetLevel} pour le ${data.moduleName}.`
+    : `Votre correction IA pour la série <strong>${data.seriesTitle}</strong> indique un niveau <strong>${data.cecrlLevel}</strong> (objectif : ${data.targetLevel}).
+       Il reste ${gapLevels === 1 ? 'un niveau' : `${gapLevels} niveaux`} à franchir — c'est tout à fait atteignable avec de la pratique régulière.`
+
+  const encouragement = data.metTarget
+    ? `<div style="background:#f0fdf4; border-left:3px solid #22c55e; padding:14px 18px; border-radius:4px; margin:20px 0; font-size:14px; color:#166534; line-height:1.7;">
+        Excellent travail ! Essayez de maintenir ce niveau sur les prochaines séries.
+        Si ce n'est pas déjà fait, définissez un objectif plus ambitieux pour continuer à progresser.
+      </div>`
+    : `<div style="background:#fffbeb; border-left:3px solid #f59e0b; padding:14px 18px; border-radius:4px; margin:20px 0; font-size:14px; color:#78350f; line-height:1.7;">
+        <strong>Conseil :</strong> relisez les textes corrigés par l'IA et notez les structures que vous n'avez pas maîtrisées.
+        Refaites une série dans 24h en appliquant ces corrections — le progrès sera visible rapidement.
+      </div>`
+
+  const html = `
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"><title>Résultat IA – ${data.moduleName} – TEF-LAB</title></head>
+<body style="font-family:Arial,sans-serif; background:#f5f5f5; margin:0; padding:20px;">
+  <div style="max-width:600px; margin:0 auto; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+
+    <div style="background:#003087; padding:24px 32px;">
+      <p style="color:#fff; margin:0; font-size:20px; font-weight:900;">TEF-LAB</p>
+      <p style="color:#cce0ff; margin:6px 0 0; font-size:13px;">Résultat de correction IA · ${data.moduleName}</p>
+    </div>
+
+    <div style="padding:32px;">
+      <p style="color:#444; font-size:15px; margin-top:0;">Bonjour ${firstName},</p>
+
+      <div style="background:${resultBg}; border:1px solid ${resultBorder}; border-radius:8px; padding:20px 24px; margin:20px 0; text-align:center;">
+        <p style="margin:0 0 6px; font-size:13px; color:#666; text-transform:uppercase; letter-spacing:0.8px;">${headline}</p>
+        <p style="margin:0; font-size:32px; font-weight:900; color:${resultColor};">${data.cecrlLevel}</p>
+        ${!data.metTarget ? `<p style="margin:6px 0 0; font-size:12px; color:#666;">Objectif : ${data.targetLevel}</p>` : ''}
+      </div>
+
+      <p style="color:#444; font-size:14px; line-height:1.7; margin-bottom:16px;">${bodyText}</p>
+
+      ${encouragement}
+
+      <div style="text-align:center; margin:24px 0;">
+        <a href="${siteUrl}/dashboard"
+           style="display:inline-block; background:#003087; color:#fff; text-decoration:none;
+                  padding:13px 32px; border-radius:6px; font-size:15px; font-weight:bold;">
+          Continuer ma préparation
+        </a>
+      </div>
+
+      <p style="color:#888; font-size:12px; line-height:1.6; margin-top:8px;">
+        Pour toute question, contactez-nous sur
+        <a href="https://wa.me/${config.adminWhatsapp}" style="color:#555;">WhatsApp</a>
+        ou à <a href="mailto:${config.adminEmail}" style="color:#555;">${config.adminEmail}</a>.
+      </p>
+    </div>
+
+    <div style="background:#f5f5f5; padding:14px 32px; text-align:center; color:#888; font-size:12px;">
+      © ${new Date().getFullYear()} TEF-LAB &nbsp;·&nbsp;
+      <a href="${siteUrl}" style="color:#0055B3; text-decoration:none;">tef-lab.com</a>
+    </div>
+  </div>
+</body>
+</html>
+`
+
+  await transporter.sendMail({
+    from: config.smtp.from,
+    to: data.clientEmail,
+    subject: data.metTarget
+      ? `[TEF-LAB] Objectif ${data.targetLevel} atteint en ${data.moduleName} !`
+      : `[TEF-LAB] Votre résultat IA en ${data.moduleName} — niveau ${data.cecrlLevel}`,
+    html,
+  })
+}
+
 // ─── Template 10 : Rappel upgrade → Utilisateurs gratuits ──────────────────
 
 export interface PackSummary {
