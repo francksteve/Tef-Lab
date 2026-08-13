@@ -1240,6 +1240,8 @@ export default function EOPage() {
   const [aiQuota, setAiQuota] = useState<{ used: number; limit: number; remaining: number; isMonthly?: boolean } | null>(null)
   const [quotaConsumedAtStart, setQuotaConsumedAtStart] = useState(false)
   const [quotaStartError, setQuotaStartError] = useState<string | null>(null)
+  const [showDebitConfirm, setShowDebitConfirm] = useState(false)
+  const [debitedRemaining, setDebitedRemaining] = useState<number | null>(null)
   const [audioUrlA, setAudioUrlA] = useState<string | null>(null)
   const [audioUrlB, setAudioUrlB] = useState<string | null>(null)
   const audioUrlARef = useRef<string | null>(null)
@@ -1657,7 +1659,7 @@ export default function EOPage() {
 
     const handleStartEpreuve = async () => {
       setQuotaStartError(null)
-      // Pas de quota IA dans ce pack → démarre directement
+      // Pas de quota IA dans ce pack → démarre directement sans confirmation
       if (!aiQuota || aiQuota.limit === 0) {
         setStep('prepA')
         return
@@ -1673,10 +1675,60 @@ export default function EOPage() {
         const data = (await res.json()) as { remaining: number; limit: number }
         setQuotaConsumedAtStart(true)
         setAiQuota((q) => q ? { ...q, remaining: data.remaining, used: q.limit - data.remaining } : q)
+        setDebitedRemaining(data.remaining)
+        setShowDebitConfirm(true)
+        return
       } catch {
-        // Erreur réseau : on démarre quand même, le scoring gèrera le quota
+        // Erreur réseau : on démarre quand même
       }
       setStep('prepA')
+    }
+
+    if (showDebitConfirm) {
+      return (
+        <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 max-w-md w-full p-6 space-y-4">
+            <div className="text-center space-y-1">
+              <div className="w-14 h-14 bg-tef-blue/10 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-3">🎤</div>
+              <h2 className="text-lg font-extrabold text-gray-900">Épreuve lancée</h2>
+              <p className="text-sm text-gray-500">Votre session Expression Orale est en cours</p>
+            </div>
+
+            <div className="flex items-start gap-3 bg-tef-blue/5 border border-tef-blue/15 rounded-xl px-4 py-3">
+              <span className="text-base flex-shrink-0 mt-0.5">🤖</span>
+              <div>
+                <p className="font-semibold text-tef-blue text-sm">1 correction IA déduite de votre quota</p>
+                {debitedRemaining !== null && (
+                  <p className="text-tef-blue/70 text-xs mt-0.5">
+                    {debitedRemaining} correction{debitedRemaining > 1 ? 's' : ''} restante{debitedRemaining > 1 ? 's' : ''} aujourd&apos;hui
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+              <span className="text-base flex-shrink-0 mt-0.5">⚠️</span>
+              <p className="text-amber-800 text-sm font-medium leading-snug">
+                Allez jusqu&apos;au bout de l&apos;épreuve — votre quota IA a déjà été utilisé pour cette session.
+              </p>
+            </div>
+
+            <div className="flex items-start gap-3 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3">
+              <span className="text-base flex-shrink-0 mt-0.5">🎙️</span>
+              <p className="text-gray-700 text-sm leading-snug">
+                Acceptez l&apos;accès à votre microphone lorsque le navigateur vous le demande.
+              </p>
+            </div>
+
+            <button
+              onClick={() => { setShowDebitConfirm(false); setStep('prepA') }}
+              className="w-full py-3 bg-tef-blue text-white font-extrabold rounded-xl hover:bg-tef-blue-hover transition-colors shadow-sm text-sm"
+            >
+              C&apos;est parti →
+            </button>
+          </div>
+        </div>
+      )
     }
 
     return (
