@@ -1800,7 +1800,7 @@ export default function EOPage() {
       <>
         <div className="min-h-screen bg-gray-50">
           {/* Gradient header — même registre que l'intro */}
-          <div className="bg-gradient-to-br from-tef-blue via-blue-700 to-blue-600 text-white">
+          <div className="bg-gradient-to-br from-tef-blue via-[#002070] to-[#001a5c] text-white">
             <div className="max-w-3xl mx-auto px-4 py-6">
               <div className="flex items-center justify-between gap-4">
                 <div>
@@ -2018,7 +2018,7 @@ export default function EOPage() {
       <>
         <div className="min-h-screen bg-gray-50">
           {/* Gradient header */}
-          <div className="bg-gradient-to-br from-tef-blue via-blue-700 to-blue-600 text-white">
+          <div className="bg-gradient-to-br from-tef-blue via-[#002070] to-[#001a5c] text-white">
             <div className="max-w-3xl mx-auto px-4 py-6">
               <div className="flex items-center justify-between gap-4">
                 <div>

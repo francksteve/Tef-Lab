@@ -893,7 +893,7 @@ export default function EEPage() {
             )}
 
             {/* Task badge */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 pt-3">
               <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-tef-blue text-white text-xs font-bold rounded-full shadow-sm">
                 📝 Tâche 1 — Suite d&apos;article
               </span>
@@ -1018,7 +1018,7 @@ export default function EEPage() {
           )}
 
           {/* Task badge */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 pt-3">
             <span className="inline-flex items-center gap-2 px-4 py-1.5 bg-tef-blue text-white text-xs font-bold rounded-full shadow-sm">
               ✉️ Tâche 2 — Lettre au journal
             </span>

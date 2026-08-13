@@ -96,6 +96,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const { showWarning, remainingSeconds, stayConnected } = useInactivityTimeout()
   const [sessionBlocked, setSessionBlocked] = useState(false)
   const [sessionInfo, setSessionInfo] = useState<{ activeCount: number; maxSessions: number } | null>(null)
+  const pathname = usePathname()
+  const isExamPage = pathname.startsWith('/dashboard/serie/')
 
   const firstName = session?.user?.name?.split(' ')[0] ?? ''
   const fullName = session?.user?.name ?? ''
@@ -139,6 +141,39 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   const closeSidebar = () => setSidebarOpen(false)
+
+  if (isExamPage) {
+    return (
+      <div className="min-h-screen bg-background">
+        {sessionBlocked && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 px-4">
+            <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 text-center space-y-4">
+              <div className="w-14 h-14 bg-red-100 rounded-2xl flex items-center justify-center mx-auto text-2xl">🔒</div>
+              <h2 className="text-lg font-extrabold text-gray-900">Nombre de sessions atteint</h2>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                Votre pack autorise{' '}
+                <strong>{sessionInfo?.maxSessions} session{sessionInfo?.maxSessions !== 1 ? 's' : ''} simultanée{sessionInfo?.maxSessions !== 1 ? 's' : ''}</strong>.{' '}
+                {sessionInfo?.activeCount} appareil{sessionInfo?.activeCount !== 1 ? 's sont' : ' est'} actuellement connecté{sessionInfo?.activeCount !== 1 ? 's' : ''} avec votre compte.
+                Déconnectez-vous sur un autre appareil ou passez à un pack supérieur.
+              </p>
+              <div className="flex gap-3 justify-center pt-1">
+                <Link href="/packs" className="px-4 py-2 bg-tef-blue text-white font-semibold rounded-xl text-sm hover:bg-tef-blue-hover transition-colors">
+                  Voir les packs
+                </Link>
+                <button onClick={() => signOut({ callbackUrl: '/connexion' })} className="px-4 py-2 bg-gray-100 text-gray-700 font-semibold rounded-xl text-sm hover:bg-gray-200 transition-colors">
+                  Se déconnecter
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        {showWarning && (
+          <InactivityWarning remainingSeconds={remainingSeconds} onStayConnected={stayConnected} />
+        )}
+        {children}
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-background">
