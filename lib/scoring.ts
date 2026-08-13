@@ -21,6 +21,8 @@ STRUCTURE OBLIGATOIRE en 4 paragraphes :
   • 3ème paragraphe — Solution           : présente comment la situation a été résolue ou prise en charge
   • 4ème paragraphe — Conclusion         : tire une leçon, une réaction ou une conséquence de l'événement
 
+⚠️ Évalue la présence de ces éléments structurels de façon souple : un candidat qui couvre ces éléments sans les titrer explicitement ou dans un ordre légèrement différent ne doit pas être pénalisé sur la structure si le contenu est cohérent et complet.
+
 Critères d'évaluation :
 - Respect de la structure 4 paragraphes ci-dessus
 - Cohérence narrative avec l'amorce fournie
@@ -52,6 +54,8 @@ STRUCTURE OBLIGATOIRE de la lettre :
   • Argument 3   : « Enfin, on ne doit jamais oublier que [argument]… Certes, [cause]… Prenons le cas de… »
   • Conclusion   : « Prenant en compte mes remarques, je crains que l'affirmation publiée soit un peu (biaisée / exagérée / obsolète)… »
   • Formule de politesse : « Veuillez agréer, Monsieur, mes salutations distinguées. »
+
+⚠️ Évalue la présence de ces éléments structurels de façon souple : un candidat qui exprime une introduction, trois arguments développés et une conclusion sans reprendre mot pour mot les formulations modèles ne doit pas être pénalisé sur la structure si la lettre est cohérente, argumentée et respecte un registre soutenu.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 BARÈME DE NOTATION
