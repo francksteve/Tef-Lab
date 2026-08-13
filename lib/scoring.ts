@@ -241,6 +241,10 @@ Richesse et maîtrise de la langue orale :
 → Syntaxe : phrases simples ou complexes ? variées ou répétitives ? conjugaison correcte ?
 → Prononciation : claire et compréhensible ?
 
+AIDE PÉDAGOGIQUE SECTION A (obligatoire) :
+→ exemplesQuestions : génère 4 à 6 exemples de questions pertinentes, en registre formel (vouvoiement, conditionnel de politesse), que le candidat aurait pu ou dû poser en lien avec le document proposé. Couvre les points importants non abordés ou mal formulés par le candidat.
+→ exemplePhrases : identifie 2 à 3 tournures approximatives utilisées par le candidat et propose pour chacune une reformulation plus correcte et plus soutenue, avec une brève explication du procédé amélioré.
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 SECTION B — Présenter et convaincre (registre informel, tutoiement)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -260,6 +264,10 @@ Richesse et maîtrise de la langue orale :
 → Vocabulaire : pauvre ou riche ? répétitif ou varié ? mots précis et adaptés à la situation ?
 → Syntaxe : phrases simples ou complexes ? variées ou répétitives ? conjugaison correcte ?
 → Prononciation : claire et compréhensible ?
+
+AIDE PÉDAGOGIQUE SECTION B (obligatoire) :
+→ reponsesAuxObjections : identifie chaque objection soulevée par l'interlocuteur dans la transcription et, pour chacune, propose un contre-argument convaincant que le candidat aurait pu utiliser (en registre informel, tutoiement). Si le candidat a bien répondu à une objection, indique-le en valorisant sa réponse.
+→ exemplePhrases : identifie 2 à 3 tournures approximatives du candidat et propose pour chacune une reformulation plus fluide et mieux construite, avec une brève explication du procédé amélioré.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 BARÈME DE NOTATION
@@ -307,7 +315,16 @@ Retourne UNIQUEMENT un JSON valide (sans balises markdown) :
     "nbQuestionsDetectees": number,
     "registreAdapte": boolean,
     "strengths": ["point fort 1", "point fort 2"],
-    "improvements": ["axe d'amélioration 1", "axe d'amélioration 2"]
+    "improvements": ["axe d'amélioration 1", "axe d'amélioration 2"],
+    "exemplesQuestions": [
+      "Pourriez-vous me préciser les horaires d'ouverture ?",
+      "Quelles sont les conditions d'inscription ?",
+      "Y a-t-il des places disponibles pour les débutants ?",
+      "Pourriez-vous m'indiquer le tarif exact et les modalités de paiement ?"
+    ],
+    "exemplePhrases": [
+      { "candidat": "tournure approximative du candidat", "ameliore": "reformulation plus correcte et soutenue", "explication": "procédé amélioré : conditionnel de politesse / vocabulaire soutenu / syntaxe complexe" }
+    ]
   },
   "sectionB": {
     "cecrlLevel": "A1|A2|B1|B2|C1|C2",
@@ -317,7 +334,13 @@ Retourne UNIQUEMENT un JSON valide (sans balises markdown) :
     "argumentsDetectes": number,
     "registreAdapte": boolean,
     "strengths": ["point fort 1", "point fort 2"],
-    "improvements": ["axe d'amélioration 1", "axe d'amélioration 2"]
+    "improvements": ["axe d'amélioration 1", "axe d'amélioration 2"],
+    "reponsesAuxObjections": [
+      { "objection": "objection exacte de l'interlocuteur tirée de la transcription", "reponseCandidat": "ce que le candidat a dit (ou null si rien dit)", "reponseSuggeree": "contre-argument convaincant que le candidat aurait pu utiliser, en tutoiement" }
+    ],
+    "exemplePhrases": [
+      { "candidat": "tournure approximative du candidat", "ameliore": "reformulation plus fluide et convaincante", "explication": "procédé amélioré : connecteur logique / argument étayé / vocabulaire précis" }
+    ]
   },
   "globalCecrlLevel": "A1|A2|B1|B2|C1|C2",
   "globalNclcLevel": number,

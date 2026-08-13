@@ -16,16 +16,31 @@ interface Series {
   module: Module
 }
 
+interface ExemplePhrase {
+  candidat: string
+  ameliore: string
+  explication: string
+}
+
+interface ReponseObjection {
+  objection: string
+  reponseCandidat: string | null
+  reponseSuggeree: string
+}
+
 interface SectionScore {
   cecrlLevel: string
-  nclcLevel?: number   // 0–12
-  score: number        // sur 225
+  nclcLevel?: number
+  score: number
   feedback: string
   nbQuestionsDetectees?: number
   argumentsDetectes?: number
   registreAdapte?: boolean
   strengths: string[]
   improvements: string[]
+  exemplesQuestions?: string[]
+  reponsesAuxObjections?: ReponseObjection[]
+  exemplePhrases?: ExemplePhrase[]
 }
 
 interface EOResult {
@@ -270,6 +285,73 @@ function EOSectionCard({
                 </li>
               ))}
             </ul>
+          </div>
+        )}
+
+        {/* Questions modèles — Section A */}
+        {score.exemplesQuestions && score.exemplesQuestions.length > 0 && (
+          <div className="bg-teal-50 rounded-xl p-3 border border-teal-200">
+            <p className="text-xs font-extrabold text-teal-700 mb-2 flex items-center gap-1">
+              <span>🎯</span> Questions que vous auriez pu poser
+            </p>
+            <ul className="space-y-1.5">
+              {score.exemplesQuestions.map((q, i) => (
+                <li key={i} className="flex items-start gap-2 text-xs text-teal-900">
+                  <span className="text-teal-500 font-bold mt-0.5 flex-shrink-0">{i + 1}.</span>
+                  <span className="italic">{q}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {/* Réponses aux objections — Section B */}
+        {score.reponsesAuxObjections && score.reponsesAuxObjections.length > 0 && (
+          <div className="bg-amber-50 rounded-xl p-3 border border-amber-200">
+            <p className="text-xs font-extrabold text-amber-700 mb-2 flex items-center gap-1">
+              <span>🔄</span> Comment répondre aux objections
+            </p>
+            <div className="space-y-3">
+              {score.reponsesAuxObjections.map((item, i) => (
+                <div key={i} className="space-y-1">
+                  <p className="text-xs font-semibold text-amber-800">
+                    <span className="bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded text-[10px] mr-1">Objection</span>
+                    {item.objection}
+                  </p>
+                  {item.reponseCandidat && (
+                    <p className="text-[11px] text-gray-500 pl-2 border-l-2 border-gray-300">
+                      Votre réponse : <span className="italic">{item.reponseCandidat}</span>
+                    </p>
+                  )}
+                  <p className="text-xs text-amber-900 pl-2 border-l-2 border-amber-400">
+                    <span className="font-semibold">Mieux : </span>
+                    <span className="italic">{item.reponseSuggeree}</span>
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Exemples de reformulation */}
+        {score.exemplePhrases && score.exemplePhrases.length > 0 && (
+          <div className="bg-indigo-50 rounded-xl p-3 border border-indigo-200">
+            <p className="text-xs font-extrabold text-indigo-700 mb-2 flex items-center gap-1">
+              <span>✍️</span> Reformulations suggérées
+            </p>
+            <div className="space-y-3">
+              {score.exemplePhrases.map((item, i) => (
+                <div key={i} className="space-y-1">
+                  <p className="text-[11px] text-gray-500 line-through pl-2 border-l-2 border-gray-300">
+                    {item.candidat}
+                  </p>
+                  <p className="text-xs text-indigo-900 pl-2 border-l-2 border-indigo-400 font-medium italic">
+                    {item.ameliore}
+                  </p>
+                  <p className="text-[10px] text-indigo-500 pl-2">{item.explication}</p>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
