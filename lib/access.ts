@@ -62,8 +62,9 @@ async function getFreeAiLimit(): Promise<number> {
 
 /**
  * Checks if a user has remaining AI quota and increments the counter.
- * Both free and paid users use a daily quota (YYYY-MM-DD).
- * Free limit is configured in PlatformSettings.freeAiUsagePerDay.
+ * - Paid users: daily quota (resets each day).
+ * - Free users (no active subscription): LIFETIME quota (total ever).
+ *   This prevents free accounts from getting unlimited daily resets.
  */
 export async function checkAndIncrementAIUsage(
   userId: string
@@ -74,19 +75,38 @@ export async function checkAndIncrementAIUsage(
   const limit = subscription ? subscription.pack.aiUsagePerDay : await getFreeAiLimit()
   if (limit === 0) return { allowed: false, remaining: 0, limit: 0, isMonthly: false }
 
-  const existing = await prisma.aIUsageLog.findUnique({
-    where: { userId_date: { userId, date: today } },
-  })
-  const currentCount = existing?.count ?? 0
-  if (currentCount >= limit) {
-    return { allowed: false, remaining: 0, limit, isMonthly: false }
+  if (subscription) {
+    // Paid users: daily quota
+    const existing = await prisma.aIUsageLog.findUnique({
+      where: { userId_date: { userId, date: today } },
+    })
+    const currentCount = existing?.count ?? 0
+    if (currentCount >= limit) {
+      return { allowed: false, remaining: 0, limit, isMonthly: false }
+    }
+    await prisma.aIUsageLog.upsert({
+      where: { userId_date: { userId, date: today } },
+      update: { count: { increment: 1 } },
+      create: { userId, date: today, count: 1 },
+    })
+    return { allowed: true, remaining: limit - currentCount - 1, limit, isMonthly: false }
+  } else {
+    // Free users: lifetime total (sum across all dates)
+    const totalResult = await prisma.aIUsageLog.aggregate({
+      where: { userId },
+      _sum: { count: true },
+    })
+    const currentCount = totalResult._sum.count ?? 0
+    if (currentCount >= limit) {
+      return { allowed: false, remaining: 0, limit, isMonthly: false }
+    }
+    await prisma.aIUsageLog.upsert({
+      where: { userId_date: { userId, date: today } },
+      update: { count: { increment: 1 } },
+      create: { userId, date: today, count: 1 },
+    })
+    return { allowed: true, remaining: limit - currentCount - 1, limit, isMonthly: false }
   }
-  await prisma.aIUsageLog.upsert({
-    where: { userId_date: { userId, date: today } },
-    update: { count: { increment: 1 } },
-    create: { userId, date: today, count: 1 },
-  })
-  return { allowed: true, remaining: limit - currentCount - 1, limit, isMonthly: false }
 }
 
 const DEVICE_TTL_MS = 15 * 60 * 1000 // 15 min — slot freed if no heartbeat
@@ -150,10 +170,22 @@ export async function getAIUsageToday(
 ): Promise<{ used: number; limit: number; remaining: number; isMonthly: boolean }> {
   const subscription = await getActiveSubscription(userId)
   const limit = subscription ? subscription.pack.aiUsagePerDay : await getFreeAiLimit()
-  const today = new Date().toISOString().split('T')[0]
-  const log = await prisma.aIUsageLog.findUnique({
-    where: { userId_date: { userId, date: today } },
-  })
-  const used = log?.count ?? 0
-  return { used, limit, remaining: Math.max(0, limit - used), isMonthly: false }
+
+  if (subscription) {
+    // Paid users: daily count only
+    const today = new Date().toISOString().split('T')[0]
+    const log = await prisma.aIUsageLog.findUnique({
+      where: { userId_date: { userId, date: today } },
+    })
+    const used = log?.count ?? 0
+    return { used, limit, remaining: Math.max(0, limit - used), isMonthly: false }
+  } else {
+    // Free users: lifetime total
+    const totalResult = await prisma.aIUsageLog.aggregate({
+      where: { userId },
+      _sum: { count: true },
+    })
+    const used = totalResult._sum.count ?? 0
+    return { used, limit, remaining: Math.max(0, limit - used), isMonthly: false }
+  }
 }

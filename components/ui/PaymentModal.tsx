@@ -373,6 +373,27 @@ export default function PaymentModal({ isOpen, onClose, pack }: Props) {
                   </div>
                 </div>
               </div>
+
+              {/* Paiement manuel — accès direct sans passer par Campay */}
+              <div className="pt-1 border-t border-gray-100 mt-1">
+                <p className="text-xs text-gray-400 text-center mb-2">Problème avec le paiement automatique ?</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => { setSelectedMethod('orange_money'); setStep('manual_form') }}
+                    className="text-xs py-2 px-3 border border-orange-200 text-orange-700 rounded-lg hover:bg-orange-50 transition-colors"
+                  >
+                    Orange Money manuel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setSelectedMethod('mtn_momo'); setStep('manual_form') }}
+                    className="text-xs py-2 px-3 border border-yellow-200 text-yellow-700 rounded-lg hover:bg-yellow-50 transition-colors"
+                  >
+                    MTN MoMo manuel
+                  </button>
+                </div>
+              </div>
             </>
           )}
 

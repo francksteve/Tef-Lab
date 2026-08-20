@@ -409,7 +409,7 @@ export default function ParametresPage() {
           </div>
           <div className="space-y-1">
             <label className="block text-sm font-semibold text-gray-700">
-              Corrections IA / jour — comptes gratuits
+              Corrections IA à vie — comptes gratuits (sans abonnement)
             </label>
             <div className="relative">
               <input
@@ -419,16 +419,16 @@ export default function ParametresPage() {
                 value={form.freeAiUsagePerDay}
                 onChange={(e) => handleChange('freeAiUsagePerDay', e.target.value)}
                 required
-                className="w-full pl-4 pr-24 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue transition-colors"
+                className="w-full pl-4 pr-28 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-tef-blue transition-colors"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-semibold">correction/jour</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-semibold">total à vie</span>
             </div>
             <p className="text-xs text-gray-400 mt-1">
-              Mettre 0 pour désactiver la correction IA sur les comptes gratuits. S&apos;applique aux modules EE et EO.
+              Quota cumulé sur toute la durée du compte gratuit (non quotidien). Mettre 0 pour désactiver.
             </p>
             {parseInt(form.freeAiUsagePerDay) > 0 && (
               <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 border border-purple-200 rounded-lg text-xs font-semibold text-purple-700">
-                Les comptes gratuits ont droit à {form.freeAiUsagePerDay} correction{parseInt(form.freeAiUsagePerDay) > 1 ? 's' : ''} IA par jour
+                Les comptes gratuits ont droit à {form.freeAiUsagePerDay} correction{parseInt(form.freeAiUsagePerDay) > 1 ? 's' : ''} IA au total (à vie)
               </div>
             )}
           </div>

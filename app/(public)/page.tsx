@@ -1,9 +1,16 @@
 'use client'
 import Link from 'next/link'
-
-const waNum = '237683008287'
+import { useState, useEffect } from 'react'
 
 export default function HomePage() {
+  const [waNum, setWaNum] = useState('237683008287')
+
+  useEffect(() => {
+    fetch('/api/settings').then(r => r.json()).then(s => {
+      if (s?.whatsappNumber) setWaNum(s.whatsappNumber)
+    }).catch(() => {})
+  }, [])
+
   return (
     <div className="min-h-screen bg-background">
 
