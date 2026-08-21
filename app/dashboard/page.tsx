@@ -149,6 +149,8 @@ function DashboardContent() {
   const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({})
   const [historyPage, setHistoryPage] = useState(0)
   const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [examDateInput, setExamDateInput] = useState('')
+  const [savingExamDate, setSavingExamDate] = useState(false)
   const greeting = useState(() => GREETING_VARIANTS[Math.floor(Math.random() * GREETING_VARIANTS.length)])[0]
 
   const isPaymentReturn = useRef(searchParams.get('payment') === 'success')
@@ -298,6 +300,24 @@ function DashboardContent() {
     setUpgradeOpen(true)
   }
 
+  const handleSaveExamDate = async () => {
+    if (!examDateInput) return
+    setSavingExamDate(true)
+    try {
+      const res = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ examDate: examDateInput }),
+      })
+      if (res.ok) {
+        const updated = await res.json()
+        setProfile((prev) => prev ? { ...prev, examDate: updated.examDate } : prev)
+      }
+    } finally {
+      setSavingExamDate(false)
+    }
+  }
+
   return (
     <div>
       {/* ─── Banners paiement ─── */}
@@ -321,6 +341,39 @@ function DashboardContent() {
               </p>
             </div>
             <button onClick={() => setPaymentBanner(null)} className="text-green-400 hover:text-green-600 text-xl leading-none flex-shrink-0">×</button>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Bannière date d'examen ─── */}
+      {profile !== null && !profile.examDate && (
+        <div className="bg-amber-50 border-b border-amber-200 px-4 py-3">
+          <div className="max-w-5xl mx-auto flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex items-start gap-2.5 flex-1 min-w-0">
+              <svg className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <p className="text-sm text-amber-800">
+                <span className="font-semibold">Quand passez-vous le TEF Canada ?</span>
+                <span className="ml-1 text-amber-700">Définissez votre date d'examen pour un suivi personnalisé.</span>
+              </p>
+            </div>
+            <div className="flex items-center gap-2 flex-shrink-0 ml-7 sm:ml-0">
+              <input
+                type="date"
+                value={examDateInput}
+                onChange={(e) => setExamDateInput(e.target.value)}
+                min={new Date().toISOString().split('T')[0]}
+                className="px-3 py-1.5 border border-amber-300 bg-white rounded-lg text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-amber-400"
+              />
+              <button
+                onClick={handleSaveExamDate}
+                disabled={!examDateInput || savingExamDate}
+                className="px-3 py-1.5 bg-amber-600 text-white text-sm font-semibold rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50 whitespace-nowrap"
+              >
+                {savingExamDate ? '…' : 'Enregistrer'}
+              </button>
+            </div>
           </div>
         </div>
       )}

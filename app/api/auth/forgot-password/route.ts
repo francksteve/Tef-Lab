@@ -38,35 +38,38 @@ export async function POST(req: NextRequest) {
 
     const { email } = parsed.data
 
-    // Always return success to prevent email enumeration
     const user = await prisma.user.findUnique({ where: { email } })
-    if (user) {
-      // Invalidate any existing unused tokens for this email
-      await prisma.passwordResetToken.updateMany({
-        where: { email, used: false },
-        data: { used: true },
-      })
-
-      // Generate a secure random token
-      const token = crypto.randomBytes(32).toString('hex')
-      const expiresAt = new Date(Date.now() + 60 * 60 * 1000) // 1 hour
-
-      await prisma.passwordResetToken.create({
-        data: { email, token, expiresAt },
-      })
-
-      const resetUrl = `${config.siteUrl}/reinitialiser-mot-de-passe?token=${token}`
-      try {
-        await sendPasswordResetEmail({ name: user.name, email, resetUrl })
-      } catch (err) {
-        const message = err instanceof Error ? err.message : String(err)
-        console.error('[FORGOT-PASSWORD] Email send failed:', message, err)
-      }
+    if (!user) {
+      return NextResponse.json(
+        { error: 'Aucun compte n\'est associé à cette adresse email.' },
+        { status: 404 }
+      )
     }
 
-    // Always return same message (security: don't reveal if email exists)
+    // Invalidate any existing unused tokens for this email
+    await prisma.passwordResetToken.updateMany({
+      where: { email, used: false },
+      data: { used: true },
+    })
+
+    // Generate a secure random token
+    const token = crypto.randomBytes(32).toString('hex')
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000) // 1 hour
+
+    await prisma.passwordResetToken.create({
+      data: { email, token, expiresAt },
+    })
+
+    const resetUrl = `${config.siteUrl}/reinitialiser-mot-de-passe?token=${token}`
+    try {
+      await sendPasswordResetEmail({ name: user.name, email, resetUrl })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      console.error('[FORGOT-PASSWORD] Email send failed:', message, err)
+    }
+
     return NextResponse.json({
-      message: 'Si cet email existe, un lien de réinitialisation a été envoyé.',
+      message: 'Un lien de réinitialisation a été envoyé à votre adresse email.',
     })
   } catch (error) {
     console.error('[API_ERROR] POST /api/auth/forgot-password', error)

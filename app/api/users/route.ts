@@ -53,10 +53,16 @@ export async function GET(req: NextRequest) {
           referenceCode: true,
           phone: true,
           createdAt: true,
+          examDate: true,
           orders: {
             where: { status: 'VALIDATED' },
             include: { pack: true },
             orderBy: { activatedAt: 'desc' },
+            take: 1,
+          },
+          attempts: {
+            select: { completedAt: true },
+            orderBy: { completedAt: 'desc' },
             take: 1,
           },
         },

@@ -52,9 +52,8 @@ export default function ForgotPasswordPage() {
               <div className="text-5xl">📧</div>
               <h2 className="text-lg font-bold text-gray-900">Email envoyé !</h2>
               <p className="text-gray-600 text-sm leading-relaxed">
-                Si l&apos;adresse <strong>{email}</strong> est associée à un compte,
-                vous recevrez un lien de réinitialisation dans quelques minutes.
-                Pensez à vérifier vos spams.
+                Un lien de réinitialisation a été envoyé à <strong>{email}</strong>.
+                Vérifiez votre boîte de réception et vos spams.
               </p>
               <p className="text-xs text-gray-400">Le lien expire dans 1 heure.</p>
               <Link

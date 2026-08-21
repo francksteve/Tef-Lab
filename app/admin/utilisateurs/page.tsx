@@ -17,8 +17,10 @@ interface User {
   cityOfResidence?: string | null
   referenceCode?: string | null
   phone?: string | null
+  examDate?: string | null
   createdAt: string
   orders: UserOrder[]
+  attempts?: { completedAt: string }[]
 }
 
 function whatsappLink(phone: string): string {
@@ -321,7 +323,7 @@ export default function UtilisateursPage() {
                 <tr>
                   <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider w-10">N°</th>
                   <SortHeader label="Nom"           col="name"      sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
-                  <SortHeader label="Statut"         col="status"    sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
+                  <SortHeader label="Dernière activité" col="status"    sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
                   <SortHeader label="Pack en cours"  col="pack"      sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="hidden md:table-cell" />
                   <SortHeader label="Créé le"        col="createdAt" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} className="hidden sm:table-cell" />
                   <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider hidden sm:table-cell">Contact</th>
@@ -398,16 +400,40 @@ export default function UtilisateursPage() {
                         {user.mustChangePassword && (
                           <p className="text-xs text-red-500 mt-0.5">Doit changer son mdp</p>
                         )}
-                      </td>
-
-                      <td className="px-4 py-3">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                        <span className={`inline-flex items-center mt-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
                           user.accountStatus === 'ACTIVE'
                             ? 'bg-blue-100 text-tef-blue'
                             : 'bg-red-100 text-tef-red'
                         }`}>
                           {user.accountStatus === 'ACTIVE' ? 'Actif' : 'Suspendu'}
                         </span>
+                      </td>
+
+                      <td className="px-4 py-3">
+                        {(() => {
+                          const lastActivity = user.attempts?.[0]?.completedAt
+                          const examD = user.examDate
+                          return (
+                            <div className="flex flex-col gap-0.5">
+                              {lastActivity ? (
+                                <span className="text-xs text-gray-700 font-medium">
+                                  {new Date(lastActivity).toLocaleDateString('fr-FR')}
+                                </span>
+                              ) : (
+                                <span className="text-xs text-gray-300 italic">Aucune série</span>
+                              )}
+                              {examD ? (
+                                <span className={`text-[11px] font-medium ${
+                                  new Date(examD) < new Date() ? 'text-gray-400' : 'text-tef-blue'
+                                }`}>
+                                  Examen : {new Date(examD).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                </span>
+                              ) : (
+                                <span className="text-[11px] text-amber-500 italic">Date d'examen non définie</span>
+                              )}
+                            </div>
+                          )
+                        })()}
                       </td>
 
                       <td className="px-4 py-3 hidden md:table-cell">
