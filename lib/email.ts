@@ -1117,3 +1117,54 @@ export async function sendDailyUpgradeReminder(data: DailyUpgradeReminderData): 
     html,
   })
 }
+
+// ─── Template 14 : Email groupé admin → tous les inscrits ─────────────────
+
+export interface BroadcastEmailData {
+  clientName: string
+  clientEmail: string
+  subject: string
+  htmlBody: string // HTML déjà formaté par l'admin
+}
+
+export async function sendBroadcastEmail(data: BroadcastEmailData): Promise<void> {
+  const firstName = data.clientName.split(' ')[0]
+
+  const html = `
+<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"><title>${data.subject}</title></head>
+<body style="font-family:Arial,sans-serif; background:#f5f5f5; margin:0; padding:20px;">
+  <div style="max-width:600px; margin:0 auto; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+
+    <div style="background:#003087; padding:24px 32px;">
+      <p style="color:#fff; margin:0; font-size:20px; font-weight:900;">TEF-LAB</p>
+      <p style="color:#cce0ff; margin:6px 0 0; font-size:13px;">Préparation au TEF Canada</p>
+    </div>
+
+    <div style="padding:32px;">
+      <p style="color:#444; font-size:15px; margin-top:0;">Bonjour ${firstName},</p>
+      <div style="color:#444; font-size:14px; line-height:1.8;">
+        ${data.htmlBody}
+      </div>
+    </div>
+
+    <div style="background:#f9fafb; border-top:1px solid #e5e7eb; padding:20px 32px; text-align:center;">
+      <p style="color:#999; font-size:11px; margin:0;">
+        © ${new Date().getFullYear()} TEF-LAB · Préparation au TEF Canada<br>
+        Vous recevez cet email car vous êtes inscrit(e) sur la plateforme TEF-LAB.
+      </p>
+    </div>
+
+  </div>
+</body>
+</html>
+`
+
+  await transporter.sendMail({
+    from: config.smtp.from,
+    to: data.clientEmail,
+    subject: data.subject,
+    html,
+  })
+}
