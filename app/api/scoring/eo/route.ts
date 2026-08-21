@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     // ── 3. Call Anthropic
     const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-5',
-      max_tokens: 2048,
+      max_tokens: 4096,
       system: EO_SCORING_PROMPT,
       messages: [
         {

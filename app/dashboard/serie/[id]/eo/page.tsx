@@ -55,6 +55,7 @@ interface EOResult {
 
 type EoStep =
   | 'intro'
+  | 'history'
   | 'prepA'
   | 'dialogueA'
   | 'pause'
@@ -62,6 +63,17 @@ type EoStep =
   | 'dialogueB'
   | 'scoring'
   | 'results'
+
+interface EOPastAttempt {
+  id: string
+  completedAt: string
+  aiScore: number | null
+  cecrlLevel: string | null
+  scoringData: EOResult | null
+  writtenTask1: string | null
+  writtenTask2: string | null
+  answers: { announcementA?: string; announcementB?: string } | null
+}
 
 interface SectionData {
   longText: string | null
@@ -1282,6 +1294,7 @@ function ScoringScreen({ steps, delaysMs }: { steps: string[]; delaysMs: number[
           })}
         </div>
         <p className="text-xs text-gray-400 text-center">Étape {current + 1}/{steps.length}</p>
+        <p className="text-xs text-gray-400 text-center italic">La correction IA peut prendre 20 à 40 secondes. Merci de patienter.</p>
       </div>
     </div>
   )
@@ -1329,6 +1342,12 @@ export default function EOPage() {
   const audioUrlARef = useRef<string | null>(null)
   const blobTypeARef = useRef<string>('audio/webm')
   const blobTypeBRef = useRef<string>('audio/webm')
+  const [pastAttempts, setPastAttempts] = useState<EOPastAttempt[]>([])
+  const [attemptId, setAttemptId] = useState<string | null>(null)
+  const [canRetry, setCanRetry] = useState(false)
+  const [isRetrying, setIsRetrying] = useState(false)
+  const [viewingAttempt, setViewingAttempt] = useState<EOPastAttempt | null>(null)
+  const [showRecorrigerConfirm, setShowRecorrigerConfirm] = useState(false)
 
   useEffect(() => {
     if (status === 'loading') return
@@ -1340,10 +1359,15 @@ export default function EOPage() {
       fetch(`/api/series/${seriesId}`).then((r) => r.json()),
       fetch(`/api/series/${seriesId}/questions`).then((r) => r.json()),
       fetch('/api/ai-usage').then((r) => r.json()),
+      fetch(`/api/attempts?seriesId=${seriesId}&moduleCode=EO`).then((r) => r.json()),
     ])
-      .then(([seriesData, questionsData, quotaData]) => {
+      .then(([seriesData, questionsData, quotaData, attemptsData]) => {
         if (quotaData && typeof quotaData === 'object' && 'remaining' in quotaData) {
           setAiQuota(quotaData as { used: number; limit: number; remaining: number; isMonthly?: boolean })
+        }
+        if (Array.isArray(attemptsData) && attemptsData.length > 0) {
+          setPastAttempts(attemptsData as EOPastAttempt[])
+          setStep('history')
         }
         if (seriesData && typeof seriesData === 'object' && 'id' in seriesData) {
           setSeries(seriesData as Series)
@@ -1390,7 +1414,7 @@ export default function EOPage() {
 
   // Prevent accidental tab/window close during active exam
   useEffect(() => {
-    if (step === 'results' || step === 'scoring' || step === 'intro') return
+    if (step === 'results' || step === 'scoring' || step === 'intro' || step === 'history') return
     const handler = (e: BeforeUnloadEvent) => {
       e.preventDefault()
       e.returnValue = ''
@@ -1458,37 +1482,125 @@ export default function EOPage() {
           setResult(eoResult)
         } else {
           setAiError('La correction par IA a échoué.')
+          setCanRetry(true)
         }
       } catch {
         setAiError('Erreur réseau lors de la correction IA.')
+        setCanRetry(true)
       }
 
       // TODO: re-enable when Supabase storage upgraded (1 GB limit reached)
       // const audioUrlBLocal = await audioUrlBPromise
       // if (audioUrlBLocal) setAudioUrlB(audioUrlBLocal)
 
-      // Save attempt (without audio URLs until storage upgraded)
-      await fetch('/api/attempts', {
+      // Save attempt with transcripts (allows recorrection from history)
+      const savedAttempt = await fetch('/api/attempts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           seriesId,
           moduleCode: 'EO',
-          answers: {},
-          // TODO: re-enable when Supabase storage upgraded
-          // audioTask1: audioUrlARef.current ?? undefined,
-          // audioTask2: audioUrlBLocal ?? undefined,
+          answers: { announcementA: sectionA.longText, announcementB: sectionB.longText },
+          writtenTask1: transcriptA || '[Aucune réplique enregistrée pour la Section A]',
+          writtenTask2: transcriptB || '[Aucune réplique enregistrée pour la Section B]',
           ...(eoResult && {
             aiScore: eoResult.globalScore,
             cecrlLevel: eoResult.globalCecrlLevel,
+            scoringData: eoResult,
           }),
         }),
-      }).catch(() => {})
+      }).then((r) => r.json()).catch(() => null)
+      if (savedAttempt?.id) setAttemptId(savedAttempt.id)
 
       setStep('results')
     },
     [historyA, seriesId, sectionA.longText, sectionB.longText, quotaConsumedAtStart]
   )
+
+  /* ─── Retry current session correction ─── */
+
+  const handleRetry = useCallback(async () => {
+    setIsRetrying(true)
+    setAiError(null)
+    setCanRetry(false)
+    setStep('scoring')
+    const buildTranscript = (h: DialogueTurn[]) =>
+      h.map((t) => `${t.role === 'user' ? 'Candidat' : 'Interlocuteur'}: ${t.content}`).join('\n')
+    try {
+      const res = await fetch('/api/scoring/eo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          transcriptionA: buildTranscript(historyA) || '[Aucune réplique]',
+          transcriptionB: buildTranscript(historyB) || '[Aucune réplique]',
+          announcementA: sectionA.longText ?? '[Document non disponible]',
+          announcementB: sectionB.longText ?? '[Document non disponible]',
+          quotaAlreadyConsumed: true,
+        }),
+      })
+      if (res.ok) {
+        const eoResult = (await res.json()) as EOResult
+        setResult(eoResult)
+        setCanRetry(false)
+        if (attemptId) {
+          await fetch(`/api/attempts/${attemptId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ aiScore: eoResult.globalScore, cecrlLevel: eoResult.globalCecrlLevel, scoringData: eoResult }),
+          }).catch(() => {})
+        }
+      } else {
+        setAiError('La correction a de nouveau échoué. Réessayez plus tard.')
+        setCanRetry(true)
+      }
+    } catch {
+      setAiError('Erreur de connexion. Réessayez quand votre réseau est disponible.')
+      setCanRetry(true)
+    } finally {
+      setStep('results')
+      setIsRetrying(false)
+    }
+  }, [historyA, historyB, sectionA.longText, sectionB.longText, attemptId])
+
+  /* ─── Recorrection from history ─── */
+
+  const handleResumeCorrection = useCallback(async (attempt: EOPastAttempt) => {
+    const transcriptA = attempt.writtenTask1 ?? '[Aucune réplique]'
+    const transcriptB = attempt.writtenTask2 ?? '[Aucune réplique]'
+    const announcementA = attempt.answers?.announcementA ?? sectionA.longText ?? '[Document non disponible]'
+    const announcementB = attempt.answers?.announcementB ?? sectionB.longText ?? '[Document non disponible]'
+    setAttemptId(attempt.id)
+    setViewingAttempt(null)
+    setShowRecorrigerConfirm(false)
+    setAiError(null)
+    setCanRetry(false)
+    setStep('scoring')
+    try {
+      const res = await fetch('/api/scoring/eo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transcriptionA: transcriptA, transcriptionB: transcriptB, announcementA, announcementB, quotaAlreadyConsumed: false }),
+      })
+      if (res.ok) {
+        const eoResult = (await res.json()) as EOResult
+        setResult(eoResult)
+        await fetch(`/api/attempts/${attempt.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ aiScore: eoResult.globalScore, cecrlLevel: eoResult.globalCecrlLevel, scoringData: eoResult }),
+        }).catch(() => {})
+      } else {
+        const body = await res.json().catch(() => ({}))
+        setAiError(body?.error ?? 'La correction a échoué. Réessayez plus tard.')
+        setCanRetry(res.status !== 429)
+      }
+    } catch {
+      setAiError('Erreur de connexion. Réessayez quand votre réseau est disponible.')
+      setCanRetry(true)
+    } finally {
+      setStep('results')
+    }
+  }, [sectionA.longText, sectionB.longText])
 
   /* ─── Loading / Error ─── */
 
@@ -1534,8 +1646,8 @@ export default function EOPage() {
 
     const CECRL_GRADIENT: Record<string, string> = {
       A1: 'from-tef-red to-red-700', A2: 'from-red-500 to-red-600',
-      B1: 'from-blue-400 to-blue-500', B2: 'from-blue-600 to-blue-700',
-      C1: 'from-tef-blue to-blue-800', C2: 'from-blue-900 to-[#001344]',
+      B1: 'from-[#0055B3] to-tef-blue', B2: 'from-tef-blue to-[#002060]',
+      C1: 'from-tef-blue to-[#001A50]', C2: 'from-[#001A50] to-[#000D28]',
     }
     const cecrlGrad = result ? (CECRL_GRADIENT[result.globalCecrlLevel] ?? 'from-blue-600 to-tef-blue') : 'from-gray-400 to-gray-500'
 
@@ -1570,9 +1682,29 @@ export default function EOPage() {
 
         <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
           {aiError && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm flex items-start gap-2">
-              <span className="text-lg flex-shrink-0">⚠️</span>
-              {aiError}
+            <div className="bg-amber-50 border border-amber-200 rounded-xl overflow-hidden">
+              <div className="px-4 py-4 flex items-start gap-3">
+                <svg className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+                <div className="flex-1">
+                  <p className="font-bold text-amber-800 text-sm">Correction IA non disponible</p>
+                  <p className="text-amber-700 text-sm mt-1 leading-relaxed">{aiError}</p>
+                </div>
+              </div>
+              {canRetry && (
+                <div className="px-4 pb-4">
+                  <button
+                    onClick={handleRetry}
+                    disabled={isRetrying}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white text-sm font-bold rounded-lg transition-colors"
+                  >
+                    {isRetrying ? (
+                      <><div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />Relance en cours…</>
+                    ) : 'Réessayer la correction IA'}
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
@@ -1728,6 +1860,135 @@ export default function EOPage() {
             >
               Retour au tableau de bord →
             </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  /* ─── History ─── */
+
+  if (step === 'history') {
+    const CECRL_COLOR: Record<string, string> = {
+      A1: 'text-red-600', A2: 'text-red-500',
+      B1: 'text-[#0055B3]', B2: 'text-tef-blue',
+      C1: 'text-tef-blue', C2: 'text-[#001A50]',
+    }
+
+    if (viewingAttempt) {
+      const attempt = viewingAttempt
+      const r = attempt.scoringData
+      return (
+        <div className="min-h-screen bg-background">
+          <div className="bg-gradient-to-br from-tef-blue to-[#002060] text-white">
+            <div className="max-w-3xl mx-auto px-4 py-6">
+              <button onClick={() => { setViewingAttempt(null); setShowRecorrigerConfirm(false) }} className="flex items-center gap-2 text-white/70 hover:text-white text-sm font-semibold mb-4 transition-colors">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" /></svg>
+                Historique
+              </button>
+              <p className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-1">Expression Orale</p>
+              <h1 className="text-xl font-extrabold">{series?.title}</h1>
+              <p className="text-white/60 text-sm mt-1">{new Date(attempt.completedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+            </div>
+          </div>
+          <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">
+            {r ? (
+              <>
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5 flex items-center gap-4">
+                  <div className="text-center">
+                    <div className="text-4xl font-black text-gray-900">{r.globalScore}<span className="text-lg text-gray-400">/450</span></div>
+                    <div className={`text-xl font-extrabold ${CECRL_COLOR[r.globalCecrlLevel] ?? 'text-tef-blue'}`}>{r.globalCecrlLevel}</div>
+                    {r.globalNclcLevel !== undefined && <div className="text-xs text-gray-400 mt-0.5">NCLC {r.globalNclcLevel}</div>}
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <div className="flex items-center justify-between text-sm"><span className="text-gray-500">Section A</span><span className="font-bold text-gray-800">{r.sectionA.score}/225 — {r.sectionA.cecrlLevel}</span></div>
+                    <div className="flex items-center justify-between text-sm"><span className="text-gray-500">Section B</span><span className="font-bold text-gray-800">{r.sectionB.score}/225 — {r.sectionB.cecrlLevel}</span></div>
+                  </div>
+                </div>
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                  <div className="px-4 py-3 border-b border-gray-100"><p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Feedback Section A — Obtenir des informations</p></div>
+                  <div className="px-4 py-4 space-y-2">
+                    <p className="text-sm text-gray-700 leading-relaxed">{r.sectionA.feedback}</p>
+                    {r.sectionA.strengths?.length > 0 && <div className="bg-blue-50 rounded-lg p-3 border border-blue-100"><p className="text-xs font-bold text-tef-blue mb-1">✅ Points forts</p><ul className="space-y-1">{r.sectionA.strengths.map((s, i) => <li key={i} className="text-xs text-gray-700">• {s}</li>)}</ul></div>}
+                    {r.sectionA.improvements?.length > 0 && <div className="bg-orange-50 rounded-lg p-3 border border-orange-100"><p className="text-xs font-bold text-orange-700 mb-1">📈 Axes d&apos;amélioration</p><ul className="space-y-1">{r.sectionA.improvements.map((s, i) => <li key={i} className="text-xs text-gray-700">• {s}</li>)}</ul></div>}
+                  </div>
+                </div>
+                <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                  <div className="px-4 py-3 border-b border-gray-100"><p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Feedback Section B — Présenter et convaincre</p></div>
+                  <div className="px-4 py-4 space-y-2">
+                    <p className="text-sm text-gray-700 leading-relaxed">{r.sectionB.feedback}</p>
+                    {r.sectionB.strengths?.length > 0 && <div className="bg-blue-50 rounded-lg p-3 border border-blue-100"><p className="text-xs font-bold text-tef-blue mb-1">✅ Points forts</p><ul className="space-y-1">{r.sectionB.strengths.map((s, i) => <li key={i} className="text-xs text-gray-700">• {s}</li>)}</ul></div>}
+                    {r.sectionB.improvements?.length > 0 && <div className="bg-orange-50 rounded-lg p-3 border border-orange-100"><p className="text-xs font-bold text-orange-700 mb-1">📈 Axes d&apos;amélioration</p><ul className="space-y-1">{r.sectionB.improvements.map((s, i) => <li key={i} className="text-xs text-gray-700">• {s}</li>)}</ul></div>}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-amber-800 text-sm">Ce passage n&apos;a pas encore de correction IA.</div>
+            )}
+            {/* Transcriptions */}
+            {(attempt.writtenTask1 || attempt.writtenTask2) && (
+              <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                <div className="px-4 py-3 border-b border-gray-100"><p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Transcriptions sauvegardées</p></div>
+                <div className="px-4 py-4 space-y-4">
+                  {attempt.writtenTask1 && <div><p className="text-xs font-bold text-gray-500 mb-1">Section A</p><p className="text-xs text-gray-600 whitespace-pre-wrap font-mono bg-gray-50 rounded-lg p-3">{attempt.writtenTask1}</p></div>}
+                  {attempt.writtenTask2 && <div><p className="text-xs font-bold text-gray-500 mb-1">Section B</p><p className="text-xs text-gray-600 whitespace-pre-wrap font-mono bg-gray-50 rounded-lg p-3">{attempt.writtenTask2}</p></div>}
+                </div>
+              </div>
+            )}
+            {/* Recorriger */}
+            {(attempt.writtenTask1 || attempt.writtenTask2) && (
+              !showRecorrigerConfirm ? (
+                <div className="flex justify-center"><button onClick={() => setShowRecorrigerConfirm(true)} className="px-6 py-2.5 bg-amber-500 text-white text-sm font-bold rounded-xl hover:bg-amber-600 transition-colors shadow-sm">Recorriger avec l&apos;IA</button></div>
+              ) : (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
+                  <p className="text-sm font-semibold text-amber-800">Une correction IA sera utilisée sur votre quota. Confirmer ?</p>
+                  <div className="flex gap-2">
+                    <button onClick={() => handleResumeCorrection(attempt)} className="px-4 py-2 bg-amber-500 text-white text-sm font-bold rounded-lg hover:bg-amber-600 transition-colors">Confirmer</button>
+                    <button onClick={() => setShowRecorrigerConfirm(false)} className="px-4 py-2 bg-white border border-gray-200 text-gray-600 text-sm font-semibold rounded-lg hover:bg-gray-50 transition-colors">Annuler</button>
+                  </div>
+                </div>
+              )
+            )}
+            <div className="flex justify-center pt-2">
+              <button onClick={() => router.push('/dashboard')} className="px-8 py-3 bg-tef-blue text-white font-bold rounded-xl hover:bg-tef-blue-hover transition-colors shadow-sm">Retour au tableau de bord →</button>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="bg-gradient-to-br from-tef-blue to-[#002060] text-white">
+          <div className="max-w-3xl mx-auto px-4 py-8">
+            <p className="text-white/70 text-xs font-semibold uppercase tracking-widest mb-1">Expression Orale</p>
+            <h1 className="text-2xl font-extrabold">{series?.title}</h1>
+            <p className="text-white/70 text-sm mt-1">Historique de vos passages</p>
+          </div>
+        </div>
+        <div className="max-w-3xl mx-auto px-4 py-8 space-y-4">
+          {pastAttempts.map((attempt) => (
+            <button
+              key={attempt.id}
+              onClick={() => { setViewingAttempt(attempt); setShowRecorrigerConfirm(false) }}
+              className="w-full bg-white rounded-xl border border-gray-200 shadow-sm hover:border-tef-blue/30 hover:shadow-md transition-all p-4 text-left"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="space-y-0.5">
+                  <p className="text-sm font-semibold text-gray-800">{new Date(attempt.completedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                  {attempt.cecrlLevel ? (
+                    <p className="text-xs text-gray-500">Score : <span className="font-bold text-gray-700">{attempt.aiScore}/450</span> — Niveau <span className={`font-bold ${CECRL_COLOR[attempt.cecrlLevel] ?? 'text-tef-blue'}`}>{attempt.cecrlLevel}</span></p>
+                  ) : (
+                    <p className="text-xs text-amber-600 font-medium">Pas encore de correction IA</p>
+                  )}
+                </div>
+                <svg className="w-5 h-5 text-gray-300 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+              </div>
+            </button>
+          ))}
+          <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+            <button onClick={() => { setStep('intro'); setPastAttempts([]) }} className="px-6 py-2.5 bg-tef-blue text-white font-bold rounded-xl hover:bg-tef-blue-hover transition-colors shadow-sm text-sm">Passer une nouvelle série →</button>
+            <button onClick={() => router.push('/dashboard')} className="px-6 py-2.5 bg-white border border-gray-200 text-gray-600 font-semibold rounded-xl hover:bg-gray-50 transition-colors text-sm">Retour au tableau de bord</button>
           </div>
         </div>
       </div>

@@ -67,10 +67,10 @@ const TASK2_MIN = 200
 const CECRL_GRADIENT: Record<string, string> = {
   A1: 'from-tef-red to-red-700',
   A2: 'from-red-500 to-red-600',
-  B1: 'from-blue-400 to-blue-500',
-  B2: 'from-blue-600 to-blue-700',
-  C1: 'from-tef-blue to-blue-800',
-  C2: 'from-blue-900 to-[#001344]',
+  B1: 'from-[#0055B3] to-tef-blue',
+  B2: 'from-tef-blue to-[#002060]',
+  C1: 'from-tef-blue to-[#001A50]',
+  C2: 'from-[#001A50] to-[#000D28]',
 }
 
 /* ─── Scoring progressif (item 05) ─── */
@@ -109,6 +109,7 @@ function ScoringScreen() {
           })}
         </div>
         <p className="text-xs text-gray-400 text-center">Étape {current + 1}/{steps.length}</p>
+        <p className="text-xs text-gray-400 text-center italic">La correction IA peut prendre 20 à 40 secondes. Merci de patienter.</p>
       </div>
     </div>
   )
