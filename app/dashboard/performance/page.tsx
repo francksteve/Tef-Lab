@@ -63,10 +63,10 @@ interface Stats {
 
 // ─── Constantes palette BVR ───────────────────────────────────────────────────
 const MODULE_COLORS: Record<string, string> = {
-  CE: '#003087',  // bleu marine
-  CO: '#2563eb',  // bleu vif
-  EE: '#E30613',  // rouge
-  EO: '#ef4444',  // rouge clair
+  CE: '#003087',
+  CO: '#0055B3',
+  EE: '#E30613',
+  EO: '#ef4444',
 }
 
 const MODULE_LABELS: Record<string, string> = {
@@ -78,7 +78,7 @@ const MODULE_LABELS: Record<string, string> = {
 
 const CECRL_COLORS: Record<string, string> = {
   A1: '#E30613', A2: '#ef4444',
-  B1: '#60a5fa', B2: '#2563eb',
+  B1: '#5B9BD5', B2: '#0055B3',
   C1: '#003087', C2: '#001344',
 }
 
@@ -113,8 +113,8 @@ function ScoreBar({ value, showTarget = false }: { value: number | null; showTar
         {/* NCLC 7 target marker */}
         {showTarget && (
           <div
-            className="absolute top-1/2 -translate-y-1/2 w-0.5 h-4 bg-blue-300 rounded-full"
-            style={{ left: `${NCLC7_TARGET}%` }}
+            className="absolute top-1/2 -translate-y-1/2 w-0.5 h-4 rounded-full"
+            style={{ left: `${NCLC7_TARGET}%`, background: '#003087', opacity: 0.4 }}
             title="Objectif NCLC 7"
           />
         )}
@@ -244,7 +244,7 @@ export default function PerformancePage() {
           <div className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium border ${
             subscription.daysLeft <= 7
               ? 'bg-red-50 border-red-200 text-red-700'
-              : 'bg-blue-50 border-blue-200 text-blue-700'
+              : 'bg-tef-blue/5 border-tef-blue/20 text-tef-blue'
           }`}>
             {subscription.daysLeft <= 7 && (
               <svg className="w-4 h-4 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -425,13 +425,13 @@ export default function PerformancePage() {
                     {/* Ligne cible NCLC 7 */}
                     <ReferenceLine
                       y={NCLC7_TARGET}
-                      stroke="#2563eb"
+                      stroke="#003087"
                       strokeDasharray="6 3"
                       strokeWidth={1.5}
                       label={{
                         value: 'NCLC 7',
                         position: 'right',
-                        fill: '#2563eb',
+                        fill: '#003087',
                         fontSize: 10,
                         fontWeight: 700,
                       }}

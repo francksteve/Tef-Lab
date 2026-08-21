@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import Timer from '@/components/ui/Timer'
@@ -178,6 +178,7 @@ export default function EEPage() {
   const [showRecorrigerConfirm, setShowRecorrigerConfirm] = useState(false)
   const [aiQuota, setAiQuota] = useState<{ used: number; limit: number; remaining: number; isMonthly?: boolean } | null>(null)
   const [draftBanner, setDraftBanner] = useState(false)
+  const startTimeRef = useRef<number>(Date.now())
 
   useEffect(() => {
     if (status === 'loading') return
@@ -270,6 +271,7 @@ export default function EEPage() {
   const handleFinalSubmit = useCallback(async () => {
     if (phase === 'submitting' || phase === 'results') return
     try { localStorage.removeItem(`ee-draft-${seriesId}`) } catch { /* ignore */ }
+    const timeTaken = Math.round((Date.now() - startTimeRef.current) / 1000)
     setPhase('submitting')
     setAiError(null)
     setCanRetry(false)
@@ -282,7 +284,7 @@ export default function EEPage() {
       if (scoringRes.ok) {
         const scoringData = (await scoringRes.json()) as EEResult
         setResult(scoringData)
-        await saveAttempt({ aiScore: scoringData.globalScore, cecrlLevel: scoringData.globalCecrlLevel, scoringData })
+        await saveAttempt({ aiScore: scoringData.globalScore, cecrlLevel: scoringData.globalCecrlLevel, scoringData, timeTaken })
       } else {
         const isQuota = scoringRes.status === 403
         setAiError(
@@ -291,12 +293,12 @@ export default function EEPage() {
             : 'La correction par IA a échoué. Vos textes ont été enregistrés — vous pouvez réessayer ci-dessous.'
         )
         setCanRetry(!isQuota)
-        await saveAttempt()
+        await saveAttempt({ timeTaken })
       }
     } catch {
       setAiError('Erreur de connexion. Vos textes ont été enregistrés — relancez la correction dès que votre réseau est disponible.')
       setCanRetry(true)
-      await saveAttempt()
+      await saveAttempt({ timeTaken })
     } finally {
       setPhase('results')
     }

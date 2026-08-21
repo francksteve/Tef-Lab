@@ -64,10 +64,10 @@ const moduleDescriptions: Record<string, string> = {
 const CECRL_COLORS: Record<string, string> = {
   A1: 'bg-red-100 text-red-700',
   A2: 'bg-red-100 text-red-600',
-  B1: 'bg-blue-100 text-blue-600',
-  B2: 'bg-blue-200 text-blue-800',
-  C1: 'bg-tef-blue/20 text-tef-blue',
-  C2: 'bg-blue-900 text-white',
+  B1: 'bg-tef-blue/10 text-tef-blue',
+  B2: 'bg-tef-blue/20 text-tef-blue',
+  C1: 'bg-tef-blue/30 text-tef-blue',
+  C2: 'bg-[#001344] text-white',
 }
 
 function formatTime(seconds: number): string {
@@ -706,7 +706,7 @@ function DashboardContent() {
                           <span className={`text-xs font-bold ${acc.pillText}`}>{attempt.score}/40</span>
                         )}
                         {attempt.aiScore != null && attempt.score == null && (
-                          <span className="text-xs font-bold text-blue-700">{Math.round(attempt.aiScore)}/{['EE', 'EO'].includes(attempt.moduleCode) ? 450 : 100}</span>
+                          <span className="text-xs font-bold text-tef-blue">{Math.round(attempt.aiScore)}/{['EE', 'EO'].includes(attempt.moduleCode) ? 450 : 100}</span>
                         )}
                         {attempt.cecrlLevel && (
                           <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${cecrlColor}`}>{attempt.cecrlLevel}</span>
@@ -745,7 +745,7 @@ function DashboardContent() {
                             {attempt.score != null ? (
                               <span className={`font-bold ${acc.pillText}`}>{attempt.score}/40</span>
                             ) : attempt.aiScore != null ? (
-                              <span className="font-bold text-blue-600">{Math.round(attempt.aiScore)}/{['EE', 'EO'].includes(attempt.moduleCode) ? 450 : 100}</span>
+                              <span className="font-bold text-tef-blue">{Math.round(attempt.aiScore)}/{['EE', 'EO'].includes(attempt.moduleCode) ? 450 : 100}</span>
                             ) : (
                               <span className="text-gray-300">—</span>
                             )}
