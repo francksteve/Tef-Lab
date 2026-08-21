@@ -126,7 +126,7 @@ export async function sendNewOrderEmail(data: NewOrderEmailData): Promise<void> 
   await transporter.sendMail({
     from: config.smtp.from,
     to: config.adminEmail,
-    subject: `[TEF-LAB] Commande ${data.reference} — ${data.packName}`,
+    subject: `TEF-LAB : nouvelle commande ${data.reference} pour le pack ${data.packName}`,
     html,
   })
 }
@@ -232,7 +232,7 @@ export async function sendAccountActivatedEmail(data: AccountActivatedEmailData)
   await transporter.sendMail({
     from: config.smtp.from,
     to: data.visitorEmail,
-    subject: `[TEF-LAB] Compte activé — Pack ${data.packName}`,
+    subject: `TEF-LAB : votre accès au pack ${data.packName} est activé`,
     html,
   })
 }
@@ -347,7 +347,7 @@ export async function sendPaymentConfirmedEmail(data: PaymentConfirmedEmailData)
   await transporter.sendMail({
     from: config.smtp.from,
     to: data.clientEmail,
-    subject: `[TEF-LAB] Paiement confirmé — Pack ${data.packName}`,
+    subject: `TEF-LAB : votre paiement pour le pack ${data.packName} est confirmé`,
     html,
   })
 }
@@ -409,7 +409,7 @@ export async function sendPackExpiredEmail(data: PackExpiredEmailData): Promise<
   await transporter.sendMail({
     from: config.smtp.from,
     to: data.clientEmail,
-    subject: `[TEF-LAB] Votre pack ${data.packName} est arrivé à expiration`,
+    subject: `TEF-LAB : votre pack ${data.packName} a expiré`,
     html,
   })
 }
@@ -449,7 +449,7 @@ export async function sendAdminPaymentNotification(data: AdminPaymentNotificatio
 
     <div style="padding:32px;">
       <div style="background:#f0fdf4; border-left:3px solid #22c55e; padding:12px 16px; border-radius:4px; margin-bottom:24px; font-size:14px; color:#166534;">
-        Paiement confirmé via ${data.paymentMethod} — ${data.price.toLocaleString('fr-FR')} FCFA
+        Paiement de ${data.price.toLocaleString('fr-FR')} FCFA reçu via ${data.paymentMethod}.
       </div>
 
       <h3 style="color:#003087; font-size:14px; text-transform:uppercase; letter-spacing:0.5px; border-bottom:1px solid #e5e7eb; padding-bottom:8px; margin-bottom:16px;">Paiement</h3>
@@ -512,7 +512,7 @@ export async function sendAdminPaymentNotification(data: AdminPaymentNotificatio
   await transporter.sendMail({
     from: config.smtp.from,
     to: config.adminEmail,
-    subject: `[TEF-LAB] Paiement ${data.paymentMethod} — ${data.clientName} · ${data.packName} · ${data.price.toLocaleString('fr-FR')} FCFA`,
+    subject: `TEF-LAB : paiement ${data.paymentMethod} de ${data.clientName} pour le pack ${data.packName}`,
     html,
   })
 }
@@ -532,48 +532,42 @@ export async function sendPasswordResetEmail(data: PasswordResetEmailData): Prom
 <head><meta charset="UTF-8"><title>Réinitialisation de mot de passe – TEF-LAB</title></head>
 <body style="font-family: Arial, sans-serif; background:#f5f5f5; margin:0; padding:20px;">
   <div style="max-width:600px; margin:0 auto; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.1);">
-    <!-- En-tête -->
     <div style="background:#003087; padding:24px 32px;">
-      <h1 style="color:#fff; margin:0; font-size:22px; font-weight:900;">TEF-LAB</h1>
-      <p style="color:#cce0ff; margin:6px 0 0;">Réinitialisation de mot de passe</p>
+      <p style="color:#fff; margin:0; font-size:20px; font-weight:900;">TEF-LAB</p>
+      <p style="color:#cce0ff; margin:6px 0 0; font-size:13px;">Réinitialisation de mot de passe</p>
     </div>
 
-    <!-- Corps -->
     <div style="padding:32px;">
-      <h2 style="color:#003087; margin-top:0;">Bonjour ${data.name},</h2>
-      <p style="color:#444; line-height:1.6;">
+      <p style="color:#444; font-size:15px; margin-top:0;">Bonjour ${data.name},</p>
+      <p style="color:#444; font-size:14px; line-height:1.7;">
         Vous avez demandé la réinitialisation de votre mot de passe TEF-LAB.
-        Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe :
+        Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe.
       </p>
 
-      <!-- Bouton -->
       <div style="text-align:center; margin:32px 0;">
         <a href="${data.resetUrl}"
            style="display:inline-block; background:#003087; color:#fff; text-decoration:none;
-                  padding:16px 40px; border-radius:8px; font-size:16px; font-weight:bold;
-                  letter-spacing:0.5px;">
+                  padding:16px 40px; border-radius:8px; font-size:16px; font-weight:bold;">
           Réinitialiser mon mot de passe
         </a>
       </div>
 
-      <!-- Avertissements -->
       <div style="background:#fff3cd; border-left:4px solid #E30613; padding:12px 16px; border-radius:4px; margin-bottom:24px;">
         <p style="margin:0; color:#856404; font-size:14px; line-height:1.6;">
-          <strong>⚠️ Ce lien expire dans 1 heure.</strong><br>
-          Si vous n'avez pas fait cette demande, ignorez cet email — votre mot de passe reste inchangé.
+          Ce lien est valable pendant 1 heure.
+          Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet email.
         </p>
       </div>
 
-      <!-- Lien texte de secours -->
       <p style="color:#888; font-size:12px; line-height:1.6;">
-        Si le bouton ne fonctionne pas, copiez ce lien dans votre navigateur :<br>
+        Si le bouton ne s'affiche pas correctement, copiez ce lien dans votre navigateur :<br>
         <a href="${data.resetUrl}" style="color:#0055B3; word-break:break-all;">${data.resetUrl}</a>
       </p>
     </div>
 
-    <!-- Pied de page -->
     <div style="background:#f5f5f5; padding:16px 32px; text-align:center; color:#888; font-size:12px;">
-      © 2025 TEF-LAB · <a href="${config.siteUrl}" style="color:#0055B3; text-decoration:none;">tef-lab.com</a>
+      © ${new Date().getFullYear()} TEF-LAB &nbsp;&nbsp;
+      <a href="${config.siteUrl}" style="color:#0055B3; text-decoration:none;">tef-lab.com</a>
     </div>
   </div>
 </body>
@@ -583,7 +577,7 @@ export async function sendPasswordResetEmail(data: PasswordResetEmailData): Prom
   await transporter.sendMail({
     from: config.smtp.from,
     to: data.email,
-    subject: '[TEF-LAB] Réinitialisation de votre mot de passe',
+    subject: 'TEF-LAB : réinitialisation de votre mot de passe',
     html,
   })
 }
@@ -613,16 +607,18 @@ export async function sendWelcomeEmail(data: WelcomeEmailData): Promise<void> {
     <div style="padding:32px;">
       <p style="color:#444; font-size:15px; margin-top:0;">Bonjour ${firstName},</p>
       <p style="color:#444; font-size:14px; line-height:1.7; margin-bottom:24px;">
-        Votre compte TEF-LAB a été créé. Vous avez accès aux séries gratuites de
-        Compréhension Écrite (CE) et Compréhension Orale (CO) dès maintenant.
+        Votre compte TEF-LAB est prêt. Vous pouvez commencer à vous entraîner
+        dès maintenant, même sans abonnement payant.
       </p>
 
       <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:6px; padding:18px 20px; margin-bottom:24px;">
-        <p style="margin:0 0 10px; font-size:13px; font-weight:bold; color:#003087; text-transform:uppercase; letter-spacing:0.5px;">Inclus avec votre compte gratuit</p>
+        <p style="margin:0 0 10px; font-size:13px; font-weight:bold; color:#003087; text-transform:uppercase; letter-spacing:0.5px;">Ce que vous avez avec votre compte gratuit</p>
         <ul style="margin:0; padding-left:18px; color:#444; font-size:14px; line-height:2;">
-          <li>Séries CE et CO disponibles immédiatement</li>
-          <li>Résultats et niveau CECRL après chaque série</li>
-          <li>Suivi de progression</li>
+          <li>Séries de Compréhension Écrite (CE) et Compréhension Orale (CO)</li>
+          <li>Accès aux séries Expression Écrite (EE) et Expression Orale (EO)</li>
+          <li>Un quota de corrections IA chaque mois pour évaluer vos productions</li>
+          <li>Score et niveau CECRL après chaque série</li>
+          <li>Suivi de votre progression</li>
         </ul>
       </div>
 
@@ -635,8 +631,8 @@ export async function sendWelcomeEmail(data: WelcomeEmailData): Promise<void> {
       </div>
 
       <p style="color:#666; font-size:13px; line-height:1.6; margin-bottom:0;">
-        Pour accéder aux modules Expression Écrite et Expression Orale, consultez nos
-        <a href="${config.siteUrl}/packs" style="color:#003087;">packs de préparation</a>.
+        Pour augmenter votre quota de corrections IA et accéder à davantage de séries,
+        découvrez nos <a href="${config.siteUrl}/packs" style="color:#003087;">packs de préparation</a>.
       </p>
 
       <p style="color:#888; font-size:12px; line-height:1.6; margin-top:20px;">
@@ -658,7 +654,7 @@ export async function sendWelcomeEmail(data: WelcomeEmailData): Promise<void> {
   await transporter.sendMail({
     from: config.smtp.from,
     to: data.email,
-    subject: '[TEF-LAB] Votre compte est créé',
+    subject: 'TEF-LAB : bienvenue, votre compte est prêt',
     html,
   })
 }
@@ -714,7 +710,7 @@ export async function sendOrderRejectedEmail(data: OrderRejectedEmailData): Prom
   await transporter.sendMail({
     from: config.smtp.from,
     to: data.visitorEmail,
-    subject: `[TEF-LAB] Commande ${data.reference} — paiement non confirmé`,
+    subject: `TEF-LAB : commande ${data.reference}, paiement non confirmé`,
     html,
   })
 }
@@ -803,7 +799,7 @@ export async function sendDailyPracticeReminder(data: DailyPracticeReminderData)
   await transporter.sendMail({
     from: config.smtp.from,
     to: data.clientEmail,
-    subject: `[TEF-LAB] Rappel — votre session du jour`,
+    subject: `TEF-LAB : un peu de pratique pour aujourd'hui ?`,
     html,
   })
 }
@@ -897,7 +893,7 @@ export async function sendExamDayEmail(data: ExamDayEmailData): Promise<void> {
   await transporter.sendMail({
     from: config.smtp.from,
     to: data.clientEmail,
-    subject: `[TEF-LAB] Bon courage ${firstName} — c'est le jour de votre TEF Canada !`,
+    subject: `TEF-LAB : bon courage ${firstName}, c'est le jour du TEF Canada !`,
     html,
   })
 }
@@ -998,8 +994,8 @@ export async function sendAIResultEmail(data: AIResultEmailData): Promise<void> 
     from: config.smtp.from,
     to: data.clientEmail,
     subject: data.metTarget
-      ? `[TEF-LAB] Objectif ${data.targetLevel} atteint en ${data.moduleName} !`
-      : `[TEF-LAB] Votre résultat IA en ${data.moduleName} — niveau ${data.cecrlLevel}`,
+      ? `TEF-LAB : objectif ${data.targetLevel} atteint en ${data.moduleName} !`
+      : `TEF-LAB : votre résultat en ${data.moduleName} est ${data.cecrlLevel}`,
     html,
   })
 }
@@ -1059,18 +1055,19 @@ export async function sendDailyUpgradeReminder(data: DailyUpgradeReminderData): 
     <div style="padding:32px;">
       <p style="color:#444; font-size:15px; margin-top:0;">Bonjour ${firstName},</p>
       <p style="color:#444; font-size:14px; line-height:1.7; margin-bottom:24px;">
-        Avec votre compte gratuit, vous avez accès aux séries de Compréhension Écrite (CE)
-        et Compréhension Orale (CO). Les modules Expression Écrite (EE) et Expression Orale (EO)
-        sont disponibles dans les packs payants.
+        Avec votre compte gratuit, vous avez déjà accès à des séries de
+        Compréhension Écrite (CE), Compréhension Orale (CO), Expression Écrite (EE)
+        et Expression Orale (EO), ainsi qu'à un quota de corrections IA par mois.
+        Un pack payant vous donne davantage pour aller plus loin dans votre préparation.
       </p>
 
       <div style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:6px; padding:18px 20px; margin-bottom:24px;">
-        <p style="margin:0 0 12px; font-size:13px; font-weight:bold; color:#003087; text-transform:uppercase; letter-spacing:0.5px;">Ce que vous débloquez avec un pack</p>
+        <p style="margin:0 0 12px; font-size:13px; font-weight:bold; color:#003087; text-transform:uppercase; letter-spacing:0.5px;">Ce que vous gagnez avec un pack</p>
         <ul style="margin:0; padding-left:18px; color:#444; font-size:14px; line-height:2;">
-          <li>Expression Écrite (EE) — rédaction et correction par intelligence artificielle</li>
-          <li>Expression Orale (EO) — simulation et évaluation</li>
-          <li>Toutes les séries CE et CO avancées</li>
-          <li>Score CECRL et NCLC après chaque série</li>
+          <li>Un quota de corrections IA bien plus élevé (jusqu'à 30 par jour)</li>
+          <li>Accès à toutes les séries CE, CO, EE et EO sans restriction</li>
+          <li>Score CECRL et NCLC détaillé après chaque série</li>
+          <li>Suivi de progression complet</li>
         </ul>
       </div>
 
@@ -1113,7 +1110,7 @@ export async function sendDailyUpgradeReminder(data: DailyUpgradeReminderData): 
   await transporter.sendMail({
     from: config.smtp.from,
     to: data.clientEmail,
-    subject: `[TEF-LAB] Accédez aux 4 modules du TEF Canada`,
+    subject: `TEF-LAB : améliorez votre préparation au TEF Canada`,
     html,
   })
 }
